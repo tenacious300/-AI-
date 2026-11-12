@@ -107,7 +107,7 @@ a.link{color:var(--pri);font-size:13px;font-weight:700;text-decoration:none;whit
 .sum h2{color:#fff}
 .big{font-size:32px;font-weight:800;letter-spacing:-.8px;margin:2px 0;line-height:1.2}
 .sum .cap{font-size:13px;opacity:.78}
-.sum-l{margin-top:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:10px}
+.sum-l{margin-top:12px}
 .sum-l div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;font-size:14px}
 .sum-l div span:first-child{opacity:.8}
 .sum-l .minus{color:#ffb38a}
@@ -322,6 +322,15 @@ body.preview{background:#e5e7eb;padding:0}
 .care-ul>li{margin:8px 0}
 .care-ul ul{margin:3px 0 0;padding-left:16px;color:#475569}
 .care-ul ul li{margin:2px 0}
+.sum-l .sgrp{display:block;padding:8px 12px}
+.sgrp{background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;margin-top:10px}
+.sgrp .sg-h{font-size:12.5px;font-weight:800;opacity:.85;margin-bottom:2px}
+.sum-l .sgrp div{padding:3px 0}
+.sum-l .sgrp .sg-h{padding:0 0 2px}
+.snote{font-size:12px;opacity:.7}
+.stog{display:block;width:100%;margin-top:10px;background:none;border:1px dashed rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:8px;font-size:13px;font-weight:700;cursor:pointer}
+.stog:hover{background:rgba(255,255,255,.08)}
+.sum-l .tot-g .tot{border-top:1px dashed rgba(255,255,255,.25);margin-top:4px;padding-top:6px;font-weight:800}
 .foot{max-width:1180px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--sub)}
 </style>
 </head>
@@ -605,8 +614,10 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v5.1',VER_DATE='2026.11.12';
+var VERSION='v5.3',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v5.3','11.13',['예상 결과 \'총 구독료 보기\' 버튼 이름을 \'자세히보기\'로 변경']],
+  ['v5.2','11.13',['예상 결과를 월 구독료 · 제휴카드 · 포인트 적립으로 나눠 표시','정책 할인을 월 할인금액으로 표시','총 구독료 · 총 혜택은 \'자세히보기\'를 눌러야 표시']],
   ['v5.1','11.12',['제품 사진 · 재고 조회 정확도 개선 (검색 범위 확대, 색상 · 옵션 하위 모델까지 탐색)','삼성닷컴에서 찾을 수 없는 모델은 \'닷컴 미검색\' 표시, 통신 실패 시 다시 시도 버튼','견적 인쇄 시 실패한 제품 정보 자동 재조회']],
   ['v5.0','11.12',['깃허브(GitHub Pages) 운영 지원: 화면은 깃허브, 접속자 · 보관함 · 관리자 기능은 Apps Script API로 연결','케어 가이드 이미지를 깃허브에서 바로 표시','관리자가 올린 단가표 · 판촉은 접속 시 자동으로 받아 적용 (기기에 저장해 재사용)']],
   ['v4.5','11.12',['케어 가이드 이미지를 드라이브 공개 링크로 바로 표시 (서버 호출 1회로 감소, 실패 시 한 장씩 순차 로딩)','접속 직후 보관함 자동 조회 제거 (보관함 버튼을 누를 때만 조회)']],
@@ -910,23 +921,34 @@ function render(){
   $('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';
   $('#sBig').textContent=won(net);
   $('#sSub').textContent=n?('정상 월 '+won(sumMon)+(sumP?' · 선납금 '+won(sumP)+' 별도':'')):'모델을 담으면 바로 계산돼요';
-  var L=[];
+  var h='';
   if(n){
-    L.push(['정상 총 구독료',won(sumT)]);
-    L.push(['정책 할인 합계','−'+won(sumDisc),'minus']);
-    if(sumP)L.push(['선납금 (일시불)',won(sumP)]);
-    L.push(['할인 후 월 납부액',won(sumMon2)]);
-    if(card&&cs.tier){L.push([card.name+' 할인 (첫 달)','−'+won(firstCard),'minus']);L.push(['카드 할인 총액','−'+won(cardTot),'minus']);
-      if(extra)L.push([card.once?'연회비 캐시백':'런칭 캐시백','+'+won(extra),'plus']);}
-    if(pts)L.push(['구독포인트 (약 '+chRate+'%)','+'+pts.toLocaleString()+'P','plus']);
-    var winPts=items.reduce(function(a,i){return a+i.winPt;},0);
-    if(recPts)L.push([''+BN+' 지원','+'+recPts.toLocaleString()+'P','plus']);
-    if(winPts)L.push(['🏆 '+PN+' 지원','+'+winPts.toLocaleString()+'P','plus']);
-    var allPts=pts+recPts+winPts,cashBen=sumDisc+cardTot+extra;
-    L.push(['고객 총 혜택',won(cashBen)+(allPts?' + '+allPts.toLocaleString()+'P':''),'tot']);
-    if(allPts)L.push(['혜택 합계 (1P = 1원)',won(cashBen+allPts),'tot']);
+    var sumMon1=items.reduce(function(a,i){return a+i.mon1;},0);
+    var winPts=items.reduce(function(a,i){return a+i.winPt;},0),allPts=pts+recPts+winPts,cashBen=sumDisc+cardTot+extra;
+    var row=function(l,v,c){return '<div><span>'+l+'</span><span class="'+(c||'')+'">'+v+'</span></div>';};
+    h+='<div class="sgrp"><div class="sg-h">💰 월 구독료</div>'+row('정상 월 구독료',won(sumMon))+row('정책 할인 (월)','−'+won(sumMon-sumMon1),'minus')
+      +(sumP?row('선납 차감 (월)','−'+won(sumMon1-sumMon2),'minus'):'')+row('<b>할인 후 월 납부액</b>','<b>'+won(sumMon2)+'</b>')
+      +(sumP?'<div class="snote">선납금 '+won(sumP)+'은 계약할 때 일시불로 내요</div>':'')+'</div>';
+    if(card&&cs.tier){
+      h+='<div class="sgrp"><div class="sg-h">💳 제휴카드 · '+card.name+'</div>'+row('카드 월 할인 (첫 달)','−'+won(firstCard),'minus')+row('<b>카드 적용 월 실 납부액</b>','<b>'+won(Math.max(0,sumMon2-firstCard))+'</b>')
+        +(extra?row(card.once?'연회비 캐시백':'런칭 캐시백','+'+won(extra),'plus'):'')+'</div>';
+    }
+    if(allPts){
+      h+='<div class="sgrp"><div class="sg-h">🎁 포인트 적립</div>'+(pts?row('구독포인트 (약 '+chRate+'%)','+'+pts.toLocaleString()+'P','plus'):'')
+        +(recPts?row(BN+' 지원','+'+recPts.toLocaleString()+'P','plus'):'')+(winPts?row('🏆 '+PN+' 지원','+'+winPts.toLocaleString()+'P','plus'):'')
+        +row('<b>포인트 합계</b>','<b>'+allPts.toLocaleString()+'P</b>','plus')+'</div>';
+    }
+    var totPay=items.reduce(function(a,i){return a+i.mon2*i.N+i.P;},0);
+    h+='<button class="stog" id="sTog" type="button">'+(S.showTot?'자세히보기 접기 ▴':'자세히보기 ▾')+'</button>';
+    if(S.showTot){
+      h+='<div class="sgrp tot-g">'+row('정상 총 구독료',won(sumT))+row('정책 할인 총액','−'+won(sumDisc),'minus')+(sumP?row('선납금 (일시불)',won(sumP)):'')
+        +row('할인 후 총 납부액',won(totPay))+(card&&cs.tier?row('카드 할인 총액','−'+won(cardTot),'minus'):'')
+        +'<div class="tot"><span>고객 총 혜택</span><span>'+won(cashBen)+(allPts?' + '+allPts.toLocaleString()+'P':'')+'</span></div>'
+        +(allPts?'<div class="tot"><span>혜택 합계 (1P = 1원)</span><span>'+won(cashBen+allPts)+'</span></div>':'')+'</div>';
+    }
   }
-  $('#sList').innerHTML=L.map(function(x){return '<div class="'+(x[2]==='tot'?'tot':'')+'"><span>'+x[0]+'</span><span class="'+(x[2]&&x[2]!=='tot'?x[2]:'')+'">'+x[1]+'</span></div>';}).join('');
+  $('#sList').innerHTML=h;
+  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;render();};
   var ph='';
   if(n){
     var sched;
