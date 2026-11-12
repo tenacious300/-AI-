@@ -605,8 +605,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v5.0',VER_DATE='2026.11.12';
+var VERSION='v5.1',VER_DATE='2026.11.12';
 var CHANGELOG=[
+  ['v5.1','11.12',['제품 사진 · 재고 조회 정확도 개선 (검색 범위 확대, 색상 · 옵션 하위 모델까지 탐색)','삼성닷컴에서 찾을 수 없는 모델은 \'닷컴 미검색\' 표시, 통신 실패 시 다시 시도 버튼','견적 인쇄 시 실패한 제품 정보 자동 재조회']],
   ['v5.0','11.12',['깃허브(GitHub Pages) 운영 지원: 화면은 깃허브, 접속자 · 보관함 · 관리자 기능은 Apps Script API로 연결','케어 가이드 이미지를 깃허브에서 바로 표시','관리자가 올린 단가표 · 판촉은 접속 시 자동으로 받아 적용 (기기에 저장해 재사용)']],
   ['v4.5','11.12',['케어 가이드 이미지를 드라이브 공개 링크로 바로 표시 (서버 호출 1회로 감소, 실패 시 한 장씩 순차 로딩)','접속 직후 보관함 자동 조회 제거 (보관함 버튼을 누를 때만 조회)']],
   ['v4.4','11.12',['동시 접속 100명 대비: 접속 신호 30초 → 75초, 서버 저장소 쓰기 최소화, 혼잡 시 대기 없이 건너뛰기','관리자 접속 현황 자동 갱신 10초 → 30초']],
@@ -647,20 +648,22 @@ var CHANGELOG=[
 ];
 var API_URL='https:\/\/sribsrch.ecom.samsung.com/estoresearch-api/v1/scom/sec/search';
 var INFO={};
-function fetchInfo(code){
-  if(INFO[code]&&INFO[code].p)return INFO[code].p;
-  var o=INFO[code]={st:'loading'};
-  var body='clientCode=b2c&storeID=1&countryCode=sec&startIndex=0&requestCount=5&clientName=scom&projection='+encodeURIComponent('["*"]')+'&keyword='+encodeURIComponent(code)+'&siteCd=sec&version=v2&firstSearchYN=true';
-  var to=new Promise(function(res){setTimeout(function(){res(null);},7000);});
+function findModel(o,code,depth){if(!o||typeof o!=='object'||depth>4)return null;
+  if(!Array.isArray(o)&&(String(o.modelCode||'').toUpperCase()===code||String(o.id||'').toUpperCase()===code))return o;
+  for(var k in o){if(k==='embedding_text')continue;var v=o[k];if(v&&typeof v==='object'){var r=findModel(v,code,depth+1);if(r)return r;}}return null;}
+function fetchInfo(code,force){
+  if(INFO[code]&&INFO[code].p&&!(force&&INFO[code].st==='fail'))return INFO[code].p;
+  var o=INFO[code]={st:'loading'};var CU=String(code).toUpperCase();
+  var body='clientCode=b2c&storeID=1&countryCode=sec&startIndex=0&requestCount=30&clientName=scom&projection='+encodeURIComponent('["*"]')+'&keyword='+encodeURIComponent(code)+'&siteCd=sec&version=v2&firstSearchYN=true';
+  var to=new Promise(function(res){setTimeout(function(){res('timeout');},8000);});
   var req=fetch(API_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body}).then(function(r){return r.json();}).then(function(j){
     var rs=(j&&j.searchResults)||[];var x=null;
-    rs.forEach(function(a){if(!x&&(a.modelCode===code||a.id===code))x=a;});
-    if(!x)rs.forEach(function(a){(a.groupedProductList||a.groupedProducts||[]).forEach(function(g){if(!x&&g&&(g.modelCode===code||g.id===code))x=Object.assign({},a,g);});});
-    if(!x)return null;
-    var im=x.images||{};var img=(im.largeImage&&im.largeImage.url)||im.laImage||(im.smallImage&&im.smallImage.url)||'';
+    rs.forEach(function(a){if(x)return;if(String(a.modelCode||'').toUpperCase()===CU||String(a.id||'').toUpperCase()===CU){x=a;return;}var g=findModel(a,CU,0);if(g)x=Object.assign({},a,g);});
+    if(!x)return 'none';
+    var im=x.images||{};var img=(im.largeImage&&im.largeImage.url)||im.laImage||(im.smallImage&&im.smallImage.url)||im.smImage||'';
     return {name:x.name||x.productDisplayName||'',img:img,stock:x.stockStatus||'',pdp:x.pdpURL||''};
-  }).catch(function(){return null;});
-  o.p=Promise.race([req,to]).then(function(v){if(v){Object.assign(o,v);o.st='ok';}else o.st='fail';render();return o;});
+  }).catch(function(){return 'timeout';});
+  o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';}else o.st=(v==='none'?'none':'fail');render();return o;});
   return o.p;
 }
 var SEARCH_BASE='https:\/\/www.samsung.com/sec/aisearch/?searchvalue=';
@@ -728,6 +731,8 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp
 
 function infoThumb(code){var o=INFO[code];if(o&&o.st==='ok'&&o.img)return '<img class="thumb" src="'+esc(o.img)+'" alt="">';return '<div class="thumb"></div>';}
 function infoName(code){var o=INFO[code];if(!o)return '';if(o.st==='loading')return '<div class="pname" style="color:var(--sub)">제품 정보 불러오는 중…</div>';
+  if(o.st==='none')return '<div class="pname" style="color:var(--sub)">삼성닷컴에서 이 모델을 찾지 못했어요 <span class="stk n">닷컴 미검색</span></div>';
+  if(o.st==='fail')return '<div class="pname" style="color:var(--sub)">제품 정보를 불러오지 못했어요 <a href="#" class="link" data-reinfo="'+esc(code)+'">다시 시도</a></div>';
   if(o.st!=='ok')return '';var stk=o.stock==='InStock'?'<span class="stk y">닷컴 재고 있음</span>':(o.stock?'<span class="stk n">닷컴 품절</span>':'');
   return '<div class="pname">'+esc(o.name)+stk+'</div>';}
 function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('on');},1600);}
@@ -980,7 +985,7 @@ $('#addBtn').onclick=function(){
   render();
   toast(m[0]+' 담았어요 ('+S.cart.length+'개)');
 };
-$('#cart').addEventListener('click',function(e){var d=e.target.closest('[data-del]');if(d){S.cart.splice(+d.dataset.del,1);S.cmpY=null;render();}});
+$('#cart').addEventListener('click',function(e){var ri=e.target.closest('[data-reinfo]');if(ri){e.preventDefault();fetchInfo(ri.dataset.reinfo,true);render();return;}var d=e.target.closest('[data-del]');if(d){S.cart.splice(+d.dataset.del,1);S.cmpY=null;render();}});
 $('#cart').addEventListener('change',function(e){var t=e.target;
   if(t.dataset.win!=null)S.cart[+t.dataset.win].win=t.checked;
   if(t.dataset.cmp!=null)S.cart[+t.dataset.cmp].cmp=t.checked;
@@ -1046,7 +1051,7 @@ function buildPrint(){
 function printQuote(){
   if(!S.cart.length){toast('담은 모델이 없어요');return;}
   toast('제품 이미지를 불러오는 중…');
-  Promise.all(S.cart.map(function(it){return fetchInfo(it.code);})).then(buildPrint).then(function(){setTimeout(function(){window.print();},200);});
+  Promise.all(S.cart.map(function(it){return fetchInfo(it.code,true);})).then(buildPrint).then(function(){setTimeout(function(){window.print();},200);});
 }
 $('#printBtn').onclick=function(){printQuote();if(S.cart.length)gsr('logEvent','print');};
 window.__previewQuote=function(){return Promise.all(S.cart.map(function(it){return fetchInfo(it.code);})).then(buildPrint).then(function(){document.body.classList.add('preview');});};
