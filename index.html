@@ -566,9 +566,10 @@ body.preview{background:#e5e7eb;padding:0}
   <div id="verList"></div>
 </div></div>
 
-<script src="data/price.js"></script>
-<script src="data/promo.js"></script>
-<script src="config.js"></script>
+<script>
+(function(){var d=new Date(),day=''+d.getFullYear()+(d.getMonth()+1)+d.getDate();
+document.write('<script src="data/price.js?d='+day+'"><\/script><script src="data/promo.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script>');})();
+</script>
 <script>
 (function(){
   window.CARE_LOCAL=true;
