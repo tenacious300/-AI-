@@ -626,8 +626,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v6.0',VER_DATE='2026.11.13';
+var VERSION='v6.1',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v6.1','11.13',['판촉 모델 창에서 대상이 아닌 모델을 검색하면 \'대상 아님\'과 적용되는 기본 판촉 개월수를 보여주고 바로 선택 가능 (판촉 이름은 업로드한 프로모션 이름을 따름)']],
   ['v6.0','11.13',['견적 인쇄 시 📄 기본 견적서 / 🔥 체감가 견적서 선택 (체감가 견적서는 월 체감가 계산 박스 포함)']],
   ['v5.9','11.13',['체감가는 기본으로 접어두고 \'🔥 체감가 보기\' 버튼으로 펼치도록 변경 (처음 화면은 카드 적용 월 실 납부액)']],
   ['v5.8','11.13',['새 버전이 올라오면 화면 위에 \'🔔 새 버전이 있어요 · 새로고침\' 안내 표시 (5분마다, 화면으로 돌아올 때 확인)']],
@@ -1208,7 +1209,19 @@ function winRender(){
     var pm=promoOf(m[0]),mx=maxYears(catOf(m));var ps=m[3].filter(function(p){return p[0]===mx;});if(!ps.length)ps=m[3];
     var mn=Math.min.apply(null,ps.map(function(p){return p[2];}));
     return '<div class="wl-it"><div><b>'+m[0]+'</b><div class="m">'+esc(subOf(m))+'</div><div style="margin-top:3px"><span class="tag" style="background:#fef3c7;color:#92400e">최종 '+pm.fin+'개월</span> <span class="tag gr">'+BN+' '+pm.fest+' + '+PN+' '+pm.win+'</span></div></div>'
-      +'<div class="r"><span class="m">'+mx+'년 정상 월</span><span class="mo">'+won(mn)+'~</span></div><button class="btn pri" data-pick="'+m[0]+'">선택</button></div>';}).join(''):'<div class="empty" style="background:#fff">해당 모델이 없어요.</div>');
+      +'<div class="r"><span class="m">'+mx+'년 정상 월</span><span class="mo">'+won(mn)+'~</span></div><button class="btn pri" data-pick="'+m[0]+'">선택</button></div>';}).join(''):winEmpty(q));
+}
+function winEmpty(q){
+  if(!q)return '<div class="empty" style="background:#fff">해당 모델이 없어요.</div>';
+  var ms=MODELS.filter(function(m){return m[0].toUpperCase().indexOf(q)>=0;});
+  if(!ms.length)return '<div class="empty" style="background:#fff">\''+esc(q)+'\' 모델을 요금표에서 찾지 못했어요.<br>모델코드를 다시 확인해 주세요.</div>';
+  var h='<div class="warn" style="margin:8px 0">검색한 모델은 <b>'+esc(PN)+' 대상이 아니에요.</b> 메인 화면에서는 그대로 계산할 수 있어요.</div>';
+  return h+ms.slice(0,20).map(function(m){var pm=promoOf(m[0]),mx=maxYears(catOf(m));
+    var ps=m[3].filter(function(p){return p[0]===mx;});if(!ps.length)ps=m[3];var mn=Math.min.apply(null,ps.map(function(p){return p[2];}));
+    var tag=pm.fest?'<span class="tag gr">'+esc(BN)+' '+pm.fest+'개월만 적용</span>':'<span class="tag" style="background:#f1f5f9;color:#475569">'+esc(BN)+' · '+esc(PN)+' 모두 대상 아님</span>';
+    return '<div class="wl-it"><div><b>'+m[0]+'</b><div class="m">'+esc(catOf(m))+' · '+esc(subOf(m))+'</div><div style="margin-top:3px"><span class="tag" style="background:#fee2e2;color:#991b1b">'+esc(PN)+' 대상 아님</span> '+tag+'</div></div>'
+      +'<div class="r"><span class="m">'+mx+'년 정상 월</span><span class="mo">'+won(mn)+'~</span></div><button class="btn line" data-pick="'+m[0]+'">선택</button></div>';}).join('')
+    +(ms.length>20?'<div class="hint">외 '+(ms.length-20)+'개 · 모델코드를 더 입력해 주세요</div>':'');
 }
 $('#winTab').onclick=function(){drawerOpen('#winDrawer');winRender();};
 $('#promoBnBtn').onclick=function(){drawerOpen('#winDrawer');winRender();};
