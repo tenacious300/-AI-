@@ -142,6 +142,8 @@ details.fold[open]>summary::after{content:'접기 ▴'}
 .bar .btn{min-height:46px;padding:10px 18px}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:#111827;color:#fff;padding:10px 18px;border-radius:99px;font-size:14px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:50;white-space:nowrap}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.newver{position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:200;display:none;align-items:center;gap:10px;background:#111827;color:#fff;padding:9px 10px 9px 16px;border-radius:99px;font-size:14px;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.25);white-space:nowrap}
+.newver.on{display:flex}.newver button{border:0;border-radius:99px;padding:6px 14px;font-weight:800;font-size:13px;cursor:pointer;background:#22c55e;color:#fff}.newver .nx{background:transparent;color:#9ca3af;padding:6px 8px}
 @media(min-width:960px){.toast{bottom:28px}}
 .thumb{width:56px;height:56px;border-radius:10px;background:var(--soft);object-fit:contain;flex:none}
 .item-top{display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0}
@@ -516,6 +518,7 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="btn pri" id="barBtn">결과 보기</button>
 </div>
 <div class="toast" id="toast"></div>
+<div class="newver" id="newVer">🔔 새 버전이 있어요 <small id="newVerNo" style="opacity:.7;font-weight:500"></small><button id="newVerGo" type="button">새로고침</button><button class="nx" id="newVerX" type="button" aria-label="닫기">✕</button></div>
 <div id="printArea"></div>
 <button class="fab" id="boxFab">📁 보관함<span class="bd" id="boxBd" style="display:none"></span></button>
 <div class="modal" id="saveModal"><div class="modal-box">
@@ -615,8 +618,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v5.7',VER_DATE='2026.11.13';
+var VERSION='v5.8',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v5.8','11.13',['새 버전이 올라오면 화면 위에 \'🔔 새 버전이 있어요 · 새로고침\' 안내 표시 (5분마다, 화면으로 돌아올 때 확인)']],
   ['v5.7','11.13',['구독포인트 기준을 할인 전 정상 총 구독료로 변경 (선납 여부와 관계없이 같은 포인트, 삼성닷컴 방식)']],
   ['v5.6','11.13',['예상 결과 맨 위에 🔥 월 체감가 표시: (선납 포함 총 납부액 − 카드 할인 − 포인트) ÷ 개월, 계산 과정 박스 추가','실제 매달 결제액(카드 적용)은 체감가 아래에 함께 표시','비교하기에 카드 할인 총액 · 포인트 합계 · 실부담 총액 · 월 체감가(최저 강조) 추가']],
   ['v5.5','11.13',['갤럭시 탭·북 등 부가세 끝자리가 맞지 않는 요금도 삼성닷컴과 동일하게 계산 (할인액 100원 단위 올림 후 정상 월에서 차감)']],
@@ -1193,6 +1197,19 @@ $('#cart').addEventListener('click',function(e){var a=e.target.closest('[data-ca
 function openVer(){$('#verNow').textContent=VERSION+' ('+VER_DATE+')';
   $('#verList').innerHTML=CHANGELOG.map(function(c,k){return '<div class="cl"><div class="h">'+c[0]+' <small>'+c[1]+'</small>'+(k===0?'<span class="new">NEW</span>':'')+'</div><ul>'+c[2].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';}).join('');
   $('#verModal').classList.add('on');try{localStorage.setItem('calcVerSeen',VERSION);}catch(e){}renderVer();}
+var verChk={last:0,dis:null};
+function checkNewVer(){
+  if(!/github\.io$/.test(location.hostname)||!window.fetch)return;
+  var now=Date.now();if(now-verChk.last<60000)return;verChk.last=now;
+  fetch(location.pathname+'?vchk='+now,{cache:'no-store'}).then(function(r){return r.ok?r.text():'';}).then(function(t){
+    var m=/var VERSION='(v[0-9.]+)'/.exec(t||'');if(!m||m[1]===VERSION||m[1]===verChk.dis)return;
+    $('#newVerNo').textContent=VERSION+' → '+m[1];$('#newVer').classList.add('on');
+  }).catch(function(){});
+}
+$('#newVerGo').onclick=function(){location.replace(location.pathname+'?v='+Date.now()+location.hash);};
+$('#newVerX').onclick=function(){$('#newVer').classList.remove('on');var t=$('#newVerNo').textContent.split('→ ')[1];verChk.dis=t||null;};
+setInterval(checkNewVer,5*60000);setTimeout(checkNewVer,20000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)checkNewVer();});
 function renderVer(){$('#verBtn').textContent=VERSION;var a=!!(ADM&&ADM.pw);$('#verBtn').classList.toggle('adm',a);$('#verBtn').title=a?'수정 내역 보기 (관리자)':'';}
 $('#verBtn').onclick=function(){if(ADM&&ADM.pw)openVer();};
 $('#verClose').onclick=function(){$('#verModal').classList.remove('on');};
