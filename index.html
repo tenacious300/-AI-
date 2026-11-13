@@ -614,8 +614,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v5.3',VER_DATE='2026.11.13';
+var VERSION='v5.4',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v5.4','11.13',['관리자 모드에 📁 견적 관리 탭 추가: 전체 사번의 보관 견적 검색 · 불러오기 · 삭제, 구글 시트 바로가기']],
   ['v5.3','11.13',['예상 결과 \'총 구독료 보기\' 버튼 이름을 \'자세히보기\'로 변경']],
   ['v5.2','11.13',['예상 결과를 월 구독료 · 제휴카드 · 포인트 적립으로 나눠 표시','정책 할인을 월 할인금액으로 표시','총 구독료 · 총 혜택은 \'자세히보기\'를 눌러야 표시']],
   ['v5.1','11.12',['제품 사진 · 재고 조회 정확도 개선 (검색 범위 확대, 색상 · 옵션 하위 모델까지 탐색)','삼성닷컴에서 찾을 수 없는 모델은 \'닷컴 미검색\' 표시, 통신 실패 시 다시 시도 버튼','견적 인쇄 시 실패한 제품 정보 자동 재조회']],
@@ -1247,18 +1248,54 @@ function admStatHtml(r){
   return h;
 }
 function admVerHtml(){return '<div class="hint" style="margin-top:10px">현재 버전 <b>'+VERSION+'</b> ('+VER_DATE+') · 수정 내역은 관리자만 볼 수 있어요</div>'+CHANGELOG.map(function(c,k){return '<div class="cl"><div class="h">'+c[0]+' <small>'+c[1]+'</small>'+(k===0?'<span class="new">NEW</span>':'')+'</div><ul>'+c[2].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';}).join('');}
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admQuoteLoad(){ADM.qload=true;gsr('adminListQuotes',{pw:ADM.pw},function(r){ADM.qload=false;if(r&&r.ok){ADM.quotes=r;}else ADM.quotes={ok:false};if(ADM.tab==='quote')admRender();},function(){ADM.qload=false;ADM.quotes={ok:false,err:1};if(ADM.tab==='quote')admRender();});}
+function admQuoteHtml(){
+  if(!ADM.quotes){if(!ADM.qload)admQuoteLoad();return '<div class="empty" style="margin-top:12px">견적 목록을 불러오는 중…</div>';}
+  var Q=ADM.quotes;if(!Q.ok)return '<div class="warn" style="margin-top:12px">견적 목록을 불러오지 못했어요.'+(HAS_GS?'':' (서버 연결이 없는 상태예요)')+'</div>';
+  var td=todayStr(),list=Q.list||[],emps={};list.forEach(function(x){emps[x.emp]=(emps[x.emp]||0)+1;});
+  var todayN=list.filter(function(x){return String(x.ts).indexOf(td)===0;}).length;
+  var h='<div class="adm-kpi"><div><span>전체 견적</span><b>'+(Q.total||list.length)+'</b></div><div><span>오늘 저장</span><b>'+todayN+'</b></div><div><span>저장한 사번</span><b>'+Object.keys(emps).length+'</b></div></div>';
+  h+='<div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap"><div class="search" style="flex:1;min-width:200px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="aqQ" placeholder="사번 · 고객명 · 모델 · 메모 검색" value="'+esc(ADM.aqq||'')+'" autocomplete="off"></div>'
+    +'<button class="btn line sm" id="aqRef">새로고침</button>'+(Q.url?'<a class="btn line sm" style="text-decoration:none;display:inline-flex;align-items:center" href="'+esc(Q.url)+'" target="_blank" rel="noopener">구글 시트 열기 ↗</a>':'')+'</div>';
+  h+='<div id="aqList" style="margin-top:10px"></div>';
+  return h;
+}
+function admQuoteList(){
+  var el=$('#aqList');if(!el||!ADM.quotes||!ADM.quotes.ok)return;
+  var q=String(ADM.aqq||'').toLowerCase().replace(/-/g,''),list=ADM.quotes.list||[];
+  var f=list.filter(function(x){return !q||(x.emp+' '+x.name+' '+x.summary+' '+x.memo).toLowerCase().replace(/-/g,'').indexOf(q)>=0;});
+  el.innerHTML='<div class="hint">'+(q?'검색 결과 '+f.length+'건':'최근 저장순 '+f.length+'건')+'</div>'+(f.length?f.slice(0,300).map(function(x){
+    return '<div class="qi" style="border:1px solid var(--line)"><div class="qi-h"><div><b>'+esc(x.name)+'</b> <span class="tag gr">사번 '+esc(x.emp)+'</span></div><div class="ts">'+esc(x.ts)+'</div></div>'
+      +'<div class="mo">월 '+won(x.monthly)+(x.prepay?' <span style="font-size:12.5px;color:var(--sub);font-weight:600">· 선납 '+won(x.prepay)+'</span>':'')+'</div>'
+      +'<div class="sm">'+esc(x.summary)+(x.memo?'<br>📝 '+esc(x.memo):'')+'</div>'
+      +'<div class="act"><button class="btn pri" data-aload="'+esc(x.id)+'">불러오기</button><button class="btn del" data-adel="'+esc(x.id)+'">삭제</button></div></div>';}).join('')
+    :'<div class="empty">'+(list.length?'검색 결과가 없어요.':'아직 보관된 견적이 없어요.')+'</div>');
+}
+function admQuoteBind(){
+  admQuoteList();
+  var i=$('#aqQ');if(i)i.oninput=function(){ADM.aqq=i.value;admQuoteList();};
+  var r=$('#aqRef');if(r)r.onclick=function(){ADM.quotes=null;admRender();};
+  var L=$('#aqList');if(L)L.onclick=function(e){
+    var a=e.target.closest('[data-aload]');if(a){var q=(ADM.quotes.list||[]).filter(function(x){return x.id===a.dataset.aload;})[0];if(q){$('#admModal').classList.remove('on');loadQuote(q);}return;}
+    var d=e.target.closest('[data-adel]');if(d){
+      if(d.dataset.sure!=='1'){d.dataset.sure='1';d.textContent='한 번 더 누르면 삭제';setTimeout(function(){if(d.isConnected){d.dataset.sure='';d.textContent='삭제';}},3000);return;}
+      d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
+  };
+}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 function admRender(){
   var t=ADM.tab||'stat',h=admTabsHtml();
   if(t==='stat')h+=ADM.stat?admStatHtml(ADM.stat):'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   else if(t==='price')h+=admPriceHtml();
   else if(t==='promo')h+=admPromoHtml();
+  else if(t==='quote')h+=admQuoteHtml();
   else h+=admVerHtml();
   $('#admBody').innerHTML=h;
-  onChip($('#admTabs'),function(v){ADM.tab=v;admRender();if(v==='stat')admRefresh();else admInfo();});
+  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
+  if(t==='quote')admQuoteBind();
 }
 $('#liveBtn').onclick=function(){$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 $('#admLink').onclick=function(e){e.preventDefault();$('#liveBtn').onclick();};
