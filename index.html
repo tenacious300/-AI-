@@ -626,8 +626,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v6.2',VER_DATE='2026.11.13';
+var VERSION='v6.3',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v6.3','11.13',['실시간 접속자 수를 Firebase로 집계 (창을 열거나 닫으면 1~2초 안에 반영, config.js에 Firebase 설정을 넣으면 켜짐)']],
   ['v6.2','11.13',['체감가 계산을 월 기준으로 표시: 카드 적용 월 결제 + 선납금 월 환산 − 포인트 월 환산 (화면 · 체감가 견적서 동일)','선납으로 체감가가 실제 매달 결제보다 높을 때 💡 안내 표시']],
   ['v6.1','11.13',['판촉 모델 창에서 대상이 아닌 모델을 검색하면 \'대상 아님\'과 적용되는 기본 판촉 개월수를 보여주고 바로 선택 가능 (판촉 이름은 업로드한 프로모션 이름을 따름)']],
   ['v6.0','11.13',['견적 인쇄 시 📄 기본 견적서 / 🔥 체감가 견적서 선택 (체감가 견적서는 월 체감가 계산 박스 포함)']],
@@ -1291,11 +1292,26 @@ function beat(){
   window.__lastBeat=Date.now();
   var info={emp:EMP,sid:SID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat};
   firstBeat=false;
-  gsr('heartbeat',info,function(r){if(r&&r.online>0){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);},function(){$('#liveBtn').classList.add('off');});
+  gsr('heartbeat',info,function(r){if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);},function(){$('#liveBtn').classList.add('off');});
 }
 var EMP=null,beatStarted=false;
+var FB={on:false,n:0,started:false};
+function loadJs(u,cb,er){var sc=document.createElement('script');sc.src=u;sc.onload=cb;sc.onerror=er||function(){};document.head.appendChild(sc);}
+function fbInit(){
+  var c=window.FIREBASE_CONFIG;if(FB.started||!c||!c.databaseURL||!EMP)return;FB.started=true;
+  var base='https:\/\/www.gstatic.com\/firebasejs\/10.12.2\/';
+  loadJs(base+'firebase-app-compat.js',function(){loadJs(base+'firebase-database-compat.js',function(){
+    try{
+      var app=firebase.apps&&firebase.apps.length?firebase.app():firebase.initializeApp(c),db=firebase.database(app);
+      var me=db.ref('online/'+SID);
+      db.ref('.info/connected').on('value',function(snap){if(snap.val()!==true)return;me.onDisconnect().remove().then(function(){me.set(firebase.database.ServerValue.TIMESTAMP);});});
+      db.ref('online').on('value',function(snap){FB.on=true;FB.n=snap.numChildren();$('#liveN').textContent=FB.n;$('#liveBtn').classList.remove('off');
+        if(ADM.stat&&(ADM.tab||'stat')==='stat'&&$('#admModal').classList.contains('on'))admRender();});
+    }catch(e){FB.on=false;}
+  });});
+}
 try{EMP=localStorage.getItem('calcEmp');}catch(e){}
-function startBeat(){if(beatStarted||!HAS_GS)return;beatStarted=true;beat();setInterval(beat,75000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(window.__lastBeat||0)>45000)beat();});}
+function startBeat(){fbInit();if(beatStarted||!HAS_GS)return;beatStarted=true;beat();setInterval(beat,75000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(window.__lastBeat||0)>45000)beat();});}
 function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';}
 function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();
@@ -1322,10 +1338,10 @@ function admLogin(){
   setTimeout(function(){$('#admPw').focus();},50);
 }
 function admRefresh(){if(!ADM.pw||!$('#admModal').classList.contains('on')||(ADM.tab&&ADM.tab!=='stat'))return;gsr('adminStats',ADM.pw,function(r){if(r&&r.ok)admShow(r);});}
-function admShow(r){ADM.stat=r;if((ADM.tab||'stat')==='stat')admRender();$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}
+function admShow(r){ADM.stat=r;if((ADM.tab||'stat')==='stat')admRender();if(!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}}
 function admStatHtml(r){
   var t=r.days[0]||{};
-  var h='<div class="adm-kpi"><div><span>현재 접속</span><b style="color:var(--ok)">'+r.online+'</b></div><div><span>오늘 방문</span><b>'+t.visits+'</b></div><div><span>오늘 사번 수</span><b>'+(r.todayEmps||[]).length+'</b></div><div><span>오늘 최대 동시</span><b>'+t.peak+'</b></div><div><span>누적 방문</span><b>'+r.total+'</b></div></div>';
+  var h='<div class="adm-kpi"><div><span>현재 접속'+(FB.on?' ⚡실시간':'')+'</span><b style="color:var(--ok)">'+(FB.on?FB.n:r.online)+'</b></div><div><span>오늘 방문</span><b>'+t.visits+'</b></div><div><span>오늘 사번 수</span><b>'+(r.todayEmps||[]).length+'</b></div><div><span>오늘 최대 동시</span><b>'+t.peak+'</b></div><div><span>누적 방문</span><b>'+r.total+'</b></div></div>';
   h+='<div class="adm-sec">접속 중인 사용자 <small>'+esc(r.at)+' 기준 · 30초마다 갱신</small></div>';
   h+=r.sessions.length?'<div class="scroll"><table class="tbl"><tr><th>사번</th><th>기기</th><th>접속 시간</th><th>담은 모델</th><th>버전</th></tr>'+r.sessions.map(function(x){
     return '<tr><td><b>'+esc(x.emp||('#'+x.id))+'</b></td><td>'+esc(x.dev)+'</td><td>'+(x.startMin<1?'방금':x.startMin+'분')+'</td><td style="text-align:left;white-space:normal;max-width:220px">'+(x.cart?x.cart+'개 · '+esc(x.models):'-')+'</td><td>'+esc(x.ver)+'</td></tr>';}).join('')+'</table></div>'
@@ -1335,7 +1351,7 @@ function admStatHtml(r){
   h+=te.length?'<div class="scroll"><table class="tbl"><tr><th>사번</th><th>첫 접속</th><th>마지막 접속</th><th>접속 횟수</th><th>기기</th></tr>'+te.map(function(x){return '<tr><td><b>'+esc(x.emp)+'</b></td><td>'+esc(x.first)+'</td><td>'+esc(x.last)+'</td><td>'+x.n+'회</td><td>'+esc(x.dev)+'</td></tr>';}).join('')+'</table></div>':'<div class="empty" style="margin-top:8px">오늘 접속 기록이 없어요.</div>';
   h+='<div class="adm-sec">최근 7일</div><div class="scroll"><table class="tbl"><tr><th>날짜</th><th>방문</th><th>사번 수</th><th>최대 동시</th><th>견적 인쇄</th><th>견적 복사</th></tr>'+r.days.map(function(d){return '<tr><td>'+esc(d.date)+'</td><td>'+d.visits+'</td><td>'+(d.emps||0)+'</td><td>'+d.peak+'</td><td>'+d.prints+'</td><td>'+d.copies+'</td></tr>';}).join('')+'</table></div>';
   h+='<div style="display:flex;gap:8px;margin-top:14px"><button class="btn line sm" id="admRef">지금 새로고침</button><button class="btn line sm" id="admOut">로그아웃</button></div>';
-  h+='<div class="note">접속 중 = 최근 3분 안에 화면을 열어둔 사용자 (75초마다 신호, 동시 접속 대비 경량화). 사번 외 개인정보는 저장하지 않아요.</div>';
+  h+='<div class="note">'+(FB.on?'현재 접속 숫자는 Firebase로 실시간 집계돼요 (창을 열거나 닫으면 1~2초 안에 반영). 아래 사용자 목록 · 통계는 75초마다 신호를 받아 집계해요.':'접속 중 = 최근 3분 안에 화면을 열어둔 사용자 (75초마다 신호, 동시 접속 대비 경량화).')+' 사번 외 개인정보는 저장하지 않아요.</div>';
   return h;
 }
 function admVerHtml(){return '<div class="hint" style="margin-top:10px">현재 버전 <b>'+VERSION+'</b> ('+VER_DATE+') · 수정 내역은 관리자만 볼 수 있어요</div>'+CHANGELOG.map(function(c,k){return '<div class="cl"><div class="h">'+c[0]+' <small>'+c[1]+'</small>'+(k===0?'<span class="new">NEW</span>':'')+'</div><ul>'+c[2].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';}).join('');}
