@@ -334,6 +334,7 @@ body.preview{background:#e5e7eb;padding:0}
 .ack-bar{height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:8px 0}.ack-bar i{display:block;height:100%;background:#22c55e}
 .ack-chip{display:inline-block;padding:3px 9px;border-radius:99px;background:#fee2e2;color:#991b1b;font-size:12px;margin:3px 4px 0 0}
 .nt-ta{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
+.emp-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;line-height:1.5;margin:4px 0 10px;text-align:center}
 .feel-c{color:rgba(255,255,255,.6);font-weight:400}.feel-t{color:#fb7185}#sBig.feel{color:#fb7185}.sum-l .sgrp.feel-g{background:rgba(244,63,94,.12);border:1px solid rgba(251,113,133,.55)}
 .sum-l .sgrp{display:block;padding:8px 12px}
 .sgrp{background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;margin-top:10px}
@@ -575,6 +576,7 @@ body.preview{background:#e5e7eb;padding:0}
   <p>사번을 입력하고 들어가 주세요</p>
   <input type="text" id="empIn" placeholder="사번 입력" autocomplete="off" maxlength="15" inputmode="numeric" enterkeyhint="go">
   <div class="err" id="empErr"></div>
+  <div class="emp-warn">⚠️ 비정상 사번 입력 시 추후 접속 불가</div>
   <button class="btn pri block" id="empGo">입장하기</button>
   <label><input type="checkbox" id="empKeep" checked> 이 기기에서 사번 기억하기</label>
   <div class="ft">사번은 접속 현황 확인용으로만 사용돼요.</div>
@@ -640,8 +642,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v6.5',VER_DATE='2026.11.13';
+var VERSION='v6.6',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v6.6','11.13',['입장 화면 입장하기 버튼 위에 \'비정상 사번 입력 시 추후 접속 불가\' 안내 문구 추가']],
   ['v6.5','11.13',['📢 공지사항: 관리자가 공지를 쓰고 업데이트 내역을 골라 올리면 직원 화면에 팝업 표시','직원이 \'확인했어요\'를 누르면 사번 · 시간 기록, 관리자 📢 공지 탭에서 확인 · 미확인 현황 확인']],
   ['v6.4','11.13',['💳 카드 여러 장으로 나눠 결제: 카드별 전월실적 · 결제 모델 지정, 카드별 할인 합산 (예상 결과 · 체감가 · 견적 인쇄 · 복사 · 보관 반영)','모델 담기 후 선택창이 닫히고 담은 모델로 이동']],
   ['v6.3','11.13',['실시간 접속자 수를 Firebase로 집계 (창을 열거나 닫으면 1~2초 안에 반영, config.js에 Firebase 설정을 넣으면 켜짐)']],
