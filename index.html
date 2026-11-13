@@ -626,8 +626,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v6.1',VER_DATE='2026.11.13';
+var VERSION='v6.2',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v6.2','11.13',['체감가 계산을 월 기준으로 표시: 카드 적용 월 결제 + 선납금 월 환산 − 포인트 월 환산 (화면 · 체감가 견적서 동일)','선납으로 체감가가 실제 매달 결제보다 높을 때 💡 안내 표시']],
   ['v6.1','11.13',['판촉 모델 창에서 대상이 아닌 모델을 검색하면 \'대상 아님\'과 적용되는 기본 판촉 개월수를 보여주고 바로 선택 가능 (판촉 이름은 업로드한 프로모션 이름을 따름)']],
   ['v6.0','11.13',['견적 인쇄 시 📄 기본 견적서 / 🔥 체감가 견적서 선택 (체감가 견적서는 월 체감가 계산 박스 포함)']],
   ['v5.9','11.13',['체감가는 기본으로 접어두고 \'🔥 체감가 보기\' 버튼으로 펼치도록 변경 (처음 화면은 카드 적용 월 실 납부액)']],
@@ -959,11 +960,16 @@ function render(){
     var row=function(l,v,c){return '<div><span>'+l+'</span><span class="'+(c||'')+'">'+v+'</span></div>';};
     var yy=feelN%12?feelN+'개월':(feelN/12)+'년 · '+feelN+'개월';
     h+='<button class="stog feel-b" id="fTog" type="button">'+(S.showFeel?'🔥 체감가 접기 ▴':'🔥 체감가 보기 <b>'+won(feelM)+'</b> ▾')+'</button>';
-    if(S.showFeel)h+='<div class="sgrp feel-g"><div class="sg-h">🧮 체감가 계산 ('+(sameN?'':'최장 ')+yy+')</div>'+row('할인 후 총 납부액 (선납금 포함)',won(totPay))
-      +(card&&cs.tier?row('카드 할인 총액'+(extra?' (캐시백 포함)':''),'−'+won(cardTot+extra),'minus'):'')
-      +(allPts?row('포인트 적립 (1P = 1원)','−'+won(allPts),'minus'):'')
-      +row('<b>실부담 총액</b>','<b>'+won(feelT)+'</b>')+row('<b>÷ '+feelN+'개월 = 월 체감가</b>','<b class="feel-t">'+won(feelM)+'</b>')
-      +'<div class="snote">포인트는 1P=1원으로 환산했어요. 실제 매달 결제는 '+(card&&cs.tier?'카드 적용 월 납부액':'할인 후 월 납부액')+'이고'+(sumP?', 선납금은 계약 때 일시불이에요.':'요.')+(sameN?'':' 계약기간이 다른 모델은 최장 기간으로 나눴어요.')+'</div></div>';
+    if(S.showFeel){
+      var mPay=Math.round((totPay-sumP-cardTot-extra)/feelN/10)*10,mPre=Math.round(sumP/feelN/10)*10,mPt=Math.round(allPts/feelN/10)*10;
+      h+='<div class="sgrp feel-g"><div class="sg-h">🧮 월 체감가 계산 ('+(sameN?'':'최장 ')+yy+' 평균)</div>'
+      +row((card&&cs.tier?'카드 적용 월 결제':'월 결제')+' (평균)',won(mPay))
+      +(sumP?row('+ 선납금 월 환산 <small style="opacity:.7">('+won(sumP)+' ÷ '+feelN+')</small>','+'+won(mPre)):'')
+      +(allPts?row('− 포인트 월 환산 <small style="opacity:.7">('+allPts.toLocaleString()+'P ÷ '+feelN+')</small>','−'+won(mPt),'minus'):'')
+      +row('<b>= 월 체감가</b>','<b class="feel-t">'+won(feelM)+'</b>')
+      +(sumP&&feelM>net?'<div class="snote" style="color:#fda4af;display:block">💡 선납금 '+won(sumP)+'을 미리 낸 만큼 체감가가 실제 매달 결제('+won(net)+')보다 높게 나와요. 체감가는 선납금까지 포함한 진짜 월 부담이에요.</div>':'')
+      +'<div class="snote">'+(sameN?'':'계약기간이 다른 모델은 최장 기간으로 나눴어요. ')+'포인트는 1P=1원으로 환산했어요. '+feelN+'개월 실부담 총액 '+won(feelT)+'</div></div>';
+    }
     h+='<div class="sgrp"><div class="sg-h">💰 월 구독료</div>'+row('정상 월 구독료',won(sumMon))+row('정책 할인 (월)','−'+won(sumMon-sumMon1),'minus')
       +(sumP?row('선납 차감 (월)','−'+won(sumMon1-sumMon2),'minus'):'')+row('<b>할인 후 월 납부액</b>','<b>'+won(sumMon2)+'</b>')
       +(sumP?'<div class="snote">선납금 '+won(sumP)+'은 계약할 때 일시불로 내요</div>':'')+'</div>';
@@ -1107,13 +1113,13 @@ function buildPrint(mode){
     var totPay=items.reduce(function(a,i){return a+i.mon2*i.N+i.P;},0),fN=Math.max.apply(null,items.map(function(i){return i.N;}));
     var sameN=items.every(function(i){return i.N===fN;}),fT=totPay-cardTot-extra-allP,fM=Math.round(fT/fN/10)*10;
     var fr=function(a,b,c){return '<div class="fr'+(c?' '+c:'')+'"><span>'+a+'</span><span>'+b+'</span></div>';};
-    var fh='<div class="feel"><h3>🔥 월 체감가 (선납·카드·포인트 모두 반영)</h3>'
-      +fr('할인 후 총 납부액 (선납금 포함, '+(sameN?'':'최장 ')+fN+'개월)',won(totPay))
-      +(card&&cs.tier?fr('카드 할인 총액'+(extra?' (캐시백 포함)':''),'−'+won(cardTot+extra)):'')
-      +(allP?fr('포인트 적립 (1P = 1원)','−'+won(allP)):'')
-      +fr('<b>실부담 총액</b>','<b>'+won(fT)+'</b>')
-      +fr('÷ '+fN+'개월 = 월 체감가',won(fM)+' <small>(정상 월 대비 '+Math.max(0,Math.round((1-fM/sumMon)*100))+'%↓)</small>','fb')
-      +'<small>※ 포인트는 1P=1원으로 환산한 참고 금액이며, 실제 매달 결제 금액은 위 \'카드 적용 월 실 납부액\'입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간으로 나눴습니다.')+'</small></div>';
+    var mPay=Math.round((totPay-sumP-cardTot-extra)/fN/10)*10,mPre=Math.round(sumP/fN/10)*10,mPt=Math.round(allP/fN/10)*10;
+    var fh='<div class="feel"><h3>🔥 월 체감가 (선납·카드·포인트 모두 반영 · '+(sameN?'':'최장 ')+fN+'개월 평균)</h3>'
+      +fr((card&&cs.tier?'카드 적용 월 결제':'월 결제')+' (평균)',won(mPay))
+      +(sumP?fr('+ 선납금 월 환산 <small>('+won(sumP)+' ÷ '+fN+')</small>','+'+won(mPre)):'')
+      +(allP?fr('− 포인트 월 환산 <small>('+allP.toLocaleString()+'P ÷ '+fN+')</small>','−'+won(mPt)):'')
+      +fr('= 월 체감가',won(fM)+' <small>(정상 월 대비 '+Math.max(0,Math.round((1-fM/sumMon)*100))+'%↓)</small>','fb')
+      +'<small>※ 선납금은 계약 시 일시불로 내며, 실제 매달 결제 금액은 위 \'카드 적용 월 실 납부액\'입니다. 포인트는 1P=1원으로 환산한 참고 금액이며, '+fN+'개월 실부담 총액은 '+won(fT)+'입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간으로 나눴습니다.')+'</small></div>';
     html=html.replace('<div class="nt">',fh+'<div class="nt">');
   }
   $('#printArea').innerHTML=html;
