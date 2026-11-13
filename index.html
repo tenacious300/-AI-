@@ -326,6 +326,14 @@ body.preview{background:#e5e7eb;padding:0}
 .care-ul ul li{margin:2px 0}
 .stog.feel-b{border-color:rgba(251,113,133,.6);color:#fda4af;margin:10px 0 0}.pm-opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font:inherit}.pm-opt b{display:block;font-size:16px;margin-bottom:4px;color:var(--ink)}.pm-opt span{font-size:13px;color:var(--sub)}.pm-opt:hover{border-color:#2563eb;background:#eff6ff}.pm-opt.feel:hover{border-color:#e11d48;background:#fff1f2}
 .pq .feel{margin-top:14px;border:2px solid #e11d48;border-radius:8px;padding:10px 14px}.pq .feel h3{margin:0 0 6px;font-size:14px;color:#e11d48}.pq .feel .fr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #f3c4cf}.pq .feel .fb{font-weight:800;font-size:17px;color:#e11d48;border-bottom:0;padding-top:6px}.pq .feel small{color:#555}
+#cart .item.just{box-shadow:0 0 0 3px #22c55e;transition:box-shadow .3s}
+.nt-t{font-size:18px;font-weight:800;margin:4px 0 2px}.nt-d{font-size:12px;color:var(--sub)}.nt-b{white-space:pre-wrap;font-size:14.5px;line-height:1.65;margin:12px 0}
+.nt-u{background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:10px 14px;font-size:13.5px}.nt-u b{display:block;margin-bottom:4px;color:#0369a1}.nt-u li{margin:3px 0}
+.cl-pick{border:1px solid var(--line);border-radius:12px;margin-top:8px;padding:8px 12px;background:#fff}.cl-pick .h{font-weight:800;font-size:13.5px;display:flex;gap:8px;align-items:center;cursor:pointer}
+.cl-pick label{display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:4px 0 4px 22px;line-height:1.45;cursor:pointer}.cl-pick input{margin-top:3px}
+.ack-bar{height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:8px 0}.ack-bar i{display:block;height:100%;background:#22c55e}
+.ack-chip{display:inline-block;padding:3px 9px;border-radius:99px;background:#fee2e2;color:#991b1b;font-size:12px;margin:3px 4px 0 0}
+.nt-ta{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
 .feel-c{color:rgba(255,255,255,.6);font-weight:400}.feel-t{color:#fb7185}#sBig.feel{color:#fb7185}.sum-l .sgrp.feel-g{background:rgba(244,63,94,.12);border:1px solid rgba(251,113,133,.55)}
 .sum-l .sgrp{display:block;padding:8px 12px}
 .sgrp{background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;margin-top:10px}
@@ -425,6 +433,7 @@ body.preview{background:#e5e7eb;padding:0}
 
   <section class="card" id="secCard">
     <h2><span class="num">4</span>제휴카드</h2>
+    <label class="switch" style="margin:0 0 8px"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
@@ -575,6 +584,11 @@ body.preview{background:#e5e7eb;padding:0}
   <h3><span>⚙ 관리자 모드</span><button id="admClose" aria-label="닫기">✕</button></h3>
   <div id="admBody"></div>
 </div></div>
+<div class="modal" id="ntModal"><div class="modal-box" style="max-width:480px">
+  <h3><span>📢 공지사항</span><button id="ntClose" aria-label="닫기">✕</button></h3>
+  <div id="ntBody"></div>
+  <button class="btn pri block" id="ntOk" style="margin-top:14px">✅ 확인했어요</button>
+</div></div>
 <div class="modal" id="pmModal"><div class="modal-box" style="max-width:460px">
   <h3><span>🖨 견적서 인쇄</span><button id="pmClose" aria-label="닫기">✕</button></h3>
   <div style="font-size:13px;color:var(--sub);margin-bottom:12px">어떤 견적서로 인쇄할까요?</div>
@@ -626,8 +640,10 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v6.3',VER_DATE='2026.11.13';
+var VERSION='v6.5',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v6.5','11.13',['📢 공지사항: 관리자가 공지를 쓰고 업데이트 내역을 골라 올리면 직원 화면에 팝업 표시','직원이 \'확인했어요\'를 누르면 사번 · 시간 기록, 관리자 📢 공지 탭에서 확인 · 미확인 현황 확인']],
+  ['v6.4','11.13',['💳 카드 여러 장으로 나눠 결제: 카드별 전월실적 · 결제 모델 지정, 카드별 할인 합산 (예상 결과 · 체감가 · 견적 인쇄 · 복사 · 보관 반영)','모델 담기 후 선택창이 닫히고 담은 모델로 이동']],
   ['v6.3','11.13',['실시간 접속자 수를 Firebase로 집계 (창을 열거나 닫으면 1~2초 안에 반영, config.js에 Firebase 설정을 넣으면 켜짐)']],
   ['v6.2','11.13',['체감가 계산을 월 기준으로 표시: 카드 적용 월 결제 + 선납금 월 환산 − 포인트 월 환산 (화면 · 체감가 견적서 동일)','선납으로 체감가가 실제 매달 결제보다 높을 때 💡 안내 표시']],
   ['v6.1','11.13',['판촉 모델 창에서 대상이 아닌 모델을 검색하면 \'대상 아님\'과 적용되는 기본 판촉 개월수를 보여주고 바로 선택 가능 (판촉 이름은 업로드한 프로모션 이름을 따름)']],
@@ -930,6 +946,31 @@ function render(){
       +(card.id==='samsung'&&n&&sumMon2<70000&&S.promo&&S.usage>=70?'<div class="warn">월 납부액이 7만원 미만이라 삼성카드 프로모션 캐시백은 적용되지 않아요. (30만원 구간은 7만원 미만도 적용)</div>':'')
       +(card.id==='samsung'&&S.usage>=250?'<div class="warn">250만원↑ 구간 프로모션은 \'26.1~11월 신규 발급 고객만 해당돼요.</div>':'');
   }else $('#cardInfo').innerHTML='';
+  $('#cardBody').querySelector('.lbl').style.display=S.multi?'none':'';$('#usage').style.display=S.multi?'none':'';
+  $('#multiOn').checked=!!S.multi;
+  if(!S.multi)S._mc=null;
+  if(S.multi){
+    S.mc=S.mc.filter(function(id){return CARDS.some(function(c){return c.id===id;});});
+    $('#cardSel').innerHTML=CARDS.map(function(c){return '<button class="chip '+(S.mc.indexOf(c.id)>=0?'on':'')+'" data-v="'+c.id+'">'+(S.mc.indexOf(c.id)>=0?'✓ ':'')+c.name+'</button>';}).join('');
+    items.forEach(function(it,i){if(S.cart[i].pc===undefined||(S.cart[i].pc!=='none'&&S.mc.indexOf(S.cart[i].pc)<0))S.cart[i].pc=S.mc[0];});
+    var maxN=Math.max.apply(null,[0].concat(items.map(function(i){return i.N;})));
+    var mm=[];for(var q=1;q<=maxN;q++)mm.push({m:q,pay:items.reduce(function(a,i){return a+(q<=i.N?i.mon2:0);},0),b:0,p:0});
+    var bs=0,ps=0,ex=0,names=[],box='',per=[];
+    S.mc.forEach(function(id){var c=CARDS.filter(function(x){return x.id===id;})[0],u=S.mu[id]||100;
+      var its=items.filter(function(it,i){return S.cart[i].pc===id;}),r=cardSchedule(c,its,u,S.promo),t=r.tier;names.push(c.name);per.push({name:c.name,u:t?t[0]:u,codes:its.map(function(i){return i.code;}),pay:its.reduce(function(a,i){return a+i.mon2;},0),f:r.months[0]?r.months[0].b+r.months[0].p:0,tot:r.baseSum+r.promoSum+r.extra});
+      r.months.forEach(function(x,k){mm[k].b+=x.b;mm[k].p+=x.p;});bs+=r.baseSum;ps+=r.promoSum;ex+=r.extra;
+      var pay=its.reduce(function(a,i){return a+i.mon2;},0),f=r.months[0]?r.months[0].b+r.months[0].p:0;
+      box+='<div class="info" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="v" style="font-size:16px">'+c.name+'</div>'
+        +'<label style="font-size:13px">전월실적 <select data-mu="'+id+'">'+c.tiers.map(function(x){return '<option value="'+x[0]+'" '+(t&&t[0]===x[0]?'selected':'')+'>'+x[0]+'만↑</option>';}).join('')+'</select></label></div>'
+        +'<div class="t" style="margin:6px 0 4px">이 카드로 결제할 모델</div>'
+        +items.map(function(it,i){return '<label style="display:inline-flex;gap:4px;align-items:center;margin:0 10px 4px 0;font-size:13px"><input type="checkbox" data-asg="'+i+'" data-card="'+id+'" '+(S.cart[i].pc===id?'checked':'')+'>'+it.code+'</label>';}).join('')
+        +'<div class="t" style="margin-top:6px">'+(its.length?'결제액 월 '+won(pay)+' → 카드 할인 <b style="color:#ea580c">−'+won(f)+'</b> (첫 달) · 실 납부 '+won(Math.max(0,pay-f)):'담당 모델이 없어요')+(t?' · 월 최대 '+won(t[1]+(S.promo?t[2]:0)):'')+'</div></div>';});
+    var none=items.filter(function(it,i){return S.cart[i].pc==='none';});
+    if(none.length)box+='<div class="warn" style="margin-top:8px">카드 미지정: '+none.map(function(i){return i.code;}).join(', ')+' (카드 할인 없이 계산)</div>';
+    $('#cardInfo').innerHTML=S.mc.length?box:'<div class="hint" style="margin-top:8px">사용할 카드를 2장 이상 눌러 선택하세요.</div>';
+    if(S.mc.length){card={id:'multi',name:names.join(' + '),once:0};cs={tier:[0],months:mm,baseSum:bs,promoSum:ps,extra:ex};S._mc={card:card,cs:cs,per:per};}
+    else{card=null;cs=null;}
+  }
 
   var sumMon=items.reduce(function(a,i){return a+i.mon;},0),sumT=items.reduce(function(a,i){return a+i.T;},0);
   var sumDisc=items.reduce(function(a,i){return a+i.disc;},0),sumP=items.reduce(function(a,i){return a+i.P;},0);
@@ -1050,6 +1091,10 @@ $('#addBtn').onclick=function(){
   fetchInfo(m[0]);
   render();
   toast(m[0]+' 담았어요 ('+S.cart.length+'개)');
+  S.sel={m:null,y:null,t:null,pre:0};$('#picked').style.display='none';$('#q').value='';
+  if(typeof renderList==='function')renderList();
+  var cards=document.querySelectorAll('#cart .item'),last=cards[cards.length-1];
+  if(last){last.scrollIntoView({behavior:'smooth',block:'center'});last.classList.add('just');setTimeout(function(){last.classList.remove('just');},1600);}
 };
 $('#cart').addEventListener('click',function(e){var ri=e.target.closest('[data-reinfo]');if(ri){e.preventDefault();fetchInfo(ri.dataset.reinfo,true);render();return;}var d=e.target.closest('[data-del]');if(d){S.cart.splice(+d.dataset.del,1);S.cmpY=null;render();}});
 $('#cart').addEventListener('change',function(e){var t=e.target;
@@ -1059,12 +1104,16 @@ $('#cart').addEventListener('change',function(e){var t=e.target;
   render();});
 onChip($('#custType'),function(v){S.cust=v;setOn($('#custType'),v);render();});
 
-onChip($('#cardSel'),function(v){S.card=v;render();});
+onChip($('#cardSel'),function(v){if(S.multi){if(v==='none')return;var k=S.mc.indexOf(v);if(k>=0)S.mc.splice(k,1);else S.mc.push(v);render();return;}S.card=v;render();});
+S.multi=false;S.mc=[];S.mu={};
+$('#multiOn').onchange=function(){S.multi=this.checked;if(S.multi&&!S.mc.length&&S.card!=='none')S.mc=[S.card];render();};
+$('#cardInfo').addEventListener('change',function(e){var t=e.target;if(t.dataset.mu){S.mu[t.dataset.mu]=+t.value;render();}
+  if(t.dataset.asg!=null){S.cart[+t.dataset.asg].pc=t.checked?t.dataset.card:'none';render();}});
 onChip($('#usage'),function(v){S.usage=+v;render();});
 onChip($('#cmpTerm'),function(v){S.cmpY=+v;render();});
 $('#cmpTbl').addEventListener('click',function(e){var r=e.target.closest('[data-card]');if(r){S.card=r.dataset.card;render();toast(CARDS.filter(function(c){return c.id===S.card;})[0].name+' 선택');}});
 $('#promoOn').onchange=function(e){S.promo=e.target.checked;render();};
-function reset(){S.loaded=null;if(typeof showLoaded==='function')showLoaded();S.cart=[];S.card='none';S.sel={m:null,y:null,t:null,pre:0};S.cmpY=null;$('#picked').style.display='none';$('#q').value='';S.cat=null;S.sub=null;renderCats();renderList();render();window.scrollTo(0,0);}
+function reset(){S.multi=false;S.mc=[];S.mu={};S._mc=null;S.loaded=null;if(typeof showLoaded==='function')showLoaded();S.cart=[];S.card='none';S.sel={m:null,y:null,t:null,pre:0};S.cmpY=null;$('#picked').style.display='none';$('#q').value='';S.cat=null;S.sub=null;renderCats();renderList();render();window.scrollTo(0,0);}
 $('#resetBtn').onclick=reset;$('#resetTop').onclick=reset;
 $('#barBtn').onclick=function(){$('#secSum').scrollIntoView({behavior:'smooth'});};
 $('#copyBtn').onclick=function(){
@@ -1076,7 +1125,8 @@ $('#copyBtn').onclick=function(){
   var sumP=items.reduce(function(a,i){return a+i.P;},0);
   if(sumP)t+='선납금 합계: '+won(sumP)+'\n';
   t+='월 납부액: '+won(sumMon2)+'\n';
-  if(card&&cs.tier)t+=card.name+'('+S.usage+'만↑) 적용 시 월 '+won(Math.max(0,sumMon2-f))+'\n';
+  if(S.multi&&S._mc){var MC=S._mc,ff=0;MC.per.forEach(function(p){if(!p.codes.length)return;ff+=p.f;t+=p.name+'('+p.u+'만↑): '+p.codes.join(', ')+' → 월 할인 '+won(p.f)+'\n';});t+='카드 '+MC.per.length+'장 적용 시 월 '+won(Math.max(0,sumMon2-ff))+'\n';}
+  else if(card&&cs.tier)t+=card.name+'('+S.usage+'만↑) 적용 시 월 '+won(Math.max(0,sumMon2-f))+'\n';
   t+='※ 최종 금액은 계약 시 확인';
   var ok=function(){toast('견적을 복사했어요');gsr('logEvent','copy');};
   var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){}ta.remove();};
@@ -1085,18 +1135,18 @@ $('#copyBtn').onclick=function(){
 
 function buildPrint(mode){
   var items=calcItems();
-  var card=CARDS.filter(function(c){return c.id===S.card;})[0],cs=card?cardSchedule(card,items,S.usage,S.promo):null;
+  var card=CARDS.filter(function(c){return c.id===S.card;})[0],cs=card?cardSchedule(card,items,S.usage,S.promo):null;var MC=S.multi&&S.mc.length&&S._mc?S._mc:null;if(MC){card=MC.card;cs=MC.cs;}
   var sumMon=0,sumMon2=0,sumP=0,sumDisc=0;items.forEach(function(i){sumMon+=i.mon;sumMon2+=i.mon2;sumP+=i.P;sumDisc+=i.disc;});
   var f=cs&&cs.months[0]?cs.months[0].b+cs.months[0].p:0,cardTot=cs?cs.baseSum+cs.promoSum:0,extra=cs?cs.extra:0;
   var d=new Date(),ds=d.getFullYear()+'.'+(d.getMonth()+1)+'.'+d.getDate();
   var chName='삼성닷컴';
   var rows=items.map(function(i,k){var o=INFO[i.code]||{};
     var img=o.st==='ok'&&o.img?'<img class="pimg" src="'+esc(o.img)+'" alt="">':'<div class="noimg">이미지 없음</div>';
-    return '<tr><td style="text-align:center">'+(k+1)+'</td><td style="width:96px">'+img+'</td><td><div class="pn">'+esc(o.name||(i.cat+' '+i.sub))+'</div>'+i.code+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span></td>'
+    return '<tr><td style="text-align:center">'+(k+1)+'</td><td style="width:96px">'+img+'</td><td><div class="pn">'+esc(o.name||(i.cat+' '+i.sub))+'</div>'+i.code+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span>'+(MC?'<br><span style="display:inline-block;margin-top:3px;padding:1px 6px;border:1px solid #2563eb;border-radius:4px;color:#2563eb;font-size:11px">💳 '+(function(){var p=MC.per.filter(function(x){return x.codes.indexOf(i.code)>=0;})[0];return p?p.name:'카드 미지정';})()+'</span>':'')+'</td>'
       +'<td class="r">'+won(i.mon)+'</td><td class="r">'+pct(i.rate)+'<br><span style="color:#555;font-size:11px">'+i.parts.map(function(p){return p[0].replace(' 할인','').replace('구독할인','구독')+' '+pct(p[1]);}).join('<br>')+'</span></td>'
       +'<td class="r">'+(i.P?won(i.P)+'<br><span style="color:#555;font-size:11px">('+i.pre+'%)</span>':'-')+'</td><td class="r"><b>'+won(i.mon2)+'</b></td></tr>';}).join('');
   var T=[['정상 월 구독료 합계',won(sumMon)],['정책 할인 합계','−'+won(sumDisc)],['선납금 합계 (일시불)',sumP?won(sumP):'-'],['할인 후 월 납부액',won(sumMon2)]];
-  if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push([card.once?'연회비 캐시백':'런칭 캐시백','+'+won(extra)]);}
+  if(MC){MC.per.forEach(function(p){if(p.codes.length)T.push([p.name+' ('+p.u+'만↑) 월 할인 · '+p.codes.length+'개 모델','−'+won(p.f)]);});T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push(['카드 캐시백','+'+won(extra)]);}else if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push([card.once?'연회비 캐시백':'런칭 캐시백','+'+won(extra)]);}
   var fp=0,wp=0;items.forEach(function(i){fp+=i.recPt;wp+=i.winPt;});
   if(fp)T.push([''+BN+' 지원 포인트','+'+fp.toLocaleString()+'P']);
   if(wp)T.push([''+PN+' 지원 포인트','+'+wp.toLocaleString()+'P']);
@@ -1105,7 +1155,7 @@ function buildPrint(mode){
   var allP=fp+wp+chP;
   T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(allP?' + '+allP.toLocaleString()+'P':'')]);
   var html='<div class="pq"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><small>견적일 '+ds+'</small></div>'
-    +'<div class="cond"><span>고객 유형: <b>'+({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust]||'신규')+'</b></span><span>구매 채널: <b>'+chName+'</b></span><span>제휴카드: <b>'+(card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
+    +'<div class="cond"><span>고객 유형: <b>'+({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust]||'신규')+'</b></span><span>구매 채널: <b>'+chName+'</b></span><span>제휴카드: <b>'+(MC?MC.per.map(function(p){return p.name+' · 월 '+p.u+'만원↑';}).join(' / '):card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
     +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')
     +'<div class="em"><span>'+(card&&cs.tier?'카드 적용 월 실 납부액 (첫 달)':'월 납부액')+'</span><span>'+won(Math.max(0,sumMon2-f))+'</span></div></div>'
@@ -1292,7 +1342,7 @@ function beat(){
   window.__lastBeat=Date.now();
   var info={emp:EMP,sid:SID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat};
   firstBeat=false;
-  gsr('heartbeat',info,function(r){if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);},function(){$('#liveBtn').classList.add('off');});
+  gsr('heartbeat',info,function(r){if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.nid)ntCheck(r.nid);},function(){$('#liveBtn').classList.add('off');});
 }
 var EMP=null,beatStarted=false;
 var FB={on:false,n:0,started:false};
@@ -1389,20 +1439,80 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
+function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
+  $('#ntBody').innerHTML=(preview?'<div class="warn" style="margin:0 0 8px">미리보기예요. 아직 올라가지 않았어요.</div>':'')+'<div class="nt-t">'+esc(n.title||'(제목 없음)')+'</div><div class="nt-d">'+ntFmt(n.at)+' · 관리자</div>'
+   +(n.body?'<div class="nt-b">'+esc(n.body)+'</div>':'<div style="height:10px"></div>')
+   +(n.items&&n.items.length?'<div class="nt-u"><b>📝 이번 업데이트 내용</b><ul style="margin:0;padding-left:18px">'+n.items.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>':'');
+  $('#ntOk').textContent=preview?'닫기':'✅ 확인했어요';$('#ntModal').classList.add('on');}
+function ntCheck(nid){
+  if(!nid||!EMP||NT.seen===nid||lsGet('ntAck_'+nid+'_'+EMP))return;NT.seen=nid;
+  gsr('getNotice',{},function(n){if(n&&n.id===nid)ntShow(n,false);});
+}
+$('#ntOk').onclick=function(){$('#ntModal').classList.remove('on');var n=NT.cur;if(NT.preview||!n)return;
+  lsPut('ntAck_'+n.id+'_'+EMP,1);gsr('ackNotice',{id:n.id,emp:EMP,dev:devName()});toast('확인했어요');};
+$('#ntClose').onclick=function(){$('#ntModal').classList.remove('on');};
+function admNoticeLoad(){NT.load=true;gsr('adminNotice',ADM.pw,function(r){NT.load=false;NT.info=r&&r.ok?r:{ok:false};if(ADM.tab==='notice')admRender();},function(){NT.load=false;NT.info={ok:false};if(ADM.tab==='notice')admRender();});
+  if(!ADM.stat)gsr('adminStats',ADM.pw,function(r){if(r&&r.ok){ADM.stat=r;if(ADM.tab==='notice')admRender();}});}
+function ntPicked(){var out=[];CHANGELOG.forEach(function(v,k){v[2].forEach(function(x,j){if(NT.draft.pick[k+'_'+j])out.push(x);});});return out;}
+function admNoticeHtml(){
+  var I=NT.info,h='',d=NT.draft;
+  if(!I)h+='<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  else if(!I.ok)h+='<div class="warn" style="margin-top:12px">공지 정보를 불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
+  else if(!I.notice)h+='<div class="adm-card">현재 올라간 공지가 없어요.</div>';
+  else{var n=I.notice,ack=I.acks||[],ackE={};ack.forEach(function(a){ackE[a.emp]=1;});
+    var te=(ADM.stat&&ADM.stat.todayEmps||[]).map(function(x){return x.emp;}),un=te.filter(function(e){return !ackE[e];}),base=Math.max(te.length,ack.length),pc=base?Math.round(ack.length/base*100):0;
+    h+='<div class="adm-sec">현재 공지</div><div class="adm-card"><div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:15px">'+esc(n.title)+'</b><small style="color:var(--sub)">'+ntFmt(n.at)+' 게시</small></div>'
+     +'<div style="margin-top:6px">확인 <b style="color:var(--ok)">'+ack.length+'명</b>'+(te.length?' / 오늘 접속 '+te.length+'명 ('+pc+'%)':'')+'</div><div class="ack-bar"><i style="width:'+pc+'%"></i></div>'
+     +(un.length?'<div style="font-size:12.5px;color:var(--sub)">오늘 접속했지만 아직 확인 안 함 '+un.length+'명</div>'+un.map(function(e){return '<span class="ack-chip">'+esc(e)+'</span>';}).join(''):'')
+     +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn line sm" id="ntView">공지 보기</button><button class="btn line sm" id="ntReload">새로고침</button><button class="btn del sm" id="ntDel">공지 내리기</button></div></div>';
+    h+=ack.length?'<div class="scroll" style="margin-top:8px"><table class="tbl"><tr><th>사번</th><th>기기</th><th>확인 시간</th></tr>'+ack.map(function(a){return '<tr><td><b>'+esc(a.emp)+'</b></td><td>'+esc(a.dev)+'</td><td>'+esc(a.at)+'</td></tr>';}).join('')+'</table></div>':'<div class="empty" style="margin-top:8px">아직 확인한 사람이 없어요.</div>';
+  }
+  h+='<div class="adm-sec" style="margin-top:18px">새 공지 작성</div><div class="adm-form"><div class="full"><label>제목</label><input type="text" id="ntTitle" maxlength="60" placeholder="예: v6.5 업데이트 안내" value="'+esc(d.title)+'"></div>'
+   +'<div class="full"><label>내용</label><textarea class="nt-ta" id="ntText" rows="4" maxlength="1000" placeholder="직원들에게 전할 내용을 적어주세요">'+esc(d.body)+'</textarea></div></div>';
+  h+='<div class="adm-sec" style="margin-top:12px">업데이트 내역에서 골라 넣기 <small>체크한 항목이 공지 아래에 붙어요 · '+ntPicked().length+'개 선택</small></div>';
+  var shown=NT.more?CHANGELOG:CHANGELOG.slice(0,4);
+  h+=shown.map(function(v,k){var all=v[2].every(function(x,j){return d.pick[k+'_'+j];});
+    return '<div class="cl-pick"><label class="h" style="padding:0"><input type="checkbox" data-ver="'+k+'" '+(all?'checked':'')+'>'+esc(v[0])+' <small style="color:var(--sub);font-weight:500">'+esc(v[1])+'</small></label>'
+     +v[2].map(function(x,j){return '<label><input type="checkbox" data-cl="'+k+'_'+j+'" '+(d.pick[k+'_'+j]?'checked':'')+'>'+esc(x)+'</label>';}).join('')+'</div>';}).join('');
+  if(CHANGELOG.length>4)h+='<a href="#" class="link" id="ntMore" style="display:inline-block;margin-top:8px;font-size:13px">'+(NT.more?'접기 ▴':'이전 버전 더 보기 ▾ ('+(CHANGELOG.length-4)+'개)')+'</a>';
+  h+='<div style="display:flex;gap:8px;margin-top:14px"><button class="btn line" id="ntPrev">👀 미리보기</button><button class="btn pri" id="ntPost" style="flex:1">📢 공지 올리기 (전 직원에게 표시)</button></div>'
+   +'<div class="note">공지를 올리면 직원 화면에 75초 안에(새로 열면 바로) 팝업으로 떠요. "확인했어요"를 누르면 사번과 시간이 구글 시트 \'공지확인\' 탭에 기록되고, 그 사람에게는 다시 뜨지 않아요. 새 공지를 올리면 이전 공지는 내려가요.</div>';
+  return h;
+}
+function admNoticeBind(){
+  var d=NT.draft;
+  $('#ntTitle').oninput=function(){d.title=this.value;};$('#ntText').oninput=function(){d.body=this.value;};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-ver]'),function(c){c.onchange=function(){var k=+c.dataset.ver;CHANGELOG[k][2].forEach(function(x,j){d.pick[k+'_'+j]=c.checked;});admRender();};});
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cl]'),function(c){c.onchange=function(){d.pick[c.dataset.cl]=c.checked;admRender();};});
+  var m=$('#ntMore');if(m)m.onclick=function(e){e.preventDefault();NT.more=!NT.more;admRender();};
+  $('#ntPrev').onclick=function(){ntShow({title:d.title,body:d.body,items:ntPicked(),at:Date.now()},true);};
+  $('#ntPost').onclick=function(){var items=ntPicked();if(!d.title.trim()){toast('제목을 적어주세요');$('#ntTitle').focus();return;}
+    var b=this;b.disabled=true;b.textContent='올리는 중…';
+    gsr('adminPostNotice',{pw:ADM.pw,title:d.title.trim(),body:d.body.trim(),items:items},function(r){b.disabled=false;
+      if(r&&r.ok){toast('공지를 올렸어요');NT.draft={title:'',body:'',pick:{}};admNoticeLoad();}else{toast('공지를 올리지 못했어요');admRender();}},
+      function(){toast('서버에 연결하지 못했어요');admRender();});};
+  var v=$('#ntView');if(v)v.onclick=function(){ntShow(NT.info.notice,true);};
+  var rl=$('#ntReload');if(rl)rl.onclick=function(){NT.info=null;admRender();admNoticeLoad();};
+  var dl=$('#ntDel');if(dl)dl.onclick=function(){if(!confirm('현재 공지를 내릴까요? 직원 화면에 더 이상 뜨지 않아요.'))return;gsr('adminClearNotice',{pw:ADM.pw},function(){toast('공지를 내렸어요');admNoticeLoad();});};
+}
 function admRender(){
   var t=ADM.tab||'stat',h=admTabsHtml();
   if(t==='stat')h+=ADM.stat?admStatHtml(ADM.stat):'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   else if(t==='price')h+=admPriceHtml();
   else if(t==='promo')h+=admPromoHtml();
+  else if(t==='notice')h+=admNoticeHtml();
   else if(t==='quote')h+=admQuoteHtml();
   else h+=admVerHtml();
   $('#admBody').innerHTML=h;
-  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
+  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
   if(t==='quote')admQuoteBind();
+  if(t==='notice')admNoticeBind();
 }
 $('#liveBtn').onclick=function(){$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 $('#admLink').onclick=function(e){e.preventDefault();$('#liveBtn').onclick();};
@@ -1576,15 +1686,15 @@ function fmtPhone(v){var d=String(v||'').replace(/[^0-9]/g,'').slice(0,11);
   if(d.length<4)return d;if(d.indexOf('02')===0)return d.length<=5?d.slice(0,2)+'-'+d.slice(2):d.length<=9?d.slice(0,2)+'-'+d.slice(2,d.length-4)+'-'+d.slice(-4):d.slice(0,2)+'-'+d.slice(2,6)+'-'+d.slice(6,10);
   if(d.length<=7)return d.slice(0,3)+'-'+d.slice(3);return d.slice(0,3)+'-'+d.slice(3,d.length-4)+'-'+d.slice(-4);}
 $('#qName').addEventListener('input',function(){$('#qErr').textContent='';});
-function curState(){return JSON.stringify({v:1,cust:S.cust,card:S.card,usage:S.usage,promo:S.promo,win:S.win,
-  cart:S.cart.map(function(i){return {code:i.code,y:i.y,type:i.type,pre:i.pre,win:!!i.win,cmp:i.cmp!==false};})});}
+function curState(){return JSON.stringify({v:1,cust:S.cust,card:S.card,usage:S.usage,promo:S.promo,win:S.win,multi:!!S.multi,mc:S.mc,mu:S.mu,
+  cart:S.cart.map(function(i){return {code:i.code,y:i.y,type:i.type,pre:i.pre,win:!!i.win,cmp:i.cmp!==false,pc:i.pc};})});}
 function curSummary(){var items=calcItems();
   return {items:items,summary:items.map(function(i){return i.code+'('+i.y+'년)';}).join(', '),monthly:items.reduce(function(a,i){return a+i.mon2;},0),prepay:items.reduce(function(a,i){return a+i.P;},0)};}
 function openSave(){
   if(!S.cart.length){toast('담은 모델이 없어요');return;}
   if(!EMP){openGate();return;}
   var c=curSummary();var card=CARDS.filter(function(x){return x.id===S.card;})[0];
-  $('#saveSum').innerHTML='<b>'+c.items.length+'개 모델</b> · 월 '+won(c.monthly)+(c.prepay?' · 선납 '+won(c.prepay):'')+(card?' · '+card.name:'')+'<br><span style="color:var(--sub)">'+esc(c.summary)+'</span>';
+  $('#saveSum').innerHTML='<b>'+c.items.length+'개 모델</b> · 월 '+won(c.monthly)+(c.prepay?' · 선납 '+won(c.prepay):'')+(S.multi&&S._mc?' · '+S._mc.card.name:card?' · '+card.name:'')+'<br><span style="color:var(--sub)">'+esc(c.summary)+'</span>';
   var L=S.loaded;
   $('#qName').value=L?L.name:'';$('#qMemo').value=L?L.memo:'';
   $('#qOverWrap').style.display=L?'flex':'none';$('#qOver').checked=true;$('#qErr').textContent='';
@@ -1607,8 +1717,8 @@ function loadQuote(q){
   var miss=[];
   S.cart=[];(st.cart||[]).forEach(function(c){var m=byCode[c.code];if(!m){miss.push(c.code);return;}
     var p=m[3].filter(function(p){return p[0]===c.y&&D.types[p[1]]===c.type;})[0];if(!p){miss.push(c.code);return;}
-    S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!c.win,cmp:c.cmp!==false,pre:c.pre||0});fetchInfo(m[0]);});
-  S.cust=st.cust==='new'?'combo':(st.cust||'single');S.card=st.card||'none';S.usage=st.usage||100;S.promo=st.promo!==false;S.win=!!st.win;S.cmpY=null;
+    S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!c.win,cmp:c.cmp!==false,pre:c.pre||0,pc:c.pc});fetchInfo(m[0]);});
+  S.cust=st.cust==='new'?'combo':(st.cust||'single');S.card=st.card||'none';S.usage=st.usage||100;S.promo=st.promo!==false;S.win=!!st.win;S.cmpY=null;S.multi=!!st.multi;S.mc=st.mc||[];S.mu=st.mu||{};
   setOn($('#custType'),S.cust);$('#promoOn').checked=S.promo;
   S.loaded={id:q.id,name:q.name,phone:q.phone,memo:q.memo};showLoaded();
   careClose();render();$('#secCart').scrollIntoView({behavior:'smooth'});
