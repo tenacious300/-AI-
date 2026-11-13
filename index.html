@@ -324,7 +324,7 @@ body.preview{background:#e5e7eb;padding:0}
 .care-ul>li{margin:8px 0}
 .care-ul ul{margin:3px 0 0;padding-left:16px;color:#475569}
 .care-ul ul li{margin:2px 0}
-.feel-c{color:rgba(255,255,255,.6);font-weight:400}.feel-t{color:#fb7185}#sBig.feel{color:#fb7185}.sum-l .sgrp.feel-g{background:rgba(244,63,94,.12);border:1px solid rgba(251,113,133,.55)}
+.stog.feel-b{border-color:rgba(251,113,133,.6);color:#fda4af;margin:10px 0 0}.feel-c{color:rgba(255,255,255,.6);font-weight:400}.feel-t{color:#fb7185}#sBig.feel{color:#fb7185}.sum-l .sgrp.feel-g{background:rgba(244,63,94,.12);border:1px solid rgba(251,113,133,.55)}
 .sum-l .sgrp{display:block;padding:8px 12px}
 .sgrp{background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;margin-top:10px}
 .sgrp .sg-h{font-size:12.5px;font-weight:800;opacity:.85;margin-bottom:2px}
@@ -618,8 +618,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v5.8',VER_DATE='2026.11.13';
+var VERSION='v5.9',VER_DATE='2026.11.13';
 var CHANGELOG=[
+  ['v5.9','11.13',['체감가는 기본으로 접어두고 \'🔥 체감가 보기\' 버튼으로 펼치도록 변경 (처음 화면은 카드 적용 월 실 납부액)']],
   ['v5.8','11.13',['새 버전이 올라오면 화면 위에 \'🔔 새 버전이 있어요 · 새로고침\' 안내 표시 (5분마다, 화면으로 돌아올 때 확인)']],
   ['v5.7','11.13',['구독포인트 기준을 할인 전 정상 총 구독료로 변경 (선납 여부와 관계없이 같은 포인트, 삼성닷컴 방식)']],
   ['v5.6','11.13',['예상 결과 맨 위에 🔥 월 체감가 표시: (선납 포함 총 납부액 − 카드 할인 − 포인트) ÷ 개월, 계산 과정 박스 추가','실제 매달 결제액(카드 적용)은 체감가 아래에 함께 표시','비교하기에 카드 할인 총액 · 포인트 합계 · 실부담 총액 · 월 체감가(최저 강조) 추가']],
@@ -931,8 +932,11 @@ function render(){
   var totPay=items.reduce(function(a,i){return a+i.mon2*i.N+i.P;},0);
   var feelN=n?Math.max.apply(null,items.map(function(i){return i.N;})):0,feelT=totPay-cardTot-extra-allPts;
   var feelM=feelN?Math.round(feelT/feelN/10)*10:0,sameN=items.every(function(i){return i.N===feelN;});
-  $('#sBig').classList.toggle('feel',!!n);
-  if(n){
+  $('#sBig').classList.toggle('feel',!!(n&&S.showFeel));
+  if(n&&!S.showFeel){
+    $('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';$('#sBig').textContent=won(net);
+    $('#sSub').textContent='정상 월 '+won(sumMon)+(sumP?' · 선납금 '+won(sumP)+' 별도':'');
+  }else if(n){
     $('#sCap').innerHTML='🔥 <b>월 체감가</b> <span class="feel-c">(선납·카드·포인트 모두 반영)</span>';
     $('#sBig').textContent=won(feelM);
     $('#sSub').innerHTML='정상 월 '+won(sumMon)+' 대비 <b class="feel-t">'+Math.max(0,Math.round((1-feelM/sumMon)*100))+'% ↓</b> · 실제 매달 결제 '+won(net)+(card&&cs.tier?'(카드 적용)':'');
@@ -944,7 +948,8 @@ function render(){
     var cashBen=sumDisc+cardTot+extra;
     var row=function(l,v,c){return '<div><span>'+l+'</span><span class="'+(c||'')+'">'+v+'</span></div>';};
     var yy=feelN%12?feelN+'개월':(feelN/12)+'년 · '+feelN+'개월';
-    h+='<div class="sgrp feel-g"><div class="sg-h">🧮 체감가 계산 ('+(sameN?'':'최장 ')+yy+')</div>'+row('할인 후 총 납부액 (선납금 포함)',won(totPay))
+    h+='<button class="stog feel-b" id="fTog" type="button">'+(S.showFeel?'🔥 체감가 접기 ▴':'🔥 체감가 보기 <b>'+won(feelM)+'</b> ▾')+'</button>';
+    if(S.showFeel)h+='<div class="sgrp feel-g"><div class="sg-h">🧮 체감가 계산 ('+(sameN?'':'최장 ')+yy+')</div>'+row('할인 후 총 납부액 (선납금 포함)',won(totPay))
       +(card&&cs.tier?row('카드 할인 총액'+(extra?' (캐시백 포함)':''),'−'+won(cardTot+extra),'minus'):'')
       +(allPts?row('포인트 적립 (1P = 1원)','−'+won(allPts),'minus'):'')
       +row('<b>실부담 총액</b>','<b>'+won(feelT)+'</b>')+row('<b>÷ '+feelN+'개월 = 월 체감가</b>','<b class="feel-t">'+won(feelM)+'</b>')
@@ -970,7 +975,7 @@ function render(){
     }
   }
   $('#sList').innerHTML=h;
-  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;render();};
+  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;render();};var fg=$('#fTog');if(fg)fg.onclick=function(){S.showFeel=!S.showFeel;render();};
   var ph='';
   if(n){
     var sched;
