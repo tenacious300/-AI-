@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LG 가전구독 계산기</title>
+<title>AI 구독 계산기 · LG</title>
 <meta name="description" content="LG 가전구독 월 요금 · 결합할인 · 활성화 혜택을 한 번에 계산해 보세요.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="LG 가전구독 계산기">
+<meta property="og:title" content="AI 구독 계산기 · LG">
 <meta property="og:description" content="LG 가전구독 월 요금 · 결합할인 · 활성화 혜택을 한 번에 계산해 보세요.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0f1d45">
@@ -25,12 +25,11 @@ button{-webkit-tap-highlight-color:transparent;cursor:pointer}
 .top{background:var(--navy);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:30}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .top h1{margin:0;font-size:18px;letter-spacing:-.3px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.brand{display:flex;background:rgba(255,255,255,.12);border-radius:99px;padding:3px;flex:none}
-.brand a{color:#fff;text-decoration:none;font-size:13px;font-weight:800;padding:5px 12px;border-radius:99px;opacity:.7}
-.brand a.on{background:#fff;color:var(--pri);opacity:1}
+.btag{border:0;background:#fff;color:var(--pri);font-size:12px;font-weight:800;border-radius:99px;padding:3px 10px;flex:none;white-space:nowrap}
 .top .me{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 11px;font-size:12px;flex:none}
 .top .rst{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 12px;font-size:12px;flex:none}
 @media(max-width:520px){.top h1{font-size:16px}.top .me{display:none}}
+.testbar{background:#facc15;color:#422006;text-align:center;font-size:12.5px;font-weight:800;padding:5px 10px}
 .dbar{max-width:1180px;margin:0 auto;padding:10px 16px 0;font-size:12.5px;color:var(--sub);display:flex;gap:8px;flex-wrap:wrap}
 .dbar span{background:#fff;border:1px solid var(--line);border-radius:99px;padding:3px 10px}
 .wrap{max-width:1180px;margin:0 auto;padding:12px 16px 16px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;align-items:start}
@@ -130,13 +129,13 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 <body>
 <div class="gate" id="gate"><div class="b">
   <h2 style="margin:0 0 8px">사번 확인이 필요해요</h2>
-  <p style="color:var(--sub);font-size:14px;margin:0 0 16px">삼성 계산기에서 사번을 입력하면<br>LG 계산기로 바로 돌아와요.</p>
-  <a class="btn pri wide" href="./?to=lg">사번 입력하러 가기 →</a>
+  <p style="color:var(--sub);font-size:14px;margin:0 0 16px">첫 화면에서 사번을 넣고<br><b>LG</b>를 골라 들어와 주세요.</p>
+  <a class="btn pri wide" href="./?brand=lg">사번 입력하러 가기 →</a>
 </div></div>
 
 <header class="top"><div class="top-in">
-  <div class="brand"><a href="./">삼성</a><a class="on" href="lg.html">LG</a></div>
-  <h1>LG 가전구독 계산기</h1>
+  <button class="btag" id="brandTag" title="삼성 / LG 바꾸기">LG ▾</button>
+  <h1>AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번"></button>
   <button class="rst" id="resetTop">초기화</button>
 </div></header>
@@ -199,7 +198,8 @@ function md(s){if(!s)return '';var p=s.split('-');return (+p[1])+'/'+(+p[2]);}
 var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS');}catch(e){}
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
-$('#meBtn').onclick=function(){location.href='./?to=lg';};
+$('#meBtn').onclick=$('#brandTag').onclick=function(){location.href='./?gate=1&brand=lg';};
+if(window.TEST_MODE){var tb=document.createElement('div');tb.className='testbar';tb.textContent='🧪 테스트 버전 · 실제 직원 화면에는 아직 반영되지 않았어요';document.body.insertBefore(tb,document.body.firstChild);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 
 /* ---------- 서버 API (삼성 계산기와 같은 Apps Script) ---------- */
@@ -219,7 +219,7 @@ function load(x){D=x;BY={};D.m.forEach(function(m){BY[m[0]]=m;});
   t.push('<span>모델 '+D.m.length.toLocaleString()+'개</span>');
   $('#dbar').innerHTML=t.join('');}
 function grp(c){return String(c).replace(/\s*\(.*$/,'').trim();}
-function syncData(){if(!window.API_URL)return;
+function syncData(){if(!window.API_URL||window.TEST_MODE)return;
   api('getDataVer',null,function(v){if(!v)return;var sv=v.lg||'',o=lsGet('ovr_lg'),lv=o?o.ver:'';if(sv===lv)return;
     if(!sv){lsPut('ovr_lg',null);load(REPO);refresh();return;}
     api('getData','lg',function(x){if(!x||!x.m)return;lsPut('ovr_lg',{ver:sv,x:x});load(x);refresh();toast('새 LG 단가표가 적용됐어요');});});}
@@ -382,7 +382,7 @@ function admLogin(){$('#admBody').innerHTML='<div class="hint" style="margin-top
   $('#admGo').onclick=go;$('#admPw').onkeydown=function(e){if(e.key==='Enter')go();};setTimeout(function(){$('#admPw').focus();},50);}
 function admMain(){var meta=D.meta||{},h='<div class="note" style="margin-top:0">지금 적용: <b>'+esc(meta.price||'-')+'</b><br>활성화: <b>'+esc(meta.act||'-')+'</b>'+(meta.at?'<br>올린 날: '+esc(meta.at):'')+'</div>';
   h+='<label class="file-drop">📂 LG 단가 엑셀(.xlsx) 선택<br><small>\'전자랜드_MMDD\' 단가표 시트와 \'구독 활성화 요약\' 시트가 들어 있는 파일</small><input type="file" id="admFile" accept=".xlsx,.xls" style="display:none"></label><div id="admPrev"></div>';
-  if(ADM.pw)h+='<div style="margin-top:14px;text-align:right"><button class="btn line sm" id="admReset">기본 단가(저장소)로 되돌리기</button></div>';
+  if(ADM.pw&&!window.TEST_MODE)h+='<div style="margin-top:14px;text-align:right"><button class="btn line sm" id="admReset">기본 단가(저장소)로 되돌리기</button></div>';
   $('#admBody').innerHTML=h;
   $('#admFile').onchange=function(){var f=this.files[0];if(!f)return;ADM.file=f.name;$('#admPrev').innerHTML='<div class="hint">엑셀을 읽는 중… (파일이 커서 10초쯤 걸려요)</div>';
     loadXLSX(function(){var fr=new FileReader();fr.onload=function(){setTimeout(function(){try{ADM.wb=XLSX.read(new Uint8Array(fr.result),{type:'array'});admSheets();}catch(e){$('#admPrev').innerHTML='<div class="warn">엑셀 파일을 읽지 못했어요</div>';}},30);};fr.readAsArrayBuffer(f);});};
@@ -397,7 +397,7 @@ function admParse(){var ps=$('#admPs').value,as=$('#admAs').value;$('#admRes').i
     var d=ADM.data,old=D,add=0,del=0,ch=0,ob={};old.m.forEach(function(m){ob[m[0]]=m;});
     d.m.forEach(function(m){var o=ob[m[0]];if(!o)add++;else if(minMonOf(d,m)!==minMonOf(old,o))ch++;});var nb={};d.m.forEach(function(m){nb[m[0]]=1;});old.m.forEach(function(m){if(!nb[m[0]])del++;});
     var h='<div class="note" style="margin-top:12px">모델 <b>'+d.m.length.toLocaleString()+'</b>개 · 요금 줄 '+d.rows.toLocaleString()+'개 · 활성화 '+Object.keys(d.act).length+'개<br>지금 대비: 새 모델 '+add+' · 빠진 모델 '+del+' · 최저요금 바뀐 모델 '+ch+'</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button class="btn line" id="admLocal">이 기기에서만 보기</button><button class="btn pri" id="admSave"'+(ADM.pw?'':' disabled')+'>모든 직원에게 적용</button></div><div class="hint" id="admSaveMsg"></div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button class="btn line" id="admLocal">이 기기에서만 보기</button><button class="btn pri" id="admSave"'+(ADM.pw&&!window.TEST_MODE?'':' disabled')+'>모든 직원에게 적용</button></div><div class="hint" id="admSaveMsg">'+(window.TEST_MODE?'테스트 버전에서는 \'이 기기에서만 보기\'만 할 수 있어요':'')+'</div>';
     $('#admRes').innerHTML=h;
     $('#admLocal').onclick=function(){load(ADM.data);refresh();toast('이 기기에서만 새 단가로 보여요 (새로고침하면 원래대로)');$('#admModal').classList.remove('on');};
     $('#admSave').onclick=function(){var b=this;b.disabled=true;$('#admSaveMsg').textContent='저장 중… (용량이 커서 20초쯤 걸릴 수 있어요)';

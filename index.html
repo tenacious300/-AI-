@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>삼성 AI 구독 계산기</title>
+<title>AI 구독 계산기</title>
 <!-- 링크 미리보기 (카카오톡·문자·SNS) -->
 <meta name="description" content="월 구독료 · 다품목 할인 · 제휴카드 혜택을 한 번에 계산해 보세요.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="삼성 AI 구독 계산기">
-<meta property="og:title" content="삼성 AI 구독 계산기">
+<meta property="og:site_name" content="AI 구독 계산기">
+<meta property="og:title" content="AI 구독 계산기">
 <meta property="og:description" content="월 구독료 · 다품목 할인 · 제휴카드 혜택을 한 번에 계산해 보세요.">
 <meta property="og:url" content="https://tenacious300.github.io/-AI-/">
 <meta property="og:image" content="https://tenacious300.github.io/-AI-/og-image.png">
@@ -36,10 +36,13 @@ button{-webkit-tap-highlight-color:transparent}
 .top{background:var(--navy);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:30}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .top h1{margin:0;font-size:18px;letter-spacing:-.3px;flex:1}
-.brand{display:flex;background:rgba(255,255,255,.12);border-radius:99px;padding:3px;flex:none}
-.brand a{color:#fff;text-decoration:none;font-size:13px;font-weight:800;padding:5px 12px;border-radius:99px;opacity:.7}
-.brand a.on{background:#fff;color:var(--navy);opacity:1}
-@media(max-width:520px){.top h1{display:none}.top .brand{margin-right:auto}}
+.btag{border:0;background:#fff;color:var(--navy);font-size:12px;font-weight:800;border-radius:99px;padding:3px 10px;flex:none;white-space:nowrap;cursor:pointer}
+@media(max-width:520px){.top h1{font-size:16px;white-space:nowrap}}
+.brand-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.brand-pick button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 6px;font-size:16px;font-weight:800;cursor:pointer;color:var(--sub)}
+.brand-pick button small{display:block;font-size:11.5px;font-weight:600;margin-top:2px}
+.brand-pick button.on[data-b="ss"]{border-color:#1428a0;background:#eef1fb;color:#1428a0}
+.brand-pick button.on[data-b="lg"]{border-color:#a50034;background:#fbe9ef;color:#a50034}
 .top .per{font-size:12px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:99px;white-space:nowrap}
 .top .rst{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 12px;font-size:12px;cursor:pointer}
 .wrap{max-width:1180px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;align-items:start}
@@ -527,8 +530,8 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 <header class="top"><div class="top-in">
   <button class="ver" id="verBtn" tabindex="-1"></button>
-  <div class="brand"><a class="on" href="./">삼성</a><a href="lg.html">LG</a></div>
-  <h1>삼성 AI 구독 계산기</h1>
+  <button class="btag" id="brandTag" title="삼성 / LG 바꾸기">삼성 ▾</button>
+  <h1>AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span>접속 <b id="liveN">-</b>명</button>
   <span class="per">11월 정책 · 11/1~11/30</span>
@@ -764,11 +767,12 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 <div class="gate" id="gate"><div class="gate-box">
   <img class="gate-logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBAUEBAYFBQUGBgYHCQ4JCQgICRINDQoOFRIWFhUSFBQXGiEcFxgfGRQUHScdHyIjJSUlFhwpLCgkKyEkJST/2wBDAQYGBgkICREJCREkGBQYJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCT/wAARCAD0AeADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD5UooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAopcUYoASilxRigBKKXFGKAEorotF+Hfi/xJZC+0bwzq+oWpYqJra1d0JHUZAxVq5+E3j2yt5bm58Ha9DBChkkkeycKigZJJx0AoA5Oiilx9KAEopcfT86MfT86AEopcfT86MfT86AEopcGuj0f4beMvEFhHqOk+F9Yv7OUkJPb2rujYODggetAHN0V1Go/C/wAb6PYzX+o+E9btLSBd0s81m6og9SSOBXL0AFFLijBoASilwaMGgBKKntLO5v7qK0tYJJ7iZgkcUalmdj0AA6muq/4U78RP+hJ8Q/8AgDJ/hQBx1FdFL8PPF0Grw6NL4a1dNSnQyxWjWriV0HVguMke9X/+FO/ET/oSfEP/AIAyf4UAcdRVzVtI1DQr+XT9UsriyvISBJBOhR04zyD0qnQAUUuDRg0AJRS4NGDQAlFLg0YNACUUu0+lBGKAEooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACtjwhBFdeKtHgnjWWKS9gR0YZDKZFBB9iKx60fD2ox6Rr2nahMrNHa3MU7KvUhXDED8qAP0XHwo8Bf9CdoP8A4BR/4Uv/AAqfwF/0J2g/+AUf+FeUH9tHwMCQNI14j18uP/4qtTwz+1X4c8Ya3a6Lovh7xBdXt04REEaYHqxIbgDqTQB6H/wqfwF/0J2g/wDgFH/hR/wqfwF/0J2g/wDgFH/hXVKSVBIwfSuW+Inj2L4daGdbutJ1HULKNsTtZKrNCOzMCR8vv2oAT/hU/gL/AKE7Qf8AwCj/AMK8N/a38EeGfDfgDTbrRtB03Tp31NI2ktrdY2KmNzgkduB+Vbf/AA2j4H/6BGvf9+4//iqg+J0etftJ/DLTJ/Bmilbf+0POD3t0kbEI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AooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKACiiigAooooAKKKKAP/9k=" alt="전자랜드">
-  <h2>삼성 AI 구독 계산기</h2>
-  <p>사번을 입력하고 들어가 주세요</p>
+  <h2>AI 구독 계산기</h2>
+  <p>사번을 입력하고 계산기를 골라 주세요</p>
   <input type="text" id="empIn" placeholder="사번 입력" autocomplete="off" maxlength="15" inputmode="numeric" enterkeyhint="go">
   <div class="err" id="empErr"></div>
   <div class="emp-warn">⚠️ 비정상 사번 입력 시 추후 접속 불가</div>
+  <div class="brand-pick" id="brandPick"><button data-b="ss">삼성<small>AI 구독</small></button><button data-b="lg">LG<small>가전구독</small></button></div>
   <button class="btn pri block" id="empGo">입장하기</button>
   <label><input type="checkbox" id="empKeep" checked> 이 기기에서 사번 기억하기</label>
   <div class="ft">사번은 접속 현황 확인용으로만 사용돼요.</div>
@@ -849,7 +853,7 @@ var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
 var VERSION='v8.19',VER_DATE='2026.11.14';
 var CHANGELOG=[
-  ['v8.19','11.14',['🆕 LG 가전구독 계산기 추가: 화면 위 [삼성 | LG] 버튼으로 전환 (전자랜드 단가표 + 주간 활성화 반영)']],
+  ['v8.19','11.14',['🆕 AI 구독 계산기로 이름 변경 · 사번 입력 화면에서 삼성 / LG 계산기 선택','🆕 LG 가전구독 계산기 추가 (전자랜드 단가표 + 주간 활성화 반영) · 위쪽 브랜드 표시를 누르면 다시 고를 수 있어요']],
   ['v8.18','11.14',['관리자 공지: \'아직 확인 안 함\' 목록을 접어 두고 필요할 때만 펼쳐 보기']],
   ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
@@ -1658,7 +1662,7 @@ $('#verClose').onclick=function(){$('#verModal').classList.remove('on');};
 $('#verModal').addEventListener('click',function(e){if(e.target.id==='verModal')$('#verModal').classList.remove('on');});
 renderVer();
 var HAS_GS=!!(window.google&&google.script&&google.script.run);
-function gsr(fn,arg,cb,err){if(!HAS_GS){if(err)err();return;}var r=google.script.run.withSuccessHandler(cb||function(){}).withFailureHandler(err||function(){});r[fn](arg);}
+function gsr(fn,arg,cb,err){if(!HAS_GS){if(err)err();return;}if(window.TEST_MODE&&/^admin(Save|Reset|Post|Edit|Clear|Block|Unblock|SendMsg|SetMinVer|RosterMode|RosterEx|DeleteQuote)/.test(fn)){toast('테스트 버전에서는 실제 데이터를 바꾸지 않아요');if(err)err();return;}var r=google.script.run.withSuccessHandler(cb||function(){}).withFailureHandler(err||function(){});r[fn](arg);}
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 function devName(){var u=navigator.userAgent;var m=/Mobi|Android|iPhone|iPad/i.test(u)?'모바일':'PC';
   var b=/SamsungBrowser/.test(u)?'삼성인터넷':/Whale/.test(u)?'웨일':/Edg/.test(u)?'엣지':/KAKAOTALK/i.test(u)?'카카오톡':/NAVER/.test(u)?'네이버앱':/CriOS|Chrome/.test(u)?'크롬':/Safari/.test(u)?'사파리':'기타';return m+' · '+b;}
@@ -1749,7 +1753,8 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
-  if(/[?&]to=lg/.test(location.search)){location.replace('lg.html');return;}
+  if(BRAND==='lg'){location.replace('lg.html');return;}
+  if(location.search)try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
   toast(v+' 님, 환영해요');BOX=[];boxLoaded=false;boxBadge();}
@@ -1758,8 +1763,13 @@ $('#empIn').addEventListener('keydown',function(e){if(e.key==='Enter')enter();})
 $('#meBtn').onclick=openGate;
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
-if(EMP&&!CUST&&/[?&]to=lg/.test(location.search)&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
-if(CUST){}else if(EMP)startBeat();else openGate();
+var BRAND=(function(){var m=/[?&]brand=(ss|lg)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
+function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':'삼성 계산기로 입장하기';}
+$('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
+$('#brandTag').onclick=openGate;
+var FORCE_GATE=/[?&]gate=1/.test(location.search);
+if(EMP&&!CUST&&!FORCE_GATE&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
+if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
 var ADM={pw:null,t:null};
 function admLogin(){
   $('#admBody').innerHTML='<div style="font-size:13px;color:var(--sub);margin-top:4px">관리자 비밀번호를 입력하면 상세 정보를 볼 수 있어요.</div>'
