@@ -492,7 +492,7 @@ body.preview{background:#e5e7eb;padding:0}
 .nt2-ok{margin-top:8px;font-size:13px;color:#047857;background:#e3f6ee;border-radius:10px;padding:10px}
 .nt2-det{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:0 12px;background:#fff}
 .nt2-det summary{list-style:none;display:flex;gap:8px;align-items:baseline;padding:11px 0;font-weight:800;font-size:14px;cursor:pointer}.nt2-det summary::-webkit-details-marker{display:none}
-.nt2-det summary b{color:var(--ok)}.nt2-det summary i{margin-left:auto;font-style:normal;color:var(--sub)}.nt2-det[open] summary i{transform:rotate(180deg)}
+.nt2-det summary b{color:var(--ok)}.nt2-det.un summary b{color:#c2410c}.nt2-det summary small{font-weight:500;color:var(--sub);font-size:12px}.nt2-det summary i{margin-left:auto;font-style:normal;color:var(--sub)}.nt2-det[open] summary i{transform:rotate(180deg)}
 .nt2-list>div{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:8px 0;border-top:1px dashed var(--line);font-size:13px}
 .nt2-list>div span{grid-column:1;color:var(--sub);font-size:12px}.nt2-list>div time{grid-column:2;grid-row:1/span 2;align-self:center;color:var(--sub);font-size:12px}.nt2-list small{color:var(--sub)}
 .nt2-l{display:flex;justify-content:space-between;font-size:12.5px;font-weight:700;color:var(--sub);margin-bottom:4px}.nt2-l small{font-weight:500}
@@ -842,8 +842,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.17',VER_DATE='2026.11.14';
+var VERSION='v8.18',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.18','11.14',['관리자 공지: \'아직 확인 안 함\' 목록을 접어 두고 필요할 때만 펼쳐 보기']],
   ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
   ['v8.15','11.14',['관리자 📈 기능 사용: 📅 날짜별 보기 추가 (날짜 선택 · 전날/다음날 · 최근 14일 막대 그래프, 전날 대비 변화)']],
@@ -2016,8 +2017,8 @@ function admNoticeHtml(){
       +(n.items&&n.items.length?'<div class="nt2-items">📝 업데이트 내용 '+n.items.length+'개 첨부</div>':'')
       +'<div class="nt2-stat"><div class="nt2-pc"><b>'+pc+'</b>%</div><div style="flex:1"><div>확인 <b style="color:var(--ok)">'+ack.length+'명</b>'+(te.length?' <span style="color:var(--sub)">/ 오늘 접속 '+te.length+'명</span>':'')+'</div><div class="ack-bar"><i style="width:'+pc+'%"></i></div></div></div>'
       +'<div class="nt2-act"><button class="btn line sm" id="ntView">👀 공지 보기</button><button class="btn line sm" id="ntEdit">✏️ 수정</button><button class="btn line sm" id="ntReload">↻</button><button class="btn del sm" id="ntDel" style="margin-left:auto">공지 내리기</button></div></div>';
-    h+='<div class="nt2-sec"><span>⏳ 아직 확인 안 함</span><b>'+un.length+'명</b><small>오늘 접속한 직원 기준</small></div>'
-      +(un.length?'<div class="nt2-chips">'+un.map(function(e){return '<span class="nt2-chip">'+who(e)+'</span>';}).join('')+'</div>':'<div class="nt2-ok">🎉 오늘 접속한 직원 모두 확인했어요</div>');
+    h+=un.length?'<details class="nt2-det un"'+(NT.unOpen?' open':'')+'><summary><span>⏳ 아직 확인 안 함</span><b>'+un.length+'명</b><small>오늘 접속한 직원 기준</small><i>▾</i></summary><div class="nt2-chips" style="padding-bottom:12px">'+un.map(function(e){return '<span class="nt2-chip">'+who(e)+'</span>';}).join('')+'</div></details>'
+      :'<div class="nt2-ok" style="margin-top:14px">🎉 오늘 접속한 직원 모두 확인했어요</div>';
     h+='<details class="nt2-det"'+(NT.ackOpen?' open':'')+'><summary><span>✅ 확인한 직원</span><b>'+ack.length+'명</b><i>▾</i></summary>'
       +(ack.length?'<div class="nt2-list">'+ack.map(function(a){return '<div>'+who(a.emp)+'<span>'+esc(a.dev)+'</span><time>'+esc(a.at)+'</time></div>';}).join('')+'</div>':'<div class="empty" style="margin:8px 0 0">아직 확인한 사람이 없어요.</div>')+'</details>';
     return h;
@@ -2040,7 +2041,7 @@ function admNoticeHtml(){
 function admNoticeBind(){
   var d=NT.draft;
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-ntseg]'),function(b){b.onclick=function(){NT.seg=b.dataset.ntseg;admRender();};});
-  var dt=document.querySelector('#admBody .nt2-det');if(dt)dt.ontoggle=function(){NT.ackOpen=dt.open;};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody .nt2-det'),function(dt){dt.ontoggle=function(){if(dt.classList.contains('un'))NT.unOpen=dt.open;else NT.ackOpen=dt.open;};});
   var tt=$('#ntTitle');if(tt){tt.oninput=function(){d.title=this.value;$('#ntTc').textContent=this.value.length+'/60';};$('#ntText').oninput=function(){d.body=this.value;$('#ntBc').textContent=this.value.length+'/1000';};}
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-ver]'),function(c){c.onchange=function(){var k=+c.dataset.ver;CHANGELOG[k][2].forEach(function(x,j){d.pick[k+'_'+j]=c.checked;});admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cl]'),function(c){c.onchange=function(){d.pick[c.dataset.cl]=c.checked;admRender();};});
