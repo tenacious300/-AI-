@@ -36,6 +36,10 @@ button{-webkit-tap-highlight-color:transparent}
 .top{background:var(--navy);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:30}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .top h1{margin:0;font-size:18px;letter-spacing:-.3px;flex:1}
+.brand{display:flex;background:rgba(255,255,255,.12);border-radius:99px;padding:3px;flex:none}
+.brand a{color:#fff;text-decoration:none;font-size:13px;font-weight:800;padding:5px 12px;border-radius:99px;opacity:.7}
+.brand a.on{background:#fff;color:var(--navy);opacity:1}
+@media(max-width:520px){.top h1{display:none}.top .brand{margin-right:auto}}
 .top .per{font-size:12px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:99px;white-space:nowrap}
 .top .rst{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 12px;font-size:12px;cursor:pointer}
 .wrap{max-width:1180px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;align-items:start}
@@ -523,6 +527,7 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 <header class="top"><div class="top-in">
   <button class="ver" id="verBtn" tabindex="-1"></button>
+  <div class="brand"><a class="on" href="./">삼성</a><a href="lg.html">LG</a></div>
   <h1>삼성 AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span>접속 <b id="liveN">-</b>명</button>
@@ -842,8 +847,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.18',VER_DATE='2026.11.14';
+var VERSION='v8.19',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.19','11.14',['🆕 LG 가전구독 계산기 추가: 화면 위 [삼성 | LG] 버튼으로 전환 (전자랜드 단가표 + 주간 활성화 반영)']],
   ['v8.18','11.14',['관리자 공지: \'아직 확인 안 함\' 목록을 접어 두고 필요할 때만 펼쳐 보기']],
   ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
@@ -1742,7 +1748,8 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
     gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
-  lsPut('calcLoginAt',Date.now());
+  lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
+  if(/[?&]to=lg/.test(location.search)){location.replace('lg.html');return;}
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
   toast(v+' 님, 환영해요');BOX=[];boxLoaded=false;boxBadge();}
@@ -1751,6 +1758,7 @@ $('#empIn').addEventListener('keydown',function(e){if(e.key==='Enter')enter();})
 $('#meBtn').onclick=openGate;
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
+if(EMP&&!CUST&&/[?&]to=lg/.test(location.search)&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
 if(CUST){}else if(EMP)startBeat();else openGate();
 var ADM={pw:null,t:null};
 function admLogin(){

@@ -30,6 +30,7 @@ var API_FUNCS = {
   adminStats: adminStats, adminDataInfo: adminDataInfo, adminSaveData: adminSaveData, adminResetData: adminResetData,
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
+  getDataVer: getDataVer,
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
@@ -48,19 +49,24 @@ function doPost(e) {
 }
 
 /** 업로드된 단가표/판촉 원본 (깃허브 화면이 받아감) */
+var DATA_KINDS = ['price', 'promo', 'lg'];   // lg = LG 가전구독 단가표+활성화
+function kindOf_(k) { return DATA_KINDS.indexOf(k) >= 0 ? k : 'price'; }
 function getData(kind) {
-  kind = kind === 'promo' ? 'promo' : 'price';
+  kind = kindOf_(kind);
   var t = readDataFile_(kind);
   return t ? JSON.parse(t) : null;
 }
+
+/** LG 계산기 등에서 데이터 버전만 확인 */
+function getDataVer() { return dataVersion_(); }
 
 /** 업로드 데이터 버전 (변경 시각) — 없으면 '' */
 function dataVersion_() {
   var cache = CacheService.getScriptCache();
   var c = cache.get('dv');
   if (c) return JSON.parse(c);
-  var dv = { price: '', promo: '' }, folder = dataFolder_();
-  ['price', 'promo'].forEach(function (k) {
+  var dv = { price: '', promo: '', lg: '' }, folder = dataFolder_();
+  DATA_KINDS.forEach(function (k) {
     var it = folder.getFilesByName(k + '.json');
     if (it.hasNext()) dv[k] = String(it.next().getLastUpdated().getTime());
   });
@@ -459,7 +465,7 @@ function readDataFile_(kind) {
 
 function clearDataCache_(kind) {
   var cache = CacheService.getScriptCache();
-  var keys = [kind + '_n', 'dv']; for (var i = 0; i < 30; i++) keys.push(kind + '_' + i);
+  var keys = [kind + '_n', 'dv']; for (var i = 0; i < 60; i++) keys.push(kind + '_' + i);
   cache.removeAll(keys);
 }
 
@@ -501,7 +507,7 @@ function adminDataInfo(pw) {
   var it = dataFolder_().getFiles();
   while (it.hasNext()) {
     var f = it.next(), n = f.getName();
-    if (/^(price|promo)_\d+\.json$/.test(n)) info.history.push({ name: n, at: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd HH:mm') });
+    if (/^(price|promo|lg)_\d+\.json$/.test(n)) info.history.push({ name: n, at: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd HH:mm') });
   }
   info.history.sort(function (a, b) { return a.name < b.name ? 1 : -1; });
   info.history = info.history.slice(0, 20);
@@ -512,7 +518,7 @@ function adminDataInfo(pw) {
 function adminSaveData(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
-  var kind = arg.kind === 'promo' ? 'promo' : 'price';
+  var kind = kindOf_(arg.kind);
   var txt = String(arg.payload || '');
   try { JSON.parse(txt); } catch (e) { return { ok: false, msg: '데이터 형식이 올바르지 않아요.' }; }
   var lock = LockService.getScriptLock();
@@ -534,7 +540,7 @@ function adminSaveData(arg) {
 function adminResetData(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false };
-  var kind = arg.kind === 'promo' ? 'promo' : 'price';
+  var kind = kindOf_(arg.kind);
   var folder = dataFolder_();
   var stamp = Utilities.formatDate(new Date(), TZ, 'yyyyMMddHHmm');
   var it = folder.getFilesByName(kind + '.json');
