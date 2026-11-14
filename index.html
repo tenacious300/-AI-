@@ -1459,7 +1459,8 @@ function buildPrint(mode){
   return Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]);
 }
 function staffLine(){var me=meGet();if(!EMP)return '';
-  return '<div class="staff">담당 <b>'+(me&&me.br?esc(me.br)+' ':'')+(me&&me.name?esc(me.name):'')+(me&&me.rank?' '+esc(me.rank):'')+'</b> <small>사번 '+esc(EMP)+'</small></div>';}
+  if(me&&me.name)return '<div class="staff">담당 <b>'+(me.br?esc(me.br)+' ':'')+esc(me.name)+'</b></div>';
+  return '<div class="staff">담당 <small>사번 '+esc(EMP)+'</small></div>';}
 function printQuote(mode){
   if(!S.cart.length){toast('담은 모델이 없어요');return;}
   toast('제품 이미지를 불러오는 중…');
