@@ -842,8 +842,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.15',VER_DATE='2026.11.14';
+var VERSION='v8.16',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
   ['v8.15','11.14',['관리자 📈 기능 사용: 📅 날짜별 보기 추가 (날짜 선택 · 전날/다음날 · 최근 14일 막대 그래프, 전날 대비 변화)']],
   ['v8.14','11.14',['관리자 📢 공지 수정: 올린 공지의 제목 · 내용 · 첨부 항목 수정, 다시 알리기 선택 가능']],
   ['v8.13','11.14',['관리자 📢 공지 화면 정리: 현재 공지 / 새 공지 작성 탭 분리, 확인율 크게 표시, 미확인 직원 이름 · 지점 표시, 업데이트 내역 버전별 접기']],
@@ -932,14 +933,11 @@ var INFO={};
 function findModel(o,code,depth){if(!o||typeof o!=='object'||depth>4)return null;
   if(!Array.isArray(o)&&(String(o.modelCode||'').toUpperCase()===code||String(o.id||'').toUpperCase()===code))return o;
   for(var k in o){if(k==='embedding_text')continue;var v=o[k];if(v&&typeof v==='object'){var r=findModel(v,code,depth+1);if(r)return r;}}return null;}
-/* 삼성닷컴 검색 결과에서 삼성닷컴 기준가(가장 높은 판매가 항목)를 찾음 - 월 구독료 · 포인트 · 할인액 항목은 제외 */
-function listPrice(x){var best=null;
-  var walk=function(o,d){if(!o||typeof o!=='object'||d>3)return;for(var k in o){if(k==='embedding_text')continue;var v=o[k];
-    if(v&&typeof v==='object'){walk(v,d+1);continue;}
-    if(!/price|prc/i.test(k)||/month|mon$|subs|rent|instal|inst|point|pnt|benefit|discount|dc|coupon|save|unit|per|min|ship|deliv|fee|care|tax/i.test(k))continue;
-    var n=typeof v==='number'?v:+String(v).replace(/[^0-9.]/g,'');if(!n||n<50000||n>100000000)continue;
-    if(!best||n>best.v)best={v:Math.round(n),k:k};}};
-  walk(x,0);return best;}
+/* 삼성닷컴 기준가 = 검색 결과의 msrp_price (상품 페이지 '기준가'와 같은 값). 구독 상품 정보(subscribeInfo)의 금액은 쓰지 않음 */
+function listPrice(x,code){var num=function(v){var n=typeof v==='number'?v:+String(v==null?'':v).replace(/[^0-9]/g,'');return n>0?Math.round(n):0;};
+  var v=num(x&&x.msrp_price);if(v)return {v:v,k:'msrp_price'};
+  var g=(x&&x.groupedProductList||[]).filter(function(o){return String(o.modelCode||'').toUpperCase()===code;})[0];
+  v=num(g&&g.msrp_price);return v?{v:v,k:'grouped.msrp_price'}:null;}
 function lumpAuto(){var ch=false;S.cart.forEach(function(c){if(c.lumpManual)return;var o=INFO[c.code];var v=o&&o.st==='ok'&&o.lp>=c.mon*10?o.lp:0;if(v&&c.lump!==v){c.lump=v;ch=true;}});return ch;}
 function fetchInfo(code,force){
   if(INFO[code]&&INFO[code].p&&!(force&&INFO[code].st==='fail'))return INFO[code].p;
@@ -951,7 +949,7 @@ function fetchInfo(code,force){
     rs.forEach(function(a){if(x)return;if(String(a.modelCode||'').toUpperCase()===CU||String(a.id||'').toUpperCase()===CU){x=a;return;}var g=findModel(a,CU,0);if(g)x=Object.assign({},a,g);});
     if(!x)return 'none';
     var im=x.images||{};var img=(im.largeImage&&im.largeImage.url)||im.laImage||(im.smallImage&&im.smallImage.url)||im.smImage||'';
-    var lp=listPrice(x);
+    var lp=listPrice(x,CU);
     return {name:x.name||x.productDisplayName||'',img:img,stock:x.stockStatus||'',pdp:x.pdpURL||'',lp:lp?lp.v:0,lpk:lp?lp.k:''};
   }).catch(function(){return 'timeout';});
   o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';}else o.st=(v==='none'?'none':'fail');render();return o;});
