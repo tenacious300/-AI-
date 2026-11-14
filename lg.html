@@ -448,7 +448,7 @@ function renderCart(){var L=cartCalc();if(L.length!==CART.length){CART=L.map(fun
   $('#benefit').innerHTML=h;bindCard();
   if(!L.length){$('#cart').innerHTML='<div class="empty">모델을 골라 <b>견적에 담기</b>를 눌러주세요</div>';$('#sum').innerHTML='';mbar(0,0);return;}
   $('#cart').innerHTML=L.map(function(x,i){if(x.lump)return '<div class="ci"><span class="tg lump">일시불</span><b>'+esc(x.it.code)+'</b><div class="o">'+esc(x.cat)+'</div><div class="m">'+won(x.lump)+'</div><button class="x" data-i="'+i+'" aria-label="빼기">✕</button></div>';
-    var c=x.c,r=c.r;return '<div class="ci"><span class="tg">'+(isSb(r)?'소상공인':'구독')+'</span><b>'+esc(x.it.code)+'</b><div class="o">'+esc(x.cat)+' · '+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+' · '+esc(bdName(r))+(c.pre?' · 선납 '+(c.pre/10000)+'만':'')+'</div><div class="m">월 '+won(c.monP)+(c.hm?' <small>(처음 '+c.hm+'개월 '+won(c.halfP)+')</small>':'')+'</div><button class="x" data-i="'+i+'" aria-label="빼기">✕</button></div>';}).join('');
+    var c=x.c,r=c.r;return '<div class="ci"><span class="tg">'+(isSb(r)?'소상공인':'구독')+'</span><b>'+esc(x.it.code)+'</b><div class="o">'+esc(x.cat)+' · '+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+' · '+esc(bdName(r))+(c.pre?' · 선납 '+won(c.pre):'')+'</div><div class="m">월 '+won(c.monP)+(c.hm?' <small>(처음 '+c.hm+'개월 '+won(c.halfP)+')</small>':'')+'</div><button class="x" data-i="'+i+'" aria-label="빼기">✕</button></div>';}).join('');
   var gs=uniq(S.map(function(x){return grp(x.cat);})),noBd=S.filter(function(x){return D.bd[x.c.r[R.bd]]==='결합없음';}).length;
   var s='<div class="sum">';
   if(S.length)s+='<div class="r"><span>구독 총 금액'+(cd?' (카드 할인 반영)':'')+'</span><span>'+won(tot)+'</span></div>';
