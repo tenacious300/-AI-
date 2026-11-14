@@ -199,7 +199,7 @@ body.preview{background:#e5e7eb;padding:0}
 }
 .ver{background:#fff;color:var(--navy);border:0;border-radius:8px;padding:3px 9px;font-size:12px;font-weight:800;cursor:default;white-space:nowrap}
 .ver.adm{cursor:pointer}.ver.adm:hover{background:#dbe5ff}
-@media(max-width:480px){.top .per{display:none}.top h1{font-size:15px}.top .rst{display:none}.top-in{gap:6px}.me,.live{padding:4px 8px}}
+@media(max-width:480px){.me.lo .t,.live .lt{display:none}.top .per{display:none}.top h1{font-size:15px}.top .rst{display:none}.top-in{gap:6px}.me,.live{padding:4px 8px}}
 .ver .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;margin-left:5px;vertical-align:middle}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:60px 14px 20px;overflow:auto}
 .modal.on{display:flex}
@@ -239,6 +239,7 @@ body.preview{background:#e5e7eb;padding:0}
 .gate-box label{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--sub);margin-top:12px;cursor:pointer}
 .gate-box .ft{margin-top:16px;font-size:11.5px;color:#94a3b8}
 .me{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.me.lo{border-color:rgba(252,165,165,.55);color:#fecaca}.me.lo:hover{background:rgba(239,68,68,.18)}
 .top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
 .catgrid .chip{width:100%;text-align:center;padding:9px 6px;white-space:normal;word-break:keep-all;line-height:1.25}
@@ -526,7 +527,8 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="ver" id="verBtn" tabindex="-1"></button>
   <h1>삼성 AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번 변경"></button>
-  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span>접속 <b id="liveN">-</b>명</button>
+  <button class="me lo" id="logoutBtn" title="로그아웃" style="display:none"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
+  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
   <span class="per">11월 정책 · 11/1~11/30</span>
   <button class="rst" id="resetTop">초기화</button>
 </div></header>
@@ -843,8 +845,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.19',VER_DATE='2026.11.14';
+var VERSION='v8.20',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.20','11.14',['상단에 ⏻ 로그아웃 버튼 추가 (이 기기에 저장된 사번 삭제 → 입장 화면)','휴대폰 상단 접속자 표시를 \'● 4명\'으로 줄임']],
   ['v8.19','11.14',['🖨 인쇄 오류 수정: 인쇄 설정에서 \'배경 그래픽\'을 꺼도 체감가 · 일시불 비교의 색 칸과 글자가 흐려지지 않게']],
   ['v8.18','11.14',['관리자 공지: \'아직 확인 안 함\' 목록을 접어 두고 필요할 때만 펼쳐 보기']],
   ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
@@ -1734,7 +1737,7 @@ function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 /* 관리자가 ⚡ 강제 업데이트를 누르면, 그 전에 로그인한 화면은 로그아웃 → 사번 다시 입력 (담은 모델은 유지) */
 function forceRelog(){if(!EMP)return;EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}lsPut('calcMe',null);lsPut('calcLoginAt',null);showMe();openGate();
   $('#empErr').innerHTML='<span style="color:#1d4ed8">🔄 새 버전 '+VERSION+'으로 업데이트되어 로그아웃됐어요.<br>사번을 다시 입력해 주세요.</span>';}
-function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';}
+function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';var lb=document.getElementById('logoutBtn');if(lb)lb.style.display=EMP?'':'none';}
 function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function rosterReject(){$('#empErr').innerHTML='등록되지 않은 사번이에요.<br><small style="font-weight:500">명부에 없는 사번은 입장할 수 없어요. 소속 관리자에게 등록을 요청해 주세요.</small>';$('#empIn').style.borderColor='#dc2626';}
 function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();
@@ -1751,6 +1754,9 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
 $('#empGo').onclick=enter;
 $('#empIn').addEventListener('keydown',function(e){if(e.key==='Enter')enter();});
 $('#meBtn').onclick=openGate;
+/* 로그아웃: 이 기기에 저장된 사번을 지우고 입장 화면으로 (담은 모델은 그대로) */
+$('#logoutBtn').onclick=function(){if(!EMP)return;var e=EMP;EMP=null;try{localStorage.removeItem('calcEmp');}catch(x){}lsPut('calcMe',null);lsPut('calcLoginAt',null);
+  BOX=[];boxLoaded=false;boxBadge();showMe();openGate();$('#empErr').innerHTML='<span style="color:#1d4ed8">'+esc(e)+' 님, 로그아웃했어요.</span>';fuLog('logout');};
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
 if(CUST){}else if(EMP)startBeat();else openGate();
