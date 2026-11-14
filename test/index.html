@@ -205,10 +205,11 @@ body.preview{background:#e5e7eb;padding:0}
   body>*:not(#printArea){display:none!important}
   #printArea{display:block!important;box-shadow:none!important;margin:0!important;padding:0!important;max-width:none!important}
   .pq tr{break-inside:avoid}
+  .pq,.pq *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 .ver{background:#fff;color:var(--navy);border:0;border-radius:8px;padding:3px 9px;font-size:12px;font-weight:800;cursor:default;white-space:nowrap}
 .ver.adm{cursor:pointer}.ver.adm:hover{background:#dbe5ff}
-@media(max-width:480px){.top .per{display:none}.top h1{font-size:15px}.top .rst{display:none}.top-in{gap:6px}.me,.live{padding:4px 8px}}
+@media(max-width:480px){.me.lo .t,.live .lt{display:none}.top .per{display:none}.top h1{font-size:15px}.top .rst{display:none}.top-in{gap:6px}.me,.live{padding:4px 8px}}
 .ver .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ef4444;margin-left:5px;vertical-align:middle}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:60px 14px 20px;overflow:auto}
 .modal.on{display:flex}
@@ -248,6 +249,7 @@ body.preview{background:#e5e7eb;padding:0}
 .gate-box label{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--sub);margin-top:12px;cursor:pointer}
 .gate-box .ft{margin-top:16px;font-size:11.5px;color:#94a3b8}
 .me{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.me.lo{border-color:rgba(252,165,165,.55);color:#fecaca}.me.lo:hover{background:rgba(239,68,68,.18)}
 .top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
 .catgrid .chip{width:100%;text-align:center;padding:9px 6px;white-space:normal;word-break:keep-all;line-height:1.25}
@@ -536,7 +538,8 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="btag" id="brandTag" title="삼성 / LG 바꾸기">삼성 ▾</button>
   <h1>AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번 변경"></button>
-  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span>접속 <b id="liveN">-</b>명</button>
+  <button class="me lo" id="logoutBtn" title="로그아웃" style="display:none"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
+  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
   <span class="per">11월 정책 · 11/1~11/30</span>
   <button class="rst" id="resetTop">초기화</button>
 </div></header>
@@ -854,9 +857,11 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.19',VER_DATE='2026.11.14';
+var VERSION='v8.21',VER_DATE='2026.11.15';
 var CHANGELOG=[
-  ['v8.19','11.14',['🆕 AI 구독 계산기로 이름 변경 · 사번 입력 화면에서 삼성 / LG 계산기 선택','🆕 LG 가전구독 계산기 추가 (전자랜드 단가표 + 주간 활성화 반영) · 위쪽 브랜드 표시를 누르면 다시 고를 수 있어요']],
+  ['v8.21','11.15',['🆕 AI 구독 계산기로 이름 변경 · 사번 입력 화면에서 삼성 / LG 계산기 선택','🆕 LG 가전구독 계산기 추가 (전자랜드 단가표 + 주간 활성화 반영) · 위쪽 브랜드 표시를 누르면 다시 고를 수 있어요','⚙ 관리자 모드에 🅻 LG 단가표 탭 추가 (LG 계산기 아래 ⚙ 관리자에서도 바로 열림)']],
+  ['v8.20','11.14',['상단에 ⏻ 로그아웃 버튼 추가 (이 기기에 저장된 사번 삭제 → 입장 화면)','휴대폰 상단 접속자 표시를 \'● 4명\'으로 줄임']],
+  ['v8.19','11.14',['🖨 인쇄 오류 수정: 인쇄 설정에서 \'배경 그래픽\'을 꺼도 체감가 · 일시불 비교의 색 칸과 글자가 흐려지지 않게']],
   ['v8.18','11.14',['관리자 공지: \'아직 확인 안 함\' 목록을 접어 두고 필요할 때만 펼쳐 보기']],
   ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
@@ -1745,7 +1750,7 @@ function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 /* 관리자가 ⚡ 강제 업데이트를 누르면, 그 전에 로그인한 화면은 로그아웃 → 사번 다시 입력 (담은 모델은 유지) */
 function forceRelog(){if(!EMP)return;EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}lsPut('calcMe',null);lsPut('calcLoginAt',null);showMe();openGate();
   $('#empErr').innerHTML='<span style="color:#1d4ed8">🔄 새 버전 '+VERSION+'으로 업데이트되어 로그아웃됐어요.<br>사번을 다시 입력해 주세요.</span>';}
-function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';}
+function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';var lb=document.getElementById('logoutBtn');if(lb)lb.style.display=EMP?'':'none';}
 function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function rosterReject(){$('#empErr').innerHTML='등록되지 않은 사번이에요.<br><small style="font-weight:500">명부에 없는 사번은 입장할 수 없어요. 소속 관리자에게 등록을 요청해 주세요.</small>';$('#empIn').style.borderColor='#dc2626';}
 function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();
@@ -1756,7 +1761,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
-  if(BRAND==='lg'){location.replace('lg.html');return;}
+  if(BRAND==='lg'&&!ADMIN_LG){location.replace('lg.html');return;}
   if(location.search)try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
@@ -1764,14 +1769,17 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
 $('#empGo').onclick=enter;
 $('#empIn').addEventListener('keydown',function(e){if(e.key==='Enter')enter();});
 $('#meBtn').onclick=openGate;
+/* 로그아웃: 이 기기에 저장된 사번을 지우고 입장 화면으로 (담은 모델은 그대로) */
+$('#logoutBtn').onclick=function(){if(!EMP)return;var e=EMP;EMP=null;try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(x){}lsPut('calcMe',null);lsPut('calcLoginAt',null);
+  BOX=[];boxLoaded=false;boxBadge();showMe();openGate();$('#empErr').innerHTML='<span style="color:#1d4ed8">'+esc(e)+' 님, 로그아웃했어요.</span>';fuLog('logout');};
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
 var BRAND=(function(){var m=/[?&]brand=(ss|lg)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
 $('#brandTag').onclick=openGate;
-var FORCE_GATE=/[?&]gate=1/.test(location.search);
-if(EMP&&!CUST&&!FORCE_GATE&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
+var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search);
+if(EMP&&!CUST&&!FORCE_GATE&&!ADMIN_LG&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
 var ADM={pw:null,t:null};
 function admLogin(){
@@ -1779,7 +1787,7 @@ function admLogin(){
     +'<div class="adm-pw"><input type="password" id="admPw" inputmode="numeric" placeholder="관리자 비밀번호" autocomplete="off"><button class="btn pri" id="admGo">확인</button></div><div id="admMsg" class="hint"></div>';
   var go=function(){var pw=$('#admPw').value.trim();if(!pw)return;$('#admMsg').textContent='확인 중…';
     if(!HAS_GS){$('#admMsg').textContent='배포된 웹앱 화면에서만 확인할 수 있어요.';return;}
-    gsr('adminStats',pw,function(r){if(!r||!r.ok){$('#admMsg').textContent='비밀번호가 맞지 않아요.';return;}ADM.pw=pw;ADM.tab='stat';rsLoad();admShow(r);admInfo();renderVer();
+    gsr('adminStats',pw,function(r){if(!r||!r.ok){$('#admMsg').textContent='비밀번호가 맞지 않아요.';return;}ADM.pw=pw;ADM.tab=ADMIN_LG?'lg':'stat';rsLoad();admShow(r);if(ADMIN_LG)admRender();admInfo();renderVer();
       clearInterval(ADM.t);ADM.t=setInterval(admRefresh,30000);},function(){$('#admMsg').textContent='서버에 연결하지 못했어요.';});};
   $('#admGo').onclick=go;$('#admPw').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
   setTimeout(function(){$('#admPw').focus();},50);
@@ -1998,7 +2006,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가표'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
@@ -2091,6 +2099,7 @@ function admRender(){
   if(t==='stat')h+=ADM.stat?admStatHtml(ADM.stat):'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   else if(t==='price')h+=admPriceHtml();
   else if(t==='promo')h+=admPromoHtml();
+  else if(t==='lg')h+=admLgHtml();
   else if(t==='roster')h+=admRosterHtml();
   else if(t==='best')h+=admBestHtml();
   else if(t==='feat')h+=admFeatHtml();
@@ -2102,6 +2111,7 @@ function admRender(){
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
+  if(t==='lg')admLgBind();
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
   if(t==='roster'&&RS.data&&RS.data.ok)admRosterBind();
@@ -2269,7 +2279,9 @@ $('#blkGo').onclick=function(){var x=BLK.x,m=BLK.mode,bt=this;bt.disabled=true;
     if(r&&r.ok){$('#blkModal').classList.remove('on');toast('차단했어요 · 75초 안에 해당 화면이 잠겨요');admRefresh();}else toast('차단하지 못했어요');},function(){bt.disabled=false;toast('서버에 연결하지 못했어요');});};
 $('#liveBtn').onclick=function(){$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 $('#admLink').onclick=function(e){e.preventDefault();$('#liveBtn').onclick();};
-$('#admClose').onclick=function(){$('#admModal').classList.remove('on');};
+$('#admClose').onclick=function(){$('#admModal').classList.remove('on');if(ADMIN_LG)location.href='lg.html';};
+/* LG 계산기에서 ⚙ 관리자로 들어온 경우: 관리자 모드를 LG 단가표 탭으로 바로 열기 */
+if(ADMIN_LG){ADM.tab='lg';setTimeout(function(){$('#admModal').classList.add('on');if(ADM.pw){admRender();admInfo();}else admLogin();},300);}
 $('#admModal').addEventListener('click',function(e){if(e.target.id==='admModal')$('#admModal').classList.remove('on');});
 var XLSX_URL='https:\/\/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 function loadXLSX(cb){if(window.XLSX){cb();return;}var sc=document.createElement('script');sc.src=XLSX_URL;sc.onload=cb;sc.onerror=function(){toast('엑셀 읽기 도구를 불러오지 못했어요');};document.head.appendChild(sc);}
@@ -2389,6 +2401,54 @@ function admPromoHtml(){
   h+='<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn line sm" id="poEnd2">판촉 종료 (숨기기)</button>'+(pm?'<button class="btn line sm" id="poReset">기본값으로 되돌리기</button>':'')+'</div>';
   h+='<div class="note">적용하면 상단 배너 · 오른쪽 대상 모델 메뉴 · 담은 모델의 판촉 체크 · 포인트 계산에 바로 반영돼요. 종료일이 지나면 배너는 자동으로 숨겨져요.</div>';
   return h;
+}
+/* ---------- LG 단가표 (전자랜드 단가표 + 구독 활성화 요약) ---------- */
+var LGA={wb:null,file:'',res:null,err:'',ps:'',as:'',cur:null};
+function lgLoadLibs(cb){var need=[];if(!window.LGParse)need.push('lg-parse.js');if(!window.LG_DATA)need.push('data/lg.js');
+  var n=need.length;if(!n){cb();return;}need.forEach(function(src){var sc=document.createElement('script');sc.src=src+'?d='+Date.now();sc.onload=sc.onerror=function(){if(--n===0)cb();};document.head.appendChild(sc);});}
+function lgCur(){var i=ADM.info;return i&&i.lg?i.lg:(window.LG_DATA?window.LG_DATA.meta:null);}
+function lgMin(d,m){var b=null;m[2].forEach(function(r){if(d.bd[r[4]]==='소상공인')return;if(b===null||r[10]<b)b=r[10];});return b;}
+function lgDiff(nd){var od=window.LG_DATA;if(!od)return null;var ob={},nb={},o={newM:[],remM:[],up:0,down:0,same:0};od.m.forEach(function(m){ob[m[0]]=m;});
+  nd.m.forEach(function(m){nb[m[0]]=1;var x=ob[m[0]];if(!x){o.newM.push(m[0]);return;}var a=lgMin(od,x),b=lgMin(nd,m);if(a===b)o.same++;else if(b>a)o.up++;else o.down++;});
+  od.m.forEach(function(m){if(!nb[m[0]])o.remM.push(m[0]);});return o;}
+function admLgHtml(){
+  var i=ADM.info,up=i&&i.lg,cur=lgCur(),u=LGA;
+  var h='<div class="adm-card">현재 적용: <b>'+(cur?esc(cur.price||'-'):'불러오는 중…')+'</b>'+(cur&&cur.act?' + <b>'+esc(cur.act)+'</b>':'')
+    +(up?'<br>'+esc(up.file||'')+' · '+esc(up.at||'')+' 업로드'+(up.models?' · 모델 '+up.models+'개 · 요금 '+up.rows+'행 · 활성화 '+up.acts+'개':''):'<br>기본 단가표 (저장소)'+(window.LG_DATA?' · 모델 '+window.LG_DATA.m.length+'개':''))+'</div>';
+  h+='<label class="file-drop">📂 LG 단가 엑셀(.xlsx) 선택<br><small>\'전자랜드_MMDD\' 단가표 시트 + \'구독 활성화 요약(\'YY년 M월 N주말)\' 시트가 들어 있는 파일</small><input type="file" id="lgFile" accept=".xlsx,.xls"></label>';
+  if(u.err)h+='<div class="warn">'+esc(u.err)+'</div>';
+  if(u.wb){var ch=LGParse.sheetChoices(u.wb.SheetNames);
+    var sel=function(id,list,def,none){return '<select id="'+id+'">'+(none?'<option value="">(활성화 없음)</option>':'')+list.map(function(n){return '<option'+(n===def?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>';};
+    h+='<div class="adm-form"><div class="full"><label>단가표 시트</label>'+sel('lgPs',ch.price,u.ps||ch.priceDef)+'</div><div class="full"><label>활성화 요약 시트</label>'+sel('lgAs',ch.act,u.as!==''&&u.as!=null?u.as:ch.actDef,true)+'</div></div>';}
+  if(u.res){var r=u.res,d=lgDiff(r),cats={};r.m.forEach(function(m){var c=String(r.cats[m[1]]).replace(/\s*\(.*$/,'');cats[c]=(cats[c]||0)+1;});
+    h+='<div class="adm-card"><b>'+esc(u.file)+'</b> 읽기 완료<br>단가표 <b>'+esc(r.meta.price)+'</b> · 활성화 <b>'+esc(r.meta.act||'없음')+'</b><br>모델 <b>'+r.m.length+'</b>개 · 요금 <b>'+r.rows+'</b>행 · 활성화 <b>'+Object.keys(r.act).length+'</b>개'
+      +'<br>품목: '+Object.keys(cats).map(function(c){return esc(c)+' '+cats[c];}).join(' · ')
+      +(d?'<br><br><b>현재 단가표와 비교</b><br>신규 모델 '+d.newM.length+'개 · 없어진 모델 '+d.remM.length+'개<br>최저 월요금 인상 '+d.up+' · 인하 '+d.down+' · 동일 '+d.same
+        +(d.newM.length?'<br><small>신규: '+esc(d.newM.slice(0,12).join(', '))+(d.newM.length>12?' 외':'')+'</small>':'')
+        +(d.remM.length?'<br><small>없어짐: '+esc(d.remM.slice(0,12).join(', '))+(d.remM.length>12?' 외':'')+'</small>':''):'')+'</div>'
+      +'<button class="btn pri block" id="lgApply" style="margin-top:12px">이 단가표로 적용하기</button>';}
+  if(up)h+='<button class="btn line sm" id="lgReset" style="margin-top:12px">기본 단가표로 되돌리기</button>';
+  h+='<div class="note">적용하면 LG 계산기에 바로 반영되고, 다른 사용자는 새로 접속(새로고침)할 때부터 적용돼요. 이전 단가표는 드라이브 \'삼성AI구독_데이터\' 폴더에 백업돼요.</div>';
+  if(ADMIN_LG)h+='<a class="btn line sm" href="lg.html" style="margin-top:10px;display:inline-flex;text-decoration:none">← LG 계산기로 돌아가기</a>';
+  return h;
+}
+function admLgBind(){
+  if(!window.LGParse||!window.LG_DATA){lgLoadLibs(function(){if(ADM.tab==='lg')admRender();});}
+  var parse=function(){var u=LGA;u.ps=$('#lgPs')?$('#lgPs').value:u.ps;u.as=$('#lgAs')?$('#lgAs').value:u.as;
+    try{u.res=LGParse.build(XLSX,u.wb,u.ps,u.as);u.res.meta.file=u.file;u.err='';}catch(e){u.res=null;u.err=String(e.message||e);}admRender();};
+  var f=$('#lgFile');if(f)f.onchange=function(){var file=f.files[0];if(!file)return;toast('엑셀을 읽는 중… (10초쯤 걸려요)');
+    lgLoadLibs(function(){readXlsxFile(file,function(wb){var ch=LGParse.sheetChoices(wb.SheetNames);LGA={wb:wb,file:file.name,res:null,err:ch.price.length?'':'\'전자랜드_MMDD\' 이름의 단가표 시트를 찾지 못했어요',ps:ch.priceDef,as:ch.actDef};
+      if(ch.price.length)setTimeout(parse,30);else admRender();});});};
+  ['lgPs','lgAs'].forEach(function(id){var el=$('#'+id);if(el)el.onchange=function(){toast('다시 읽는 중…');setTimeout(parse,30);};});
+  var a=$('#lgApply');if(a)a.onclick=function(){var r=LGA.res;if(!r)return;
+    var now=new Date(),at=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2)+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+    r.meta.at=at;r.meta.file=LGA.file;r.meta.models=r.m.length;r.meta.rows=r.rows;r.meta.acts=Object.keys(r.act).length;r.meta.by=EMP||'';
+    a.disabled=true;a.textContent='저장 중… (20초쯤 걸릴 수 있어요)';
+    gsr('adminSaveData',{pw:ADM.pw,kind:'lg',payload:JSON.stringify(r)},function(x){
+      if(!x||!x.ok){a.disabled=false;a.textContent='이 단가표로 적용하기';toast((x&&x.msg)||'저장하지 못했어요');return;}
+      window.LG_DATA=r;LGA={wb:null,file:'',res:null,err:''};toast('LG 단가표를 적용했어요 ('+r.m.length+'개 모델)');admInfo();},function(){a.disabled=false;a.textContent='이 단가표로 적용하기';toast('서버에 연결하지 못했어요');});};
+  var rs=$('#lgReset');if(rs)rs.onclick=function(){if(rs.dataset.s!=='1'){rs.dataset.s='1';rs.textContent='한 번 더 누르면 되돌려요';return;}
+    gsr('adminResetData',{pw:ADM.pw,kind:'lg'},function(){toast('LG 기본 단가표로 되돌렸어요');window.LG_DATA=null;lgLoadLibs(function(){});admInfo();});};
 }
 function admBind(t){
   if(t==='price'){
