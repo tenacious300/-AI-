@@ -2557,7 +2557,7 @@ $('#xBody').addEventListener('click',function(e){var a=e.target.closest('[data-x
   var d=e.target.closest('[data-xdel]');if(d){XC.list.splice(+d.dataset.xdel,1);xSave();xRender();return;}
   if(e.target.id==='xClear'){XC.list=[];xSave();xRender();}});
 $('#xBody').addEventListener('change',function(e){var t=e.target;if(t.dataset.xy){XC.list[+t.dataset.xy].y=+t.value;XC.list[+t.dataset.xy].t=null;xSave();xRender();}else if(t.dataset.xt){var xi=XC.list[+t.dataset.xt];xi.t=xi.b==='ss'?+t.value:t.value;xSave();xRender();}});
-if(XCMP){window.XCMP_BACK=BRAND==='lg';setTimeout(function(){if(EMP)xOpen();},400);}
+if(XCMP){window.XCMP_BACK=/[?&]from=lg/.test(location.search);setTimeout(function(){if(EMP)xOpen();},400);}
 var BOX=[],boxLoaded=false;
 var LS_KEY='calcQuotes';
 function lsAll(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return [];}}
