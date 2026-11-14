@@ -16,7 +16,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+      # Apps Script 프로젝트 ID (편집기 주소의 projects/ 뒤 값)
+      SCRIPT_ID: ${{ secrets.SCRIPT_ID || '1nvjl51wxEkcu83QoU-mY5JWTkCFYnMIU8vbgL4r8NWndWJhwcowFOFcU' }}
       # config.js의 API_URL에 들어 있는 배포 ID (주소가 바뀌지 않게 같은 배포를 갱신)
       DEPLOYMENT_ID: ${{ vars.DEPLOYMENT_ID || 'AKfycbxmG2sVrm-A433WA5NT1trOr4ueQCPpzrV-Xqo12R0v1g8lFY_XKyuN9HTKBH2vaj7G' }}
     steps:
@@ -33,21 +34,26 @@ jobs:
         env:
           CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
         run: |
-          if [ -z "$CLASPRC_JSON" ] || [ -z "$SCRIPT_ID" ]; then
-            echo "::error::저장소 Settings > Secrets 에 CLASPRC_JSON 과 SCRIPT_ID 를 먼저 등록해 주세요."
+          if [ -z "$CLASPRC_JSON" ]; then
+            echo "::error::저장소 Settings > Secrets 에 CLASPRC_JSON 을 먼저 등록해 주세요."
             exit 1
           fi
           printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
-          printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > apps-script/.clasp.json
+          printf '{"scriptId":"%s","rootDir":".","fileExtension":"gs"}' "$SCRIPT_ID" > apps-script/.clasp.json
 
-      - name: appsscript.json 없으면 현재 프로젝트에서 가져오기
+      # 저장소에 없는 파일(Index.html, Data.html, appsscript.json 등)은 지금 프로젝트 것을 그대로 유지
+      # (push는 프로젝트 전체를 덮어쓰기 때문에, 빠진 파일이 지워지지 않게 미리 채워둠)
+      - name: 저장소에 없는 파일은 현재 프로젝트에서 가져오기
         working-directory: apps-script
         run: |
-          if [ ! -f appsscript.json ]; then
-            mkdir -p /tmp/pull && cp .clasp.json /tmp/pull/
-            (cd /tmp/pull && clasp pull)
-            cp /tmp/pull/appsscript.json ./appsscript.json
-          fi
+          mkdir -p /tmp/pull && cp .clasp.json /tmp/pull/
+          (cd /tmp/pull && clasp pull)
+          for f in /tmp/pull/*; do
+            n=$(basename "$f")
+            [ "$n" = ".clasp.json" ] && continue
+            [ -e "$n" ] || cp "$f" "./$n"
+          done
+          ls -la
 
       - name: 코드 올리기 (clasp push)
         working-directory: apps-script

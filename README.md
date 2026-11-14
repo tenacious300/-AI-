@@ -17,4 +17,4 @@
 
 ## Apps Script 자동 배포
 - `apps-script/Code.gs`를 수정해서 main에 올리면 GitHub Actions가 Apps Script에 반영하고, 기존 웹앱 주소(`/exec`)를 유지한 채 새 버전으로 배포합니다.
-- 처음 한 번 저장소 Settings > Secrets and variables > Actions 에 `CLASPRC_JSON`, `SCRIPT_ID` 등록이 필요합니다.
+- 처음 한 번 저장소 Settings > Secrets and variables > Actions 에 `CLASPRC_JSON` 등록, Apps Script 스크립트 속성에 `ADMIN_PW` 등록이 필요합니다.
