@@ -662,8 +662,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v6.7',VER_DATE='2026.11.13';
+var VERSION='v6.8',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v6.8','11.14',['할인 금액을 항목별(구독료 · 다품목 · 추가 · 선납)로 각각 100원 단위 올림 후 합산 (삼성닷컴 주문서와 동일, 할인 2개 이상일 때 월 10~110원 차이 해소)']],
   ['v6.7','11.13',['사번은 숫자 6자리만 입장 가능','관리자 접속 현황에 기기 번호 · 🚫 차단 버튼 · 차단 목록(해제) 추가, 의심 사번(같은 숫자 반복 · 연속 숫자) 표시','차단된 사번 · 기기는 75초 안에 \'접속이 제한되었어요\' 화면으로 잠김']],
   ['v6.6','11.13',['입장 화면 입장하기 버튼 위에 \'비정상 사번 입력 시 추후 접속 불가\' 안내 문구 추가']],
   ['v6.5','11.13',['📢 공지사항: 관리자가 공지를 쓰고 업데이트 내역을 골라 올리면 직원 화면에 팝업 표시','직원이 \'확인했어요\'를 누르면 사번 · 시간 기록, 관리자 📢 공지 탭에서 확인 · 미확인 현황 확인']],
@@ -813,7 +814,7 @@ function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('on');cl
 function calcPlan(mon,y,parts,pre){
   var N=y*12,ex=mon/1.1;
   var rate=parts.reduce(function(a,p){return a+p[1];},0);
-  var dAmt=Math.ceil(ex*rate/100-1e-9)*100;
+  var dAmt=parts.reduce(function(a,p){return a+Math.ceil(ex*p[1]/100-1e-9)*100;},0);
   var preEx=pre?Math.round(ex*pre/100/100)*100:0;
   var mon1=mon-r10(dAmt*1.1),mon2=mon1-r10(preEx*1.1);
   return {N:N,T:mon*N,rate:rate,mon1:mon1,mon2:mon2,TD:mon1*N,P:r10(preEx*N*1.1)};
