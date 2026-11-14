@@ -781,8 +781,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.5',VER_DATE='2026.11.14';
+var VERSION='v8.6',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.6','11.14',['일시불 비교 안내 문구 통일: \'구독은 무상수리연장 서비스가 들어있습니다\' (화면 · 캡처 · 인쇄)']],
   ['v8.5','11.14',['🖨 견적 인쇄에 ⚖️ 일시불 비교 견적서 추가: 모델별 일시불 구매가 · 구독 총 납부액 표와 카드 · 포인트 반영 실부담 비교']],
   ['v8.4','11.14',['💬 카톡으로 견적 보내기(링크) 기능 삭제 · 견적 전달은 📸 견적 캡처 이미지로']],
   ['v8.3','11.14',['📷 라벨 찍어서 찾기 기능 삭제','고객용 견적 링크 화면에서 \'삼성닷컴에서 보기\' 버튼 삭제']],
@@ -1220,7 +1221,7 @@ function render(){
       if(LP.ok){
         h+=row('일시불 구매가 합계',won(LP.L))+row('구독 총 실부담 <small style="opacity:.7">(카드·포인트 반영)</small>',won(feelT))
           +'<div class="tot"><span>'+(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요')+'</span><span>'+won(Math.abs(LP.diff))+' <small style="opacity:.7">(월 '+won(Math.abs(LP.diffM))+')</small></span></div>'
-          +'<div class="snote" style="display:block">구독은 '+esc(LP.care)+'가 포함돼 있고, 일시불은 카드 무이자 · 매장 할인 · 사은품 등이 따로 있을 수 있어요. 단순 금액 비교예요.</div>';
+          +'<div class="snote" style="display:block">구독은 무상수리연장 서비스가 들어있습니다. 일시불은 카드 무이자 · 매장 할인 · 사은품 등이 따로 있을 수 있어요. 단순 금액 비교예요.</div>';
       }else h+='<div class="snote" style="display:block">담은 모델의 구매가를 모두 입력하면 비교돼요 ('+LP.have+' / '+items.length+')</div>';
       h+='</div>';
     }
@@ -1397,7 +1398,7 @@ function buildPrint(mode){
       +(allP?lr('− 포인트 <small>(1P=1원 환산)</small>','−'+won(allP)):'')
       +'</div><div>'+lr('<b>= 구독 총 실부담</b>','<b>'+won(lT)+'</b>')+lr('일시불 구매가 합계',won(LP.L))+'</div></div>'
       +lr(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요',won(Math.abs(LP.diff))+' <small>(월 '+won(Math.abs(LP.diffM))+')</small>','fb')
-      +'<small>※ 구독에는 '+esc(LP.care)+'가 포함되어 있습니다. 일시불 구매는 카드 무이자 할부 · 매장 할인 · 사은품 등 조건이 따로 있을 수 있어 단순 금액 비교입니다. 일시불 구매가는 상담 시 입력한 금액입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
+      +'<small>※ 구독은 무상수리연장 서비스가 들어있습니다. 일시불 구매는 카드 무이자 할부 · 매장 할인 · 사은품 등 조건이 따로 있을 수 있어 단순 금액 비교입니다. 일시불 구매가는 상담 시 입력한 금액입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');
   }
   $('#printArea').innerHTML=html;
@@ -2031,7 +2032,7 @@ function capDraw(){var d=capData();if(!d)return null;var W=760,P=40,F='"Malgun G
   if(d.LP&&d.LP.ok){y+=30;R(P-12,y,W-P*2+24,186,18,'#f0f9ff');var y0=y;y+=40;T('⚖️ 일시불 구매와 비교 ('+d.N+'개월)',P+4,y,23,'#0369a1',800);
     y+=40;T('일시불 구매가 합계',P+4,y,23,'#334155');T(won(d.LP.L),W-P-4,y,23,'#334155',400,'right');
     y+=36;T('구독 총 실부담 (카드·포인트 반영)',P+4,y,23,'#334155');T(won(d.feelT),W-P-4,y,23,'#334155',400,'right');
-    y+=40;T(d.LP.diff>0?'구독이 더 들어요 (케어 포함)':'구독이 덜 들어요',P+4,y,25,'#0f172a',800);T(won(Math.abs(d.LP.diff)),W-P-4,y,25,'#0f172a',800,'right');y=y0+186;}
+    y+=40;T(d.LP.diff>0?'구독이 더 들어요 (무상수리연장 포함)':'구독이 덜 들어요',P+4,y,25,'#0f172a',800);T(won(Math.abs(d.LP.diff)),W-P-4,y,25,'#0f172a',800,'right');y=y0+186;}
   y+=36;x.fillStyle='#f8fafc';x.fillRect(0,y,W,90);
   T('전자랜드 여수본점'+(EMP?' · 담당 '+EMP:''),P,y+52,20,'#94a3b8');T('※ 참고용 견적 · 최종 금액은 계약 시 확인',W-P,y+52,20,'#94a3b8',400,'right');
   var FH=y+90,o=document.createElement('canvas');o.width=W;o.height=FH;var ox=o.getContext('2d');
