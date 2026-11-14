@@ -1213,7 +1213,7 @@ function cmpRender(){
    +'</table></div>';}
 function cmpOpen(){drawerOpen('#cmpDrawer');cmpRender();}
 $('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
-$('#xTab').onclick=function(){location.href='./?xcmp=1';};
+$('#xTab').onclick=function(){location.href='./?xcmp=1&from=lg';};
 var winCat=null;
 function winList(){var o={};Object.keys(D.act||{}).forEach(function(c){var m=BY[c];if(!m)return;var a=actInfo(c),k=a.mid+(a.live?a.add:0);if(!a.type||!k)return;var g=grp(D.cats[m[1]]);(o[g]=o[g]||[]).push([m,a,k]);});return o;}
 function winRender(){var W=winList(),cats=GROUPS.filter(function(g){return W[g];});
