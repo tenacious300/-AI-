@@ -195,6 +195,7 @@ body.preview{background:#e5e7eb;padding:0}
   body>*:not(#printArea){display:none!important}
   #printArea{display:block!important;box-shadow:none!important;margin:0!important;padding:0!important;max-width:none!important}
   .pq tr{break-inside:avoid}
+  .pq,.pq *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 }
 .ver{background:#fff;color:var(--navy);border:0;border-radius:8px;padding:3px 9px;font-size:12px;font-weight:800;cursor:default;white-space:nowrap}
 .ver.adm{cursor:pointer}.ver.adm:hover{background:#dbe5ff}
@@ -842,8 +843,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.18',VER_DATE='2026.11.14';
+var VERSION='v8.19',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.19','11.14',['🖨 인쇄 오류 수정: 인쇄 설정에서 \'배경 그래픽\'을 꺼도 체감가 · 일시불 비교의 색 칸과 글자가 흐려지지 않게']],
   ['v8.18','11.14',['관리자 공지: \'아직 확인 안 함\' 목록을 접어 두고 필요할 때만 펼쳐 보기']],
   ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
