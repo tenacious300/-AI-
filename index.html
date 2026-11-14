@@ -428,8 +428,6 @@ body.preview{background:#e5e7eb;padding:0}
 .rrow .rc.f{border-color:#fde68a;background:#fffbeb}
 .fav{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;white-space:nowrap}
 .fav.on{background:#fffbeb;border-color:#fcd34d;color:#b45309;font-weight:800}
-.kk-btn{grid-column:1/-1;background:#fee500!important;color:#191919!important;border:0!important;font-weight:800}
-.kk-btn small{font-weight:500;opacity:.75;margin-left:4px}
 .lumpin{display:flex;align-items:center;gap:8px;padding:4px 0}
 .lumpin span{flex:1;font-size:13px;opacity:.85}
 .lumpin input{width:130px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 8px;font-size:14px;text-align:right}
@@ -445,14 +443,6 @@ body.preview{background:#e5e7eb;padding:0}
 .instbar{position:fixed;left:12px;right:12px;bottom:84px;z-index:47;background:#0f1d45;color:#fff;border-radius:14px;padding:10px 12px;display:none;align-items:center;gap:8px;font-size:13.5px;box-shadow:0 10px 30px rgba(15,29,69,.35);max-width:520px;margin:0 auto}
 .instbar.on{display:flex}.instbar button{border:0;border-radius:8px;padding:7px 12px;font-weight:800;cursor:pointer}
 .instbar .ok{background:#fff;color:#0f1d45;margin-left:auto}.instbar .x{background:none;color:#fff;opacity:.7;padding:7px 6px}
-#custView{display:none;position:fixed;inset:0;z-index:10000;background:#eef2f8;overflow:auto;-webkit-overflow-scrolling:touch}
-#custView.on{display:block}
-#custView .cw{max-width:560px;margin:0 auto;padding:18px 14px 40px}
-#custView .ch{font-size:13px;color:#475569;margin:0 4px 10px;line-height:1.5}
-#custView img{width:100%;height:auto;border-radius:20px;box-shadow:0 10px 30px rgba(15,23,42,.15);display:block}
-#custView .cn{font-size:12px;color:#64748b;margin:12px 4px 0;line-height:1.6}
-#custView .cb2{display:flex;gap:8px;margin-top:14px}
-#custView .cb2 a,#custView .cb2 button{flex:1;text-align:center;text-decoration:none;border-radius:12px;padding:12px;font-weight:800;font-size:14px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer}
 </style>
 </head>
 <body>
@@ -625,7 +615,6 @@ body.preview{background:#e5e7eb;padding:0}
     <div class="sum-l" id="sList"></div>
     <div id="sPhase"></div>
     <div class="btns">
-      <button class="btn sm kk-btn" id="shareBtn">💬 카톡으로 견적 보내기 <small>고객이 링크로 바로 확인</small></button>
       <button class="btn sm cap-btn" id="capBtn">📸 견적 캡처 <small>이미지 저장 · 카톡 전송</small></button>
       <button class="btn sm" id="saveBtn">💾 견적 보관</button>
       <button class="btn sm" id="printBtn">🖨 견적 인쇄</button>
@@ -644,7 +633,6 @@ body.preview{background:#e5e7eb;padding:0}
 </div>
 <div class="toast" id="toast"></div>
 <div class="instbar" id="instBar">📲 <span>홈 화면에 <b>구독계산기</b> 앱 설치</span><button class="ok" id="instGo">설치</button><button class="x" id="instX" aria-label="닫기">✕</button></div>
-<div id="custView"></div>
 <div class="newver" id="newVer">🔔 새 버전이 있어요 <small id="newVerNo" style="opacity:.7;font-weight:500"></small><button id="newVerGo" type="button">새로고침</button><button class="nx" id="newVerX" type="button" aria-label="닫기">✕</button></div>
 <div id="printArea"></div>
 <button class="fab" id="boxFab">📁 보관함<span class="bd" id="boxBd" style="display:none"></span></button>
@@ -771,8 +759,7 @@ document.write('<script src="data/price.js?d='+day+'"><\/script><script src="dat
 </script>
 <script>
 (function(){
-var CUST=(function(){var m=/^#q=([A-Za-z0-9_\-]+)/.exec(location.hash||'');if(!m)return null;
-  try{var b=m[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';return JSON.parse(decodeURIComponent(escape(atob(b))));}catch(e){return null;}})();
+var CUST=null;
 var D=cleanData(window.SUB_DATA);
 function cleanData(d){
   var NO_VS=['정수기','식기세척기','청소기','에어드레서','공기청정기'];var cis=NO_VS.map(function(c){return d.cats.indexOf(c);}).filter(function(i){return i>=0;});if(!cis.length)return d;
@@ -784,10 +771,11 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.3',VER_DATE='2026.11.14';
+var VERSION='v8.4',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.4','11.14',['💬 카톡으로 견적 보내기(링크) 기능 삭제 · 견적 전달은 📸 견적 캡처 이미지로']],
   ['v8.3','11.14',['📷 라벨 찍어서 찾기 기능 삭제','고객용 견적 링크 화면에서 \'삼성닷컴에서 보기\' 버튼 삭제']],
-  ['v8.2','11.14',['💬 카톡으로 견적 보내기: 고객이 링크를 누르면 휴대폰에서 견적 카드를 바로 확인','⚖️ 일시불 구매와 비교 (선택): 구매가를 입력하면 구독 총 실부담과 비교, 켰을 때만 캡처 · 링크에 포함','📞 보관함 다시 연락할 날 + 오늘 연락할 고객 알림 · ⚠️ 보관 후 단가 변경 표시','⭐ 즐겨찾기 · 🕘 최근 본 모델','📲 홈 화면에 앱처럼 설치 (인터넷이 끊겨도 마지막 단가로 계산)']],
+  ['v8.2','11.14',['⚖️ 일시불 구매와 비교 (선택): 구매가를 입력하면 구독 총 실부담과 비교, 켰을 때만 캡처에 포함','📞 보관함 다시 연락할 날 + 오늘 연락할 고객 알림 · ⚠️ 보관 후 단가 변경 표시','⭐ 즐겨찾기 · 🕘 최근 본 모델','📲 홈 화면에 앱처럼 설치 (인터넷이 끊겨도 마지막 단가로 계산)']],
   ['v8.1','11.14',['접속 현황 정확도 개선: 5분 넘게 조작이 없으면 \'자리 비움(○분째 조작 없음)\', 30분 넘으면 💤 표시 + 접속자 수에서 제외 (PC에서 창만 켜 둔 경우)','⚠️ 한 사번이 여러 기기에서 동시 접속하면 빨간 경고','지금 접속 지점 필터 · 💬 직원에게 개별 메시지 보내기','오늘 기록에 실사용 시간 · 모델 조회 · 담기 · 캡처 횟수 추가 (CSV 포함)']],
   ['v8.0','11.14',['접속 현황 ⚠️ 명부 외 탭: 명부에 없는 사번의 지금 접속 · 오늘 입장 거부(시도 횟수) · 접속 중 돌려보낸 기록을 따로 표시, 바로 허용 · 차단 · 기한 연장','입장 방식(명부 사번만 / 누구나 입장)은 그대로 전환 가능']],
   ['v7.9','11.14',['👥 직원 명부: 관리자가 명부 엑셀을 올리면 바로 반영 (신규 · 제외 · 변경 비교 후 적용, 드라이브에만 저장)','🔐 입장 방식: 명부 사번만 입장 / 누구나 입장(표시만) 전환, ✅ 예외 허용(기한 설정) 목록','접속 현황에 이름 · 소속 · 직책 · 구분 표시, 명부에 없는 사번 표시 · 바로 허용, 🏬 지점별 접속 현황, 오늘 기록 이름 검색 · 소속 필터']],
@@ -2353,30 +2341,6 @@ $('#pkFav').onclick=function(){var m=S.sel.m;if(!m)return;var F=favList(),i=F.in
 $('#recentRow').addEventListener('click',function(e){var b=e.target.closest('[data-rv]');if(!b)return;$('#q').value=b.dataset.rv;pickModel(b.dataset.rv);});
 $('#qCallQ').addEventListener('click',function(e){var b=e.target.closest('[data-cd]');if(!b)return;var v='';if(b.dataset.cd){var d=new Date(Date.now()+b.dataset.cd*86400000);v=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}$('#qCall').value=v;});
 if(EMP&&!CUST)setTimeout(boxRefresh,1500);
-
-/* ---- 💬 카톡 견적 링크 ---- */
-function shareUrl(){var st=JSON.parse(curState());st.feel=!!S.showFeel;
-  var pl={s:st,e:EMP||'',n:S.loaded?S.loaded.name:'',d:todayStr()};
-  var b=btoa(unescape(encodeURIComponent(JSON.stringify(pl)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-  return location.origin+location.pathname+'#q='+b;}
-$('#shareBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}fuLog('share');markAct('견적 공유');
-  var u=shareUrl(),c=curSummary(),nm=S.loaded?S.loaded.name+' 고객님':'고객님';
-  var txt='[삼성 AI 구독 견적] '+nm+' 맞춤 견적이에요.\n'+c.items.length+'개 모델 · 월 '+won(c.monthly)+(c.prepay?' (선납 '+won(c.prepay)+')':'')+'\n아래 링크를 누르면 자세히 볼 수 있어요.';
-  if(navigator.share&&/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)){navigator.share({title:'맞춤 구독 견적',text:txt,url:u}).catch(function(){});return;}
-  var all=txt+'\n'+u;
-  if(navigator.clipboard)navigator.clipboard.writeText(all).then(function(){toast('견적 링크를 복사했어요 · 카톡 대화창에 붙여넣기 (Ctrl+V)');},function(){prompt('아래 내용을 복사해 카톡에 붙여넣으세요',all);});
-  else prompt('아래 내용을 복사해 카톡에 붙여넣으세요',all);};
-function custShow(){var P=CUST;if(!P||!P.s){return;}
-  loadQuote({state:JSON.stringify(P.s),id:'',name:P.n||'',phone:'',memo:''});EMP=P.e||'';render();
-  ['#gate','#boxFab','#bar','#newVer','#instBar'].forEach(function(id){var e=$(id);if(e)e.style.display='none';});
-  var v=$('#custView'),c=S.cart.length?capDraw():null,ds=String(P.d||'').replace(/-/g,'.');
-  v.innerHTML='<div class="cw"><div class="ch">'+(P.n?'<b>'+esc(P.n)+'</b> 고객님, ':'')+'전자랜드에서 보내드린 <b>삼성 AI 구독 맞춤 견적</b>이에요.'+(ds?' <small>('+esc(ds)+' 기준)</small>':'')+'</div>'
-    +(c?'<img alt="맞춤 구독 견적" src="'+c.toDataURL('image/png')+'">':'<div class="empty">견적 정보를 불러오지 못했어요. 매장에 다시 문의해 주세요.</div>')
-    +'<div class="cn">※ 참고용 견적이에요. 판촉 · 카드 혜택은 기간과 조건에 따라 바뀔 수 있어서 최종 금액은 계약할 때 꼭 확인해 주세요.</div>'
-    +'<div class="cb2">'+(c?'<button type="button" id="custSave">이미지로 저장</button>':'')+'</div></div>';
-  v.classList.add('on');document.body.style.overflow='hidden';
-  var sv=$('#custSave');if(sv)sv.onclick=function(){var a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='구독견적.png';document.body.appendChild(a);a.click();a.remove();};}
-if(CUST)setTimeout(custShow,0);
 
 /* ---- 📲 홈 화면 설치 ---- */
 var INST=null;
