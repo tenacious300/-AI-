@@ -646,11 +646,11 @@ body.preview{background:#e5e7eb;padding:0}
     </details>
     <details class="fold"><summary>제휴카드 프로모션</summary>
       <ul>
-        <li>LG전자 구독 제휴카드 10종 · 2026.11 기준 · 프로모션 11/1~11/30</li>
-        <li><b>신한 The 구독케어</b>: 30만↑ 1.7만 · 70만↑ 2.7만 · 130만↑ 3만 (72개월) · 프로모션은 해외겸용 Mastercard</li>
-        <li><b>롯데 LG구독엔로카</b>: 40만↑ 2만 · 80만↑ 2.3만 · 160만↑ 2.6만 (72개월) · 프로모션은 AMEX</li>
-        <li><b>KB국민</b>: 30만↑ 1.5만 · 80만↑ 2만 (36개월) + 프로모션 5천원</li>
-        <li>카드 할인은 월 납부액 한도 안에서 적용돼요</li>
+        <li><b>기본 혜택</b>(청구할인, 유효기간 동안): 신한 30만↑ 1.3만 · 70만↑ 2.6만 · 130만↑ 3.0만 / 우리 30만↑ 1.0만 · 70만↑ 1.5만 · 120만↑ 2.0만 / 롯데 40만↑ 1.3만 · 80만↑ 1.8만 · 160만↑ 2.6만 / KB 30만↑ 1.0만 · 80만↑ 1.5만</li>
+        <li><b>신규 발급 추가 프로모션</b>: 신한 +0.4만/0.1만 (72개월, 마스터) · 우리 +0.6만/0.6만/0.2만 (72개월) · 롯데 +0.7만/0.5만 (72개월, 아멕스) · KB +0.5만 (36개월)</li>
+        <li>신한 70만·130만 구간은 LG 구독료 7만원 이상일 때 1만P 포함</li>
+        <li><b>선납 캐시백</b>(신한·롯데·우리·KB·NH, 카드 승인 11/1~11/30): 200만↑ 10만 · 300만↑ 20만 · 500만↑ 30만 · 700만↑ 35만 · 1,000만↑ 100만 · '27.1.29 지급</li>
+        <li>할인 금액보다 자동이체 청구 요금이 적으면 청구 요금만큼만 할인돼요</li>
       </ul>
     </details>
     <details class="fold"><summary>중도 해지 위약금</summary>
@@ -918,32 +918,38 @@ function payAt(i,m){return m<=i.N?(m<=i.hm?i.halfP:i.mon2):0;}
 
 /* ====== 제휴카드 (LG전자 구독 제휴카드 안내, 2026.11 기준 · 프로모션 11/1~11/30) ====== */
 var CARD_META={from:'2026-11-01',to:'2026-11-30'};
+/* 가전구독 제휴 (26.11 가이드) · tiers:[전월실적(만), 기본 청구할인, 신규 발급 추가 프로모션, (구독료 7만↑일 때만 포함되는 포인트)] */
 var CARDS=[
-  {id:'shinhan',name:'신한 The 구독케어',tiers:[[30,17000,4000],[70,27000,1000],[130,30000,0]],baseM:72,promoM:72,note:'프로모션은 해외겸용 Mastercard만 · 연회비 국내 22,000 / Master 25,000원 · 결제일 할인 + 일부 포인트 적립'},
-  {id:'kb',name:'KB국민 LG전자',tiers:[[30,15000,5000],[80,20000,5000]],baseM:36,promoM:36,note:'기본 36개월 · 프로모션 최대 36개월 · 연회비 15,000원 · 발급 다음 달 말까지 실적 무관 1만원'},
-  {id:'lotte',name:'롯데 LG구독엔로카',tiers:[[40,20000,7000],[80,23000,5000],[160,26000,0]],baseM:72,promoM:72,note:'프로모션은 AMEX만 · 연회비 20,000원'},
-  {id:'woori',name:'우리 LG전자',tiers:[[30,16000,6000],[70,21000,6000],[120,22000,2000]],baseM:72,promoM:72,note:'프로모션은 최초 자동납부 결제 고객 · 연회비 15,000원'},
-  {id:'wooripl',name:'우리 Platinum',tiers:[[100,35000,6000],[150,39000,5000],[200,42000,2000]],baseM:72,promoM:72,note:'프로모션은 최초 자동납부 결제 고객 · 연회비 25,000원'},
-  {id:'nh',name:'NH 올원',tiers:[[30,10000,0],[60,15000,0],[100,20000,0]],baseM:60,promoM:0,note:'60개월 · 연회비 국내 15,000 / 해외 17,000원'},
-  {id:'hana',name:'하나 플러스',tiers:[[30,13000,0],[70,17000,0],[100,20000,0]],baseM:60,promoM:0,note:'60개월 · 연회비 23,000원 · 사용등록 다음 달 말까지 30만 구간 적용'},
-  {id:'hyundai',name:'현대 LG전자',tiers:[[40,8000,0],[80,12000,0],[120,16000,0]],baseM:60,promoM:0,note:'60개월 · 연회비 20,000원 · 기소지 회원 대상'},
-  {id:'jb',name:'전북 베스트케어',tiers:[[30,8000,0],[100,20000,0]],baseM:60,promoM:0,note:'60개월 · 연회비 14,000원 · 무실적 기간 8,000원'},
-  {id:'kj',name:'광주 베스트케어',tiers:[[30,8000,0],[100,20000,0]],baseM:60,promoM:0,note:'60개월 · 연회비 14,000원 · 무실적 기간 8,000원'}
+  {id:'shinhan',name:'신한 더구독케어',tiers:[[30,13000,4000],[70,26000,1000,10000],[130,30000,0,10000]],baseM:84,promoM:72,preCb:true,note:'70만·130만 구간은 LG 구독료 7만원 이상일 때 1만P 포함 (미만이면 1만원 적게 할인) · 추가 프로모션 72개월 (마스터 한정) · 유효기간 7년 · 연회비 2.5만원 · ☎ 080-850-0117'},
+  {id:'wooripl',name:'우리 Platinum',tiers:[[100,29000,6000],[150,34000,5000],[200,40000,2000]],baseM:84,promoM:72,preCb:true,note:'추가 프로모션 72개월 · 유효기간 7년 · 연회비 2.5만원 · ☎ 1800-0864'},
+  {id:'woori',name:'우리 LG전자',tiers:[[30,10000,6000],[70,15000,6000],[120,20000,2000]],baseM:84,promoM:72,preCb:true,note:'추가 프로모션 72개월 · 유효기간 7년 · 연회비 1.5만원 · ☎ 1800-4137'},
+  {id:'lotte',name:'롯데 구독엔로카',tiers:[[40,13000,7000],[80,18000,5000],[160,26000,0]],baseM:84,promoM:72,preCb:true,note:'추가 프로모션 72개월 (아멕스 한정) · 해외 이용 시 2% 청구할인 (월 2만 한도) · 유효기간 7년 · 연회비 2.0만원 · ☎ 1577-9469'},
+  {id:'kb',name:'KB국민 LG전자',tiers:[[30,10000,5000],[80,15000,5000]],baseM:84,promoM:36,preCb:true,note:'추가 프로모션 36개월 (37회차부터 기본 혜택만) · 무실적 기간 프로모션 미적용 · 유효기간 7년 · 연회비 1.5만원 · ☎ 1644-8639'},
+  {id:'hyundai',name:'현대 LG전자',tiers:[[40,8000,0],[80,12000,0],[120,16000,0]],baseM:60,promoM:0,note:'유효기간 5년 · 연회비 2.0만원 · ☎ 1670-0442'},
+  {id:'hana',name:'하나 플러스',tiers:[[30,13000,0],[70,17000,0],[100,20000,0]],baseM:60,promoM:0,note:'유효기간 5년 · 연회비 2.3만원 · ☎ 1800-1264'},
+  {id:'nh',name:'NH 올원 BEST',tiers:[[30,10000,0],[60,15000,0],[100,20000,0]],baseM:60,promoM:0,preCb:true,note:'유효기간 5년 · 연회비 1.5만 / 1.7만원 · 선납 결제는 카드 수령 후 가능 · ☎ 1644-2866'},
+  {id:'best',name:'광주/전북 베스트케어',tiers:[[30,8000,0],[100,20000,0]],baseM:60,promoM:0,note:'유효기간 5년 · 연회비 1.4만 / 1.5만원 · ☎ 광주 1588-3109 · 전북 1588-2331'}
 ];
 var USAGES=[30,40,60,70,80,100,120,130,150,160,200];
+/* 구독 선납 시 제휴카드 캐시백 (카드 승인 11/1~11/30 · '27.1.29 지급) */
+var PRE_CB=[[10000000,1000000],[7000000,350000],[5000000,300000],[3000000,200000],[2000000,100000]];
+function preCashback(card,P,promo){if(!card||!card.preCb||!promo||!cardPromoLive())return 0;for(var i=0;i<PRE_CB.length;i++)if(P>=PRE_CB[i][0])return PRE_CB[i][1];return 0;}
 function cardPromoLive(){var t=todayStr();return t>=CARD_META.from&&t<=CARD_META.to;}
 function tierOf(card,u){var t=null;card.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
+function baseOf(t,pay){return t[1]-(t[3]&&pay<70000?t[3]:0);}
 function cardSchedule(card,items,u,promo){
   var t=tierOf(card,u),maxN=Math.max.apply(null,[0].concat(items.map(function(i){return i.N;})));
-  var res={tier:t,months:[],baseSum:0,promoSum:0,extra:0};if(!t)return res;promo=promo&&cardPromoLive();
+  var res={tier:t,months:[],baseSum:0,promoSum:0,extra:0};if(!t)return res;var pl=promo&&cardPromoLive();
   for(var m=1;m<=maxN;m++){var pay=items.reduce(function(a,i){return a+payAt(i,m);},0);
-    var b=m<=card.baseM?Math.min(pay,t[1]):0,p=0;if(promo&&m<=card.promoM&&t[2])p=Math.min(pay-b,t[2]);
+    var b=m<=card.baseM?Math.min(pay,baseOf(t,pay)):0,p=0;if(pl&&m<=card.promoM&&t[2])p=Math.min(pay-b,t[2]);
     res.months.push({m:m,pay:pay,b:b,p:p});res.baseSum+=b;res.promoSum+=p;}
+  res.extra=preCashback(card,items.reduce(function(a,i){return a+i.P;},0),promo);
   return res;}
-function cardSim(card,u,months,promo,monPay){var t=tierOf(card,u);if(!t)return null;promo=promo&&cardPromoLive();
+function cardSim(card,u,months,promo,monPay,P){var t=tierOf(card,u);if(!t)return null;var pl=promo&&cardPromoLive();
   var base=0,pr=0,pay=monPay==null?Infinity:monPay;
-  for(var m=1;m<=months;m++){var b=m<=card.baseM?Math.min(pay,t[1]):0;base+=b;if(promo&&m<=card.promoM&&t[2])pr+=Math.min(pay-b,t[2]);}
-  return {t:t,base:base,pr:pr,extra:0,total:base+pr};}
+  for(var m=1;m<=months;m++){var b=m<=card.baseM?Math.min(pay,baseOf(t,pay)):0;base+=b;if(pl&&m<=card.promoM&&t[2])pr+=Math.min(pay-b,t[2]);}
+  var extra=preCashback(card,P||0,promo);
+  return {t:t,base:base,pr:pr,extra:extra,total:base+pr+extra,mon:baseOf(t,pay)+(pl?t[2]:0)};}
 function lumpCalc(items,feelT,feelN){var have=items.filter(function(i){return i.lump>0;}).length,L=items.reduce(function(a,i){return a+(i.lump||0);},0);
   var diff=feelT-L;return {ok:have===items.length&&items.length>0,have:have,L:L,diff:diff,diffM:feelN?Math.round(diff/feelN/10)*10:0};}
 
@@ -951,11 +957,11 @@ function lumpCalc(items,feelT,feelN){var have=items.filter(function(i){return i.
 function totals(items){var card=CARDS.filter(function(c){return c.id===S.card;})[0],cs=card?cardSchedule(card,items,S.usage,S.promo):null;
   var t={items:items,n:items.length,card:card,cs:cs,sumMon:0,sumMon1:0,sumMon2:0,sumP:0,sumDisc:0,sumT:0,totPay:0,gifts:0,half:0};
   items.forEach(function(i){t.sumMon+=i.mon;t.sumMon1+=i.mon1;t.sumMon2+=i.mon2;t.sumP+=i.P;t.sumDisc+=i.disc;t.sumT+=i.T;t.totPay+=i.pay;if(i.gift)t.gifts+=i.gift.won;if(i.hm)t.half+=(i.mon2-i.halfP)*i.hm;});
-  t.firstCard=cs&&cs.months[0]?cs.months[0].b+cs.months[0].p:0;t.cardTot=cs?cs.baseSum+cs.promoSum:0;
+  t.firstCard=cs&&cs.months[0]?cs.months[0].b+cs.months[0].p:0;t.cardTot=cs?cs.baseSum+cs.promoSum:0;t.extra=cs?cs.extra:0;
   t.first=items.reduce(function(a,i){return a+payAt(i,1);},0);t.net=Math.max(0,t.first-t.firstCard);
   t.feelN=t.n?Math.max.apply(null,items.map(function(i){return i.N;})):0;t.sameN=items.every(function(i){return i.N===t.feelN;});
-  t.feelT=t.totPay-t.cardTot-t.gifts;t.feelM=t.feelN?Math.round(t.feelT/t.feelN/10)*10:0;return t;}
-function render(){save();
+  t.feelT=t.totPay-t.cardTot-t.extra-t.gifts;t.feelM=t.feelN?Math.round(t.feelT/t.feelN/10)*10:0;return t;}
+function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.card;}))S.card='none';save();
   var items=calcItems(),n=items.length,t=totals(items),card=t.card,cs=t.cs;
   renderCond(n);
   $('#cartCnt').textContent=n?n+'개':'';
@@ -974,18 +980,21 @@ function render(){save();
       +'<div class="item-row"><a class="link" style="margin-left:auto" target="_blank" rel="noopener" href="'+lgUrl(it.code)+'">LG전자에서 보기 ↗</a></div>'
       +'</div>';}).join('');
 
+  var sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,net=t.net,feelM=t.feelM,feelN=t.feelN,feelT=t.feelT,h='';
   /* 제휴카드 */
   $('#cardSel').innerHTML=['<button class="chip '+(S.card==='none'?'on':'')+'" data-v="none">사용 안 함</button>'].concat(CARDS.map(function(c){return '<button class="chip '+(S.card===c.id?'on':'')+'" data-v="'+c.id+'">'+c.name+'</button>';})).join('');
   $('#usage').innerHTML=USAGES.map(function(u){return '<button class="chip sm '+(S.usage===u?'on':'')+'" data-v="'+u+'">'+u+'만↑</button>';}).join('');
   $('#promoOn').checked=!!S.promo;var PL=S.promo&&cardPromoLive();
   if(card){var tr=cs.tier;
-    $('#cardInfo').innerHTML=(tr?'<div class="info"><div class="t">'+card.name+' · '+tr[0]+'만원↑ 구간</div><div class="v">월 최대 '+won(tr[1]+(PL?tr[2]:0))+' 할인</div><div class="t">기본 '+won(tr[1])+' ('+card.baseM+'개월)'+(tr[2]&&PL?' + 프로모션 '+won(tr[2])+' ('+card.promoM+'개월)':'')+'</div></div>'
+    var tb=baseOf(tr||[0,0,0],n?sumMon2:Infinity);
+    $('#cardInfo').innerHTML=(tr?'<div class="info"><div class="t">'+card.name+' · '+tr[0]+'만원↑ 구간</div><div class="v">월 최대 '+won(tb+(PL?tr[2]:0))+' 할인</div><div class="t">기본 '+won(tb)+(tr[2]&&PL?' + 신규 발급 프로모션 '+won(tr[2])+' ('+card.promoM+'개월)':'')+(cs.extra?' · 선납 캐시백 '+won(cs.extra):'')+'</div></div>'
       :'<div class="warn">'+card.name+'는 월 '+card.tiers[0][0]+'만원 이상 이용 시부터 할인돼요.</div>')+'<div class="note">'+card.note+'</div>'
+      +(tr&&tr[3]&&n&&sumMon2<70000?'<div class="warn">월 납부액이 7만원 미만이라 1만P가 빠진 '+won(tb)+'으로 계산했어요. (2대 이상 합산 7만원 이상이면 LG전자 고객센터에 합산 요청)</div>':'')
+      +(card.preCb&&PL?'<div class="note">💰 선납 캐시백: 선납 결제 200만↑ 10만 · 300만↑ 20만 · 500만↑ 30만 · 700만↑ 35만 · 1,000만↑ 100만 (카드 승인 11/1~11/30 · \'27.1.29 지급)'+(n?' · 지금 선납 '+won(sumP)+(cs.extra?' → <b>'+won(cs.extra)+'</b>':' → 대상 아님'):'')+'</div>':'')
       +(S.promo&&!cardPromoLive()?'<div class="warn">카드 프로모션 기간('+md(CARD_META.from)+'~'+md(CARD_META.to)+')이 지나 기본 할인만 계산했어요.</div>':'');
   }else $('#cardInfo').innerHTML='';
 
   /* 요약 */
-  var sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,net=t.net,feelM=t.feelM,feelN=t.feelN,feelT=t.feelT,h='';
   $('#sBig').classList.toggle('feel',!!(n&&S.showFeel));
   if(n&&!S.showFeel){$('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';$('#sBig').textContent=won(net);
     $('#sSub').textContent='정상 월 '+won(sumMon)+(sumP?' · 선납금 '+won(sumP)+' 별도':'');}
@@ -996,10 +1005,11 @@ function render(){save();
     var row=function(l,v,c){return '<div><span>'+l+'</span><span class="'+(c||'')+'">'+v+'</span></div>';};
     var yy=feelN%12?feelN+'개월':(feelN/12)+'년 · '+feelN+'개월';
     h+='<button class="stog feel-b" id="fTog" type="button">'+(S.showFeel?'🔥 체감가 접기 ▴':'🔥 체감가 보기 <b>'+won(feelM)+'</b> ▾')+'</button>';
-    if(S.showFeel){var mPay=Math.round((t.totPay-sumP-t.cardTot)/feelN/10)*10,mPre=Math.round(sumP/feelN/10)*10,mG=Math.round(t.gifts/feelN/10)*10;
+    if(S.showFeel){var mPay=Math.round((t.totPay-sumP-t.cardTot)/feelN/10)*10,mPre=Math.round(sumP/feelN/10)*10,mG=Math.round(t.gifts/feelN/10)*10,mE=Math.round(t.extra/feelN/10)*10;
       h+='<div class="sgrp feel-g"><div class="sg-h">🧮 월 체감가 계산 ('+(t.sameN?'':'최장 ')+yy+' 평균)</div>'
       +row((card&&cs.tier?'카드 적용 월 결제':'월 결제')+' (평균)',won(mPay))
       +(sumP?row('+ 선납금 월 환산 <small style="opacity:.7">('+won(sumP)+' ÷ '+feelN+')</small>','+'+won(mPre)):'')
+      +(t.extra?row('− 선납 캐시백 월 환산 <small style="opacity:.7">('+won(t.extra)+' ÷ '+feelN+')</small>','−'+won(mE),'minus'):'')
       +(t.gifts?row('− 상품권 월 환산 <small style="opacity:.7">('+won(t.gifts)+' ÷ '+feelN+')</small>','−'+won(mG),'minus'):'')
       +row('<b>= 월 체감가</b>','<b class="feel-t">'+won(feelM)+'</b>')
       +(sumP&&feelM>net?'<div class="snote" style="color:#fda4af;display:block">💡 선납금 '+won(sumP)+'을 미리 낸 만큼 체감가가 실제 매달 결제('+won(net)+')보다 높게 나와요. 체감가는 선납금까지 포함한 진짜 월 부담이에요.</div>':'')
@@ -1008,7 +1018,7 @@ function render(){save();
       +(sumP?row('선납 차감 (월)','−'+won(t.sumMon1-sumMon2),'minus'):'')+row('<b>할인 후 월 납부액</b>','<b>'+won(sumMon2)+'</b>')
       +(t.first!==sumMon2?row('처음 반값 기간 월 납부액',won(t.first),'plus'):'')
       +(sumP?'<div class="snote">선납금 '+won(sumP)+'은 계약할 때 일시불로 내요</div>':'')+'</div>';
-    if(card&&cs.tier)h+='<div class="sgrp"><div class="sg-h">💳 제휴카드 · '+card.name+'</div>'+row('카드 월 할인 (첫 달)','−'+won(t.firstCard),'minus')+row('<b>카드 적용 월 실 납부액</b>','<b>'+won(net)+'</b>')+'</div>';
+    if(card&&cs.tier)h+='<div class="sgrp"><div class="sg-h">💳 제휴카드 · '+card.name+'</div>'+row('카드 월 할인 (첫 달)','−'+won(t.firstCard),'minus')+row('<b>카드 적용 월 실 납부액</b>','<b>'+won(net)+'</b>')+(t.extra?row('선납 캐시백 (\'27.1.29 지급)','+'+won(t.extra),'plus'):'')+'</div>';
     if(t.gifts||t.half)h+='<div class="sgrp"><div class="sg-h">🎁 구독 혜택</div>'+(t.half?row('반값 기간 절감액','+'+won(t.half),'plus'):'')
       +items.filter(function(i){return i.gift;}).map(function(i){return row(esc(i.code.replace(/\..*$/,''))+' 모바일상품권',i.gift.won?'+'+won(i.gift.won):'대상','plus');}).join('')+'</div>';
     var LP=lumpCalc(items,feelT,feelN);
@@ -1017,7 +1027,7 @@ function render(){save();
       h+='<div class="sgrp lump-g"><div class="sg-h">⚖️ 일시불 구매 vs 구독 ('+yy+')</div>'
         +items.map(function(it,i){var src=it.it.lumpManual?(it.lp?'직접 입력 · <a href="#" data-lreset="'+i+'">↺ 기준가 '+won(it.lp)+'</a>':'직접 입력'):it.lp?'단가표 기준가':'기준가가 없어요 · 직접 입력';
           return '<div class="lumpin"><span>'+esc(it.code)+' 구매가<small>'+src+'</small></span><input type="text" inputmode="numeric" data-lump="'+i+'" value="'+(it.lump?it.lump.toLocaleString():'')+'" placeholder="금액 입력"></div>';}).join('');
-      if(LP.ok)h+=row('일시불 구매가 합계',won(LP.L))+row('구독 총 실부담 <small style="opacity:.7">(카드·상품권 반영)</small>',won(feelT))
+      if(LP.ok)h+=row('일시불 구매가 합계',won(LP.L))+row('구독 총 실부담 <small style="opacity:.7">(카드·캐시백·상품권 반영)</small>',won(feelT))
           +'<div class="tot"><span>'+(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요')+'</span><span>'+won(Math.abs(LP.diff))+' <small style="opacity:.7">(월 '+won(Math.abs(LP.diffM))+')</small></span></div>'
           +'<div class="snote" style="display:block">구독은 계약 기간 케어 서비스와 무상 A/S가 들어있습니다. 단순 금액 비교예요.</div>';
       else h+='<div class="snote" style="display:block">담은 모델의 구매가를 모두 입력하면 비교돼요 ('+LP.have+' / '+n+')</div>';
@@ -1025,7 +1035,7 @@ function render(){save();
     h+='<button class="stog" id="sTog" type="button">'+(S.showTot?'자세히보기 접기 ▴':'자세히보기 ▾')+'</button>';
     if(S.showTot)h+='<div class="sgrp tot-g">'+row('정상 총 구독료',won(t.sumT))+row('정책 할인 총액','−'+won(t.sumDisc),'minus')+(sumP?row('선납금 (일시불)',won(sumP)):'')
         +row('할인 후 총 납부액',won(t.totPay))+(card&&cs.tier?row('카드 할인 총액','−'+won(t.cardTot),'minus'):'')
-        +'<div class="tot"><span>고객 총 혜택</span><span>'+won(t.sumDisc+t.cardTot)+(t.gifts?' + 상품권 '+won(t.gifts):'')+'</span></div></div>';
+        +'<div class="tot"><span>고객 총 혜택</span><span>'+won(t.sumDisc+t.cardTot+t.extra)+(t.gifts?' + 상품권 '+won(t.gifts):'')+'</span></div></div>';
   }
   $('#sList').innerHTML=h;
   var lt=$('#lTog');if(lt)lt.onclick=function(){S.lumpOn=!S.lumpOn;render();};
@@ -1047,12 +1057,12 @@ function render(){save();
   var maxN=n?feelN:72,opts=[36,48,60,72];
   if(S.cmpY===null)S.cmpY=opts.indexOf(maxN)>=0?maxN:72;
   $('#cmpTerm').innerHTML=opts.map(function(o){return '<button class="chip sm '+(o===S.cmpY?'on':'')+'" data-v="'+o+'">'+o+'개월</button>';}).join('');
-  var rows=CARDS.map(function(c){return {c:c,r:cardSim(c,S.usage,S.cmpY,S.promo,n?sumMon2:null)};});
+  var rows=CARDS.map(function(c){return {c:c,r:cardSim(c,S.usage,S.cmpY,S.promo,n?sumMon2:null,sumP)};});
   var best=Math.max.apply(null,rows.map(function(x){return x.r?x.r.total:0;}));
   $('#cmpTbl').innerHTML='<tr><th>'+S.usage+'만↑ 사용</th><th>월 할인</th><th>기본</th><th>프로모션</th><th>혜택 계</th></tr>'+rows.map(function(x){var c=x.c,r=x.r;
-    return r?'<tr data-card="'+c.id+'" class="'+(r.total===best&&best>0?'best ':'')+(S.card===c.id?'sel':'')+'"><td>'+c.name+(r.total===best&&best>0?' 👍':'')+'</td><td>'+won(r.t[1]+(PL?r.t[2]:0))+'</td><td>'+won(r.base)+'</td><td>'+won(r.pr)+'</td><td>'+won(r.total)+'</td></tr>'
+    return r?'<tr data-card="'+c.id+'" class="'+(r.total===best&&best>0?'best ':'')+(S.card===c.id?'sel':'')+'"><td>'+c.name+(r.total===best&&best>0?' 👍':'')+'</td><td>'+won(r.mon)+'</td><td>'+won(r.base)+'</td><td>'+won(r.pr+r.extra)+'</td><td>'+won(r.total)+'</td></tr>'
     :'<tr data-card="'+c.id+'"><td>'+c.name+'</td><td colspan="4" style="color:var(--sub);text-align:center">'+c.tiers[0][0]+'만원↑ 이용 시</td></tr>';}).join('');
-  $('#cmpNote').innerHTML=(n?'담은 모델 월 납부액 '+won(sumMon2)+' 기준 (월 납부액 한도 내 할인). ':'월 납부액이 충분하다고 가정. ')+'표의 카드를 누르면 바로 선택돼요. 카드마다 할인 기간이 달라요 (KB 36개월 · NH·하나·현대·전북·광주 60개월).';
+  $('#cmpNote').innerHTML=(n?'담은 모델 월 납부액 '+won(sumMon2)+' 기준 (월 납부액 한도 내 할인). ':'월 납부액이 충분하다고 가정. ')+'표의 카드를 누르면 바로 선택돼요. 프로모션 칸에는 신규 발급 추가 할인과 선납 캐시백이 들어 있어요. 현대·하나·NH·광주/전북은 유효기간 5년(60개월)까지 계산해요.';
   if(S.sel)renderPicked();
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
@@ -1072,7 +1082,7 @@ function quoteText(){var items=calcItems(),t=totals(items),d=new Date(),me=meGet
   items.forEach(function(i,k){o.push((k+1)+'. '+i.code.replace(/\..*$/,'')+' ('+i.cat+')');o.push('   '+i.y+'년 · '+i.type+' · '+i.bd);
     o.push('   월 '+won(i.mon2)+(i.hm?' (처음 '+i.hm+'개월 '+won(i.halfP)+')':'')+(i.P?' · 선납 '+won(i.P):'')+(i.gift?' · 🎁 '+i.gift.note:''));});
   o.push('');o.push('▶ 월 납부액 합계 '+won(t.sumMon2));
-  if(t.card&&t.cs.tier){o.push('▶ '+t.card.name+' (전월 '+S.usage+'만↑) 월 −'+won(t.firstCard));o.push('▶ 카드 적용 월 실 납부액 '+won(t.net));}
+  if(t.card&&t.cs.tier){o.push('▶ '+t.card.name+' (전월 '+S.usage+'만↑) 월 −'+won(t.firstCard));o.push('▶ 카드 적용 월 실 납부액 '+won(t.net));if(t.extra)o.push('▶ 선납 캐시백 '+won(t.extra)+' (\'27.1.29 지급)');}
   if(t.sumP)o.push('▶ 선납금 '+won(t.sumP));
   o.push('※ 활성화·카드 프로모션은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
   if(me)o.push('담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' '));return o.join('\n');}
@@ -1085,16 +1095,16 @@ function staffLine(){var me=meGet();if(!EMP)return '';
   if(me&&me.name)return '<div class="staff">담당 <b>'+(me.br?esc(me.br)+' ':'')+esc(me.name)+'</b></div>';
   return '<div class="staff">담당 <small>사번 '+esc(EMP)+'</small></div>';}
 function buildPrint(mode){
-  var items=calcItems(),t=totals(items),card=t.card,cs=t.cs,sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,sumDisc=t.sumDisc,f=t.firstCard,cardTot=t.cardTot,allP=t.gifts;
+  var items=calcItems(),t=totals(items),card=t.card,cs=t.cs,sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,sumDisc=t.sumDisc,f=t.firstCard,cardTot=t.cardTot,allP=t.gifts,extra=t.extra;
   var d=new Date(),ds=d.getFullYear()+'.'+(d.getMonth()+1)+'.'+d.getDate(),meta=D.meta||{};
   var rows=items.map(function(i,k){
     return '<tr><td style="text-align:center">'+(k+1)+'</td><td><div class="pn">'+esc(i.cat)+'</div>'+esc(i.code)+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span>'+(i.hm||i.gift?'<br><span style="color:#047857;font-size:11px">🎁 '+(i.hm?'처음 '+i.hm+'개월 '+won(i.halfP):'')+(i.hm&&i.gift?' · ':'')+(i.gift?esc(i.gift.note):'')+'</span>':'')+'</td>'
       +'<td class="r">'+won(i.mon)+'</td><td class="r">'+pct(i.rate)+'<br><span style="color:#555;font-size:11px">'+i.parts.map(function(p){return esc(p[0]);}).join('<br>')+'</span></td>'
       +'<td class="r">'+(i.P?won(i.P)+'<br><span style="color:#555;font-size:11px">('+esc(i.preLab)+')</span>':'-')+'</td><td class="r"><b>'+won(i.mon2)+'</b></td></tr>';}).join('');
   var T=[['정상 월 구독료 합계',won(sumMon)],['정책 할인 합계','−'+won(sumDisc)],['선납금 합계 (일시불)',sumP?won(sumP):'-'],['할인 후 월 납부액',won(sumMon2)]];
-  if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);}
+  if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push(['선납 캐시백 (\'27.1.29 지급)','+'+won(extra)]);}
   if(t.gifts)T.push(['모바일상품권','+'+won(t.gifts)]);
-  T.push(['고객 총 혜택',won(sumDisc+cardTot)+(t.gifts?' + 상품권 '+won(t.gifts):'')]);
+  T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(t.gifts?' + 상품권 '+won(t.gifts):'')]);
   var html='<div class="pq"><div class="hd"><div><h1>LG 가전구독 견적서</h1><small>'+esc(String(meta.price||'').replace('전자랜드_','단가표 '))+' · '+esc(String(meta.act||'').replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1 활성화'))+' 기준</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
     +'<div class="cond"><span>고객 유형: <b>'+CUSTN[S.cust]+(S.cust==='sb'?' '+S.sbN:'')+'</b></span><span>제휴카드: <b>'+(card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
     +'<table><tr><th>No</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
@@ -1108,13 +1118,14 @@ function buildPrint(mode){
     var fh='<div class="feel"><h3>🔥 월 체감가 (선납·카드·상품권 모두 반영 · '+(sameN?'':'최장 ')+fN+'개월 평균)</h3>'
       +fr((card&&cs.tier?'카드 적용 월 결제':'월 결제')+' (평균)',won(mPay))
       +(sumP?fr('+ 선납금 월 환산 <small>('+won(sumP)+' ÷ '+fN+')</small>','+'+won(mPre)):'')
+      +(extra?fr('− 선납 캐시백 월 환산 <small>('+won(extra)+' ÷ '+fN+')</small>','−'+won(Math.round(extra/fN/10)*10)):'')
       +(allP?fr('− 상품권 월 환산 <small>('+won(allP)+' ÷ '+fN+')</small>','−'+won(mPt)):'')
       +fr('= 월 체감가',won(fM)+' <small>(정상 월 대비 '+Math.max(0,Math.round((1-fM/sumMon)*100))+'%↓)</small>','fb')
       +'<small>※ 선납금은 계약 시 일시불로 내며, 실제 매달 결제 금액은 위 \'카드 적용 월 실 납부액\'입니다. '+fN+'개월 실부담 총액은 '+won(fT)+'입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간으로 나눴습니다.')+'</small></div>';
     html=html.replace('<div class="nt">',fh+'<div class="nt">');}
   if(mode==='lump'||mode==='feellump'){
     var LP=lumpCalc(items,fT,fN),ys=items.map(function(i){return i.y;}),yMin=Math.min.apply(null,ys),yMax=Math.max.apply(null,ys),yTxt=yMin===yMax?yMax+'년':yMin+'~'+yMax+'년';
-    var benefit=sumDisc+cardTot+allP,lr=function(a,b,c){return '<div class="fr'+(c?' '+c:'')+'"><span>'+a+'</span><span>'+b+'</span></div>';};
+    var benefit=sumDisc+cardTot+extra+allP,lr=function(a,b,c){return '<div class="fr'+(c?' '+c:'')+'"><span>'+a+'</span><span>'+b+'</span></div>';};
     var lh='<div class="lump"><h3>💙 일시불 대신 구독을 추천드리는 이유 <small>('+(sameN?'':'최장 ')+fN+'개월 기준)</small></h3>'
       +'<div class="why">'
         +'<div><span>목돈 부담</span><b>'+(sumP?'선납 '+won(sumP):'0원')+'</b><small>일시불은 '+won(LP.L)+'</small></div>'
@@ -1125,7 +1136,7 @@ function buildPrint(mode){
       +'<table><tr><th>모델</th><th class="sub">구독 <small>(월 납부 × 기간'+(sumP?' + 선납':'')+')</small></th><th>일시불 구매가</th></tr>'
       +items.map(function(i){return '<tr><td><b>'+esc(i.code)+'</b> <small>'+i.y+'년</small></td><td class="r sub"><small>월 '+won(i.mon2)+' × '+i.N+'개월'+(i.hm?' (처음 '+i.hm+'개월 반값)':'')+(i.P?' + 선납 '+won(i.P):'')+' =</small> <b>'+won(i.pay)+'</b></td><td class="r">'+won(i.lump||0)+'</td></tr>';}).join('')
       +'<tr class="lsum"><td>합계</td><td class="r sub"><b>'+won(totPay)+'</b></td><td class="r"><b>'+won(LP.L)+'</b></td></tr></table>'
-      +'<div class="calc"><div>'+lr('구독 총 납부액',won(totPay))+(cardTot?lr('− 제휴카드 할인','−'+won(cardTot)):'')+(allP?lr('− 모바일상품권','−'+won(allP)):'')
+      +'<div class="calc"><div>'+lr('구독 총 납부액',won(totPay))+(cardTot?lr('− 제휴카드 할인','−'+won(cardTot)):'')+(extra?lr('− 선납 캐시백','−'+won(extra)):'')+(allP?lr('− 모바일상품권','−'+won(allP)):'')
         +lr('<b>= 구독 실부담</b>','<b>'+won(fT)+'</b>')+'</div><div>'+lr('일시불 구매가',won(LP.L))+'</div></div>'
       +(LP.diff<=0
         ?'<div class="verdict good">✅ 구독이 일시불보다 <b>'+won(-LP.diff)+'</b> 더 저렴해요 <small>(월 '+won(-LP.diffM)+' 절약 + '+yTxt+' 케어 · 무상 A/S)</small></div>'
