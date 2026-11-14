@@ -343,6 +343,15 @@ body.preview{background:#e5e7eb;padding:0}
 .care-ul ul li{margin:2px 0}
 .stog.feel-b{border-color:rgba(251,113,133,.6);color:#fda4af;margin:10px 0 0}.pm-opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font:inherit}.pm-opt b{display:block;font-size:16px;margin-bottom:4px;color:var(--ink)}.pm-opt span{font-size:13px;color:var(--sub)}.pm-opt:hover{border-color:#2563eb;background:#eff6ff}.pm-opt.feel:hover{border-color:#e11d48;background:#fff1f2}
 .pq .feel{margin-top:14px;border:2px solid #e11d48;border-radius:8px;padding:10px 14px}.pq .feel h3{margin:0 0 6px;font-size:14px;color:#e11d48}.pq .feel .fr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #f3c4cf}.pq .feel .fb{font-weight:800;font-size:17px;color:#e11d48;border-bottom:0;padding-top:6px}.pq .feel small{color:#555}
+.pm-opt.lump:hover{border-color:#0284c7;background:#f0f9ff}
+.pq .lump{margin-top:12px;border:2px solid #0284c7;border-radius:8px;padding:8px 12px;break-inside:avoid}
+.pq .lump td,.pq .lump th{padding:4px 8px}
+.pq .lump .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.pq .lump h3{margin:0 0 8px;font-size:14px;color:#0369a1}
+.pq .lump table{margin-bottom:8px}.pq .lump th{background:#f0f9ff}
+.pq .lump .fr{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed #bae6fd}
+.pq .lump .fb{font-weight:800;font-size:16px;color:#0369a1;border-bottom:0;padding-top:6px}
+.pq .lump small{color:#555}
 #cart .item.just{box-shadow:0 0 0 3px #22c55e;transition:box-shadow .3s}
 .nt-t{font-size:18px;font-weight:800;margin:4px 0 2px}.nt-d{font-size:12px;color:var(--sub)}.nt-b{white-space:pre-wrap;font-size:14.5px;line-height:1.65;margin:12px 0}
 .nt-u{background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:10px 14px;font-size:13.5px}.nt-u b{display:block;margin-bottom:4px;color:#0369a1}.nt-u li{margin:3px 0}
@@ -724,6 +733,7 @@ body.preview{background:#e5e7eb;padding:0}
   <div style="font-size:13px;color:var(--sub);margin-bottom:12px">어떤 견적서로 인쇄할까요?</div>
   <button class="pm-opt" data-pm="basic"><b>📄 기본 견적서</b><span>모델별 월 납부액 · 할인 · 선납금 · 카드 · 포인트 혜택</span></button>
   <button class="pm-opt feel" data-pm="feel"><b>🔥 체감가 견적서</b><span>기본 견적서 + 월 체감가와 계산 과정 (선납·카드·포인트 모두 반영)</span></button>
+  <button class="pm-opt lump" data-pm="lump"><b>⚖️ 일시불 비교 견적서</b><span>기본 견적서 + 모델별 일시불 구매가와 구독 총 실부담 비교</span></button>
 </div></div>
 <div class="modal" id="verModal"><div class="modal-box">
   <h3><span>수정 내역</span><button id="verClose" aria-label="닫기">✕</button></h3>
@@ -771,8 +781,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.4',VER_DATE='2026.11.14';
+var VERSION='v8.5',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.5','11.14',['🖨 견적 인쇄에 ⚖️ 일시불 비교 견적서 추가: 모델별 일시불 구매가 · 구독 총 납부액 표와 카드 · 포인트 반영 실부담 비교']],
   ['v8.4','11.14',['💬 카톡으로 견적 보내기(링크) 기능 삭제 · 견적 전달은 📸 견적 캡처 이미지로']],
   ['v8.3','11.14',['📷 라벨 찍어서 찾기 기능 삭제','고객용 견적 링크 화면에서 \'삼성닷컴에서 보기\' 버튼 삭제']],
   ['v8.2','11.14',['⚖️ 일시불 구매와 비교 (선택): 구매가를 입력하면 구독 총 실부담과 비교, 켰을 때만 캡처에 포함','📞 보관함 다시 연락할 날 + 오늘 연락할 고객 알림 · ⚠️ 보관 후 단가 변경 표시','⭐ 즐겨찾기 · 🕘 최근 본 모델','📲 홈 화면에 앱처럼 설치 (인터넷이 끊겨도 마지막 단가로 계산)']],
@@ -1373,6 +1384,22 @@ function buildPrint(mode){
       +'<small>※ 선납금은 계약 시 일시불로 내며, 실제 매달 결제 금액은 위 \'카드 적용 월 실 납부액\'입니다. 포인트는 1P=1원으로 환산한 참고 금액이며, '+fN+'개월 실부담 총액은 '+won(fT)+'입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간으로 나눴습니다.')+'</small></div>';
     html=html.replace('<div class="nt">',fh+'<div class="nt">');
   }
+  if(mode==='lump'){
+    var lN=Math.max.apply(null,items.map(function(i){return i.N;})),lSame=items.every(function(i){return i.N===lN;});
+    var subTot=items.reduce(function(a,i){return a+i.mon2*i.N+i.P;},0),lT=subTot-cardTot-extra-allP,LP=lumpCalc(items,lT,lN);
+    var lr=function(a,b,c){return '<div class="fr'+(c?' '+c:'')+'"><span>'+a+'</span><span>'+b+'</span></div>';};
+    var lh='<div class="lump"><h3>⚖️ 일시불 구매 vs 구독 비교 ('+(lSame?'':'최장 ')+lN+'개월 기준)</h3>'
+      +'<table><tr><th>모델</th><th>계약</th><th>일시불 구매가</th><th>구독 총 납부액<br><small>(정책 할인·선납 반영)</small></th></tr>'
+      +items.map(function(i){return '<tr><td>'+esc(i.code)+'</td><td>'+i.y+'년 · '+esc(careLabel(splitType(i.type).care))+'</td><td class="r">'+won(i.lump||0)+'</td><td class="r">'+won(i.mon2*i.N+i.P)+'</td></tr>';}).join('')
+      +'<tr><th colspan="2">합계</th><th class="r" style="text-align:right">'+won(LP.L)+'</th><th class="r" style="text-align:right">'+won(subTot)+'</th></tr></table>'
+      +'<div class="cols"><div>'+lr('구독 총 납부액',won(subTot))
+      +(cardTot?lr('− 제휴카드 할인 총액','−'+won(cardTot)):'')+(extra?lr('− 카드 캐시백','−'+won(extra)):'')
+      +(allP?lr('− 포인트 <small>(1P=1원 환산)</small>','−'+won(allP)):'')
+      +'</div><div>'+lr('<b>= 구독 총 실부담</b>','<b>'+won(lT)+'</b>')+lr('일시불 구매가 합계',won(LP.L))+'</div></div>'
+      +lr(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요',won(Math.abs(LP.diff))+' <small>(월 '+won(Math.abs(LP.diffM))+')</small>','fb')
+      +'<small>※ 구독에는 '+esc(LP.care)+'가 포함되어 있습니다. 일시불 구매는 카드 무이자 할부 · 매장 할인 · 사은품 등 조건이 따로 있을 수 있어 단순 금액 비교입니다. 일시불 구매가는 상담 시 입력한 금액입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
+    html=html.replace('<div class="nt">',lh+'<div class="nt">');
+  }
   $('#printArea').innerHTML=html;
   var imgs=Array.prototype.slice.call($('#printArea').querySelectorAll('img'));
   return Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]);
@@ -1384,7 +1411,8 @@ function printQuote(mode){
 }
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
 $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};
-Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');fuLog('print');fuLog('print:'+b.dataset.pm);printQuote(b.dataset.pm);S.cart.forEach(function(i){mvLog(i.code,'print');});markAct('견적 인쇄');gsr('logEvent',{name:'print',emp:EMP});};});
+Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');
+    if(b.dataset.pm==='lump'&&!S.cart.every(function(i){return i.lump>0;})){S.lumpOn=true;render();var lb=$('#lTog');if(lb)lb.scrollIntoView({behavior:'smooth',block:'start'});toast('⚖️ 모델별 일시불 구매가를 먼저 입력해 주세요');return;}fuLog('print');fuLog('print:'+b.dataset.pm);printQuote(b.dataset.pm);S.cart.forEach(function(i){mvLog(i.code,'print');});markAct('견적 인쇄');gsr('logEvent',{name:'print',emp:EMP});};});
 window.__previewQuote=function(){return Promise.all(S.cart.map(function(it){return fetchInfo(it.code);})).then(buildPrint).then(function(){document.body.classList.add('preview');});};
 window.__addModel=function(code,y,typeKw,pre){var m=byCode[code];var p=m[3].filter(function(p){return p[0]===y&&D.types[p[1]].indexOf(typeKw)>=0;})[0];S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:S.win,pre:pre||0});fetchInfo(code);render();};
 window.__S=S;
