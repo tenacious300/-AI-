@@ -802,7 +802,7 @@ var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
 var VERSION='v9.0',VER_DATE='2026.11.14';
 var CHANGELOG=[
-  ['v9.0','11.14',['⚖️ 일시불 구매가 자동 입력: 삼성닷컴 할인 전 기준가를 불러와 채움 (직접 고치면 그 금액 유지 · ↺로 기준가 복원)']],
+  ['v9.0','11.14',['⚖️ 일시불 구매가 자동 입력: 삼성닷컴 기준가를 불러와 채움 (직접 고치면 그 금액 유지 · ↺로 기준가 복원)']],
   ['v8.9','11.14',['🕘 최근 본 모델: 모델마다 ✕ 삭제 · 전체 삭제 버튼']],
   ['v8.8','11.14',['🖨 일시불 비교 견적서 개선: 구독 장점 카드(목돈 부담 · 월 납부 · 혜택 합계 · 무상수리연장) · 구독 칸 강조 · 결론 문구 자동 (더 저렴 / 월 차액으로 무상수리연장까지)']],
   ['v8.7','11.14',['일시불 비교 안내에서 카드 무이자 · 매장 할인 · 사은품 문구 삭제']],
@@ -885,7 +885,7 @@ var INFO={};
 function findModel(o,code,depth){if(!o||typeof o!=='object'||depth>4)return null;
   if(!Array.isArray(o)&&(String(o.modelCode||'').toUpperCase()===code||String(o.id||'').toUpperCase()===code))return o;
   for(var k in o){if(k==='embedding_text')continue;var v=o[k];if(v&&typeof v==='object'){var r=findModel(v,code,depth+1);if(r)return r;}}return null;}
-/* 삼성닷컴 검색 결과에서 할인 전 기준가(가장 높은 판매가 항목)를 찾음 - 월 구독료 · 포인트 · 할인액 항목은 제외 */
+/* 삼성닷컴 검색 결과에서 삼성닷컴 기준가(가장 높은 판매가 항목)를 찾음 - 월 구독료 · 포인트 · 할인액 항목은 제외 */
 function listPrice(x){var best=null;
   var walk=function(o,d){if(!o||typeof o!=='object'||d>3)return;for(var k in o){if(k==='embedding_text')continue;var v=o[k];
     if(v&&typeof v==='object'){walk(v,d+1);continue;}
@@ -1252,7 +1252,7 @@ function render(){
     if(S.lumpOn){
       h+='<div class="sgrp lump-g"><div class="sg-h">⚖️ 일시불 구매 vs 구독 ('+yy+')</div>'
         +items.map(function(it,i){var o=INFO[it.code]||{},lp=o.st==='ok'&&o.lp>=it.mon*10?o.lp:0;
-          var src=it.lumpManual?(lp?'직접 입력 · <a href="#" data-lreset="'+i+'">↺ 기준가 '+won(lp)+'</a>':'직접 입력'):lp?'삼성닷컴 할인 전 기준가':(o.st==='loading'?'기준가 불러오는 중…':'기준가를 못 찾았어요 · 직접 입력');
+          var src=it.lumpManual?(lp?'직접 입력 · <a href="#" data-lreset="'+i+'">↺ 기준가 '+won(lp)+'</a>':'직접 입력'):lp?'삼성닷컴 기준가':(o.st==='loading'?'기준가 불러오는 중…':'기준가를 못 찾았어요 · 직접 입력');
           return '<div class="lumpin"><span>'+esc(it.code)+' 구매가<small>'+src+'</small></span><input type="text" inputmode="numeric" data-lump="'+i+'" value="'+(it.lump?it.lump.toLocaleString():'')+'" placeholder="금액 입력"></div>';}).join('');
       if(LP.ok){
         h+=row('일시불 구매가 합계',won(LP.L))+row('구독 총 실부담 <small style="opacity:.7">(카드·포인트 반영)</small>',won(feelT))
@@ -1445,7 +1445,7 @@ function buildPrint(mode){
       +(LP.diff<=0
         ?'<div class="verdict good">✅ 구독이 일시불보다 <b>'+won(-LP.diff)+'</b> 더 저렴해요 <small>(월 '+won(-LP.diffM)+' 절약 + '+yTxt+' 무상수리연장)</small></div>'
         :'<div class="verdict">💡 월 <b>'+won(LP.diffM)+'</b> 차이로 <b>'+yTxt+' 무상수리연장</b>까지 <small>(총 차액 '+won(LP.diff)+' · 목돈 없이 매달 나눠서)</small></div>')
-      +'<small>※ 구독은 무상수리연장 서비스가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 삼성닷컴 할인 전 기준가(또는 상담 시 입력한 금액)입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
+      +'<small>※ 구독은 무상수리연장 서비스가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 삼성닷컴 기준가(또는 상담 시 입력한 금액)입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');
   }
   $('#printArea').innerHTML=html;
