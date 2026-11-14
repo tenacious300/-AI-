@@ -737,8 +737,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.0',VER_DATE='2026.11.14';
+var VERSION='v8.1',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.1','11.14',['접속 현황 정확도 개선: 5분 넘게 화면을 만지지 않으면 \'자리 비움(○분째 조작 없음)\'으로 표시 (PC에서 창만 켜 두고 자리를 비운 경우)','다른 창 · 앱으로 이동하면 바로 자리 비움으로 반영']],
   ['v8.0','11.14',['접속 현황 ⚠️ 명부 외 탭: 명부에 없는 사번의 지금 접속 · 오늘 입장 거부(시도 횟수) · 접속 중 돌려보낸 기록을 따로 표시, 바로 허용 · 차단 · 기한 연장','입장 방식(명부 사번만 / 누구나 입장)은 그대로 전환 가능']],
   ['v7.9','11.14',['👥 직원 명부: 관리자가 명부 엑셀을 올리면 바로 반영 (신규 · 제외 · 변경 비교 후 적용, 드라이브에만 저장)','🔐 입장 방식: 명부 사번만 입장 / 누구나 입장(표시만) 전환, ✅ 예외 허용(기한 설정) 목록','접속 현황에 이름 · 소속 · 직책 · 구분 표시, 명부에 없는 사번 표시 · 바로 허용, 🏬 지점별 접속 현황, 오늘 기록 이름 검색 · 소속 필터']],
   ['v7.8','11.14',['\'예상 결과\' → \'맞춤 구독 견적\'으로 이름 변경','📸 견적 캡처: 견적을 카드 이미지(PNG)로 저장 · 휴대폰은 카톡 등으로 바로 공유, PC는 저장 + 클립보드 복사']],
@@ -1484,7 +1485,7 @@ function beat(){
   if(!EMP)return;
   window.__lastBeat=Date.now();
   var evs=EVQ.splice(0,60),fus=FU;FU={};if(firstBeat)fus['dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;
-  var info={fu:fus,act:curAct(),away:!!document.hidden,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat};
+  var idl=idleMin(),info={fu:fus,act:idl>=IDLE_MIN?'idle:'+idl:curAct(),away:!!document.hidden||idl>=IDLE_MIN,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat};
   firstBeat=false;
   gsr('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);Object.keys(fus).forEach(function(k){FU[k]=(FU[k]||0)+fus[k];});}if(r&&r.blocked){if(r.reason==='roster'){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}showMe();openGate();rosterReject();return;}showBlocked();return;}if(r&&lsGet('calcBlocked')){lsPut('calcBlocked',null);$('#blockedScr').classList.remove('on');}if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.nid)ntCheck(r.nid);if(r&&r.mv&&verLt(VERSION,r.mv))doUpdate();},function(){$('#liveBtn').classList.add('off');});
 }
@@ -1492,6 +1493,14 @@ var EMP=null,beatStarted=false,EVQ=[],LASTACT={t:0,a:''};
 var FU={};function fuLog(k){FU[k]=(FU[k]||0)+1;if(k.indexOf(':')<0){var h='h:'+('0'+new Date().getHours()).slice(-2);FU[h]=(FU[h]||0)+1;}}
 function mvLog(code,type){if(code)EVQ.push([code,type]);if(EVQ.length>200)EVQ=EVQ.slice(-200);}
 function markAct(a){LASTACT={t:Date.now(),a:a};}
+var IDLE_MIN=5,LASTIN=Date.now();
+function idleMin(){return Math.floor((Date.now()-LASTIN)/60000);}
+(function(){var f=function(){var was=idleMin()>=IDLE_MIN;LASTIN=Date.now();if(was&&beatStarted&&Date.now()-(window.__lastBeat||0)>5000)beat();};
+  ['pointerdown','keydown','touchstart','wheel','scroll','input'].forEach(function(e){window.addEventListener(e,f,{passive:true,capture:true});});
+  var mm=0;window.addEventListener('mousemove',function(){var n=Date.now();if(n-mm>10000){mm=n;f();}},{passive:true});})();
+function awayTxt(g,x){var m=/^idle:(\d+)/.exec(x.act||'');
+  if(g.away)return '<b style="color:#94a3b8">○ 자리 비움</b>'+(m?' <small style="color:#94a3b8">('+(+m[1]>=60?Math.floor(m[1]/60)+'시간 '+(m[1]%60)+'분':m[1]+'분')+'째 조작 없음)</small>':' <small style="color:#94a3b8">(다른 창·앱)</small>');
+  return '<b style="color:#16a34a">● '+esc(m?'접속 중':(x.act||'접속 중'))+'</b>';}
 function curAct(){var on=function(id){var e=$(id);return e&&e.classList.contains('on');};
   if(Date.now()-LASTACT.t<120000)return LASTACT.a;
   if(on('#admModal'))return '관리자 모드';if(on('#cmpDrawer'))return '비교하기';if(on('#boxDrawer'))return '보관함';if(on('#careDrawer'))return '케어 가이드';
@@ -1521,7 +1530,7 @@ function fbInit(){
   });});
 }
 try{EMP=localStorage.getItem('calcEmp');}catch(e){}
-function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStarted||!HAS_GS)return;beatStarted=true;beat();setInterval(beat,75000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(window.__lastBeat||0)>45000)beat();});}
+function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStarted||!HAS_GS)return;beatStarted=true;beat();setInterval(beat,75000);document.addEventListener('visibilitychange',function(){if(document.hidden){if(Date.now()-(window.__lastBeat||0)>5000)beat();}else{LASTIN=Date.now();if(Date.now()-(window.__lastBeat||0)>5000)beat();}});}
 function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';}
 function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function rosterReject(){$('#empErr').innerHTML='등록되지 않은 사번이에요.<br><small style="font-weight:500">명부에 없는 사번은 입장할 수 없어요. 소속 관리자에게 등록을 요청해 주세요.</small>';$('#empIn').style.borderColor='#dc2626';}
@@ -1572,11 +1581,11 @@ function admStatHtml(r){
       var nr=rHasMap()&&x.emp&&!rInfo(x.emp)&&!(RS.ex&&RS.ex[x.emp]);sus=sus||nr;
       return '<div class="uc'+(sus?' sus':'')+'"><div class="av">'+(mob?'📱':'💻')+'<span class="dot" style="background:'+(g.away?'#cbd5e1':'#22c55e')+'"></span></div><div>'
         +'<div class="e">'+(x.emp?rWho(x.emp,1):esc(g.k))+(sus&&!nr&&!rHasMap()?' <span class="ack-chip" style="margin:0">의심</span>':'')+' <small>'+esc(x.dev||'')+(x.did?' · 기기 '+didTag(x.did):'')+(g.list.length>1?' · 창 '+g.list.length+'개':'')+'</small></div>'
-        +'<div class="m">'+(g.away?'<b style="color:#94a3b8">○ 자리 비움</b>':'<b style="color:#16a34a">● '+esc(x.act||'접속 중')+'</b>')+' · 접속 '+(x.startMin<1?'방금':x.startMin>=60?Math.floor(x.startMin/60)+'시간 '+(x.startMin%60)+'분':x.startMin+'분')+' · '+(old?'<span style="color:#dc2626;font-weight:700">'+esc(x.ver)+' (구버전)</span>':esc(x.ver||''))+'</div>'
+        +'<div class="m">'+awayTxt(g,x)+' · 접속 '+(x.startMin<1?'방금':x.startMin>=60?Math.floor(x.startMin/60)+'시간 '+(x.startMin%60)+'분':x.startMin+'분')+' · '+(old?'<span style="color:#dc2626;font-weight:700">'+esc(x.ver)+' (구버전)</span>':esc(x.ver||''))+'</div>'
         +'<div>'+(models.length?models.map(function(c){return '<span class="c2">🛒 '+esc(c)+'</span>';}).join(''):'<span class="c2" style="background:none;color:#94a3b8;padding-left:0">담은 모델 없음</span>')+'</div></div>'
         +'<div style="display:flex;gap:6px">'+(nr?'<button class="btn line sm" style="color:#16a34a;border-color:#86efac" data-rxok="'+esc(x.emp)+'">✅ 허용</button>':'')+'<button class="btn del sm" data-blkg="'+k+'" title="차단">🚫</button></div></div>';}).join('')
       :'<div class="empty" style="margin-top:8px">지금 접속한 사람이 없어요.</div>';
-    h+='<div class="note">● 보는 중(하는 일) · ○ 자리 비움(다른 창이나 앱으로 이동) · 구버전은 빨간색 · 같은 사번이 창을 여러 개 열면 한 줄로 묶어요. 하는 일은 75초마다 갱신돼요.</div>';
+    h+='<div class="note">● 보는 중(하는 일) · ○ 자리 비움(다른 창·앱으로 이동했거나 5분 넘게 조작 없음 · 화면만 켜 두면 여기로 가요) · 구버전은 빨간색 · 같은 사번이 창을 여러 개 열면 한 줄로 묶어요. 하는 일은 75초마다 갱신돼요.</div>';
   }else if(seg==='nr'){
     var EX=r.rex||{},mode=r.rmode||'strict',ago=function(m){return m<1?'방금':m>=60?Math.floor(m/60)+'시간 '+(m%60)+'분':m+'분';};
     var card=function(o){return '<div class="uc" style="'+(o.c==='r'?'background:#fef2f2;border-color:#fecaca':o.c==='y'?'background:#fffbeb;border-color:#fde68a':'background:#f8fafc')+'"><div class="av">'+(/모바일/.test(o.dev||'')?'📱':'💻')+'</div><div><div class="e"><b style="font-size:15px">'+esc(o.emp)+'</b> '+o.badge+(empSus(o.emp)?' <span class="ack-chip" style="margin:0">의심</span>':'')+' <small>'+esc(o.dev||'')+(o.did?' · 기기 '+didTag(o.did):'')+'</small></div><div class="m">'+o.line+'</div>'+(o.models?'<div>'+o.models.split(', ').filter(function(v){return v;}).map(function(c){return '<span class="c2">🛒 '+esc(c)+'</span>';}).join('')+'</div>':'')+'</div><div style="display:flex;gap:6px">'+o.btns+'</div></div>';};
@@ -1586,7 +1595,7 @@ function admStatHtml(r){
     if(nrNow.length){h+='<div class="adm-sec">🟢 지금 접속 중 <small>'+(mode==='open'?'명부에 없는 사번':'예외 허용으로 들어온 사번')+'</small></div>';
       h+=nrNow.map(function(g){var x=g.main,ex=EX[x.emp];return card({emp:x.emp,c:ex?'y':'r',dev:x.dev,did:x.did,models:x.models,
         badge:ex?'<span class="tp w">예외 허용</span>':'<span class="nr">명부에 없음</span>',
-        line:(g.away?'<b style="color:#94a3b8">○ 자리 비움</b>':'<b style="color:#16a34a">● '+esc(x.act||'접속 중')+'</b>')+' · 접속 '+ago(x.startMin)+(ex?' · 메모: '+esc(ex.memo||'-')+' · <b>'+(ex.until?esc(ex.until.slice(5).replace('-','.'))+'까지':'기한 없음')+'</b>':''),
+        line:awayTxt(g,x)+' · 접속 '+ago(x.startMin)+(ex?' · 메모: '+esc(ex.memo||'-')+' · <b>'+(ex.until?esc(ex.until.slice(5).replace('-','.'))+'까지':'기한 없음')+'</b>':''),
         btns:(ex?(ex.until?'<button class="btn line sm" data-rxext="'+esc(x.emp)+'">기한 연장</button>':''):al(x.emp))+bl(x)});}).join('');}
     if(nrRej.length){h+='<div class="adm-sec" style="margin-top:16px">⛔ 오늘 입장 거부 <small>명부에 없어 들어오지 못한 사번 · 실제 직원이면 허용</small></div>';
       h+=nrRej.sort(function(a,b){return NL[a].last<NL[b].last?1:-1;}).map(function(k){var e=NL[k];return card({emp:k,c:'r',dev:e.dev,did:e.did,badge:'<span class="nr">명부에 없음</span>',
