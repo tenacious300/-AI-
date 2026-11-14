@@ -796,8 +796,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.7',VER_DATE='2026.11.14';
+var VERSION='v8.8',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.8','11.14',['🖨 일시불 비교 견적서 개선: 구독 장점 카드(목돈 부담 · 월 납부 · 혜택 합계 · 무상수리연장) · 구독 칸 강조 · 결론 문구 자동 (더 저렴 / 월 차액으로 무상수리연장까지)']],
   ['v8.7','11.14',['일시불 비교 안내에서 카드 무이자 · 매장 할인 · 사은품 문구 삭제']],
   ['v8.6','11.14',['일시불 비교 안내 문구 통일: \'구독은 무상수리연장 서비스가 들어있습니다\' (화면 · 캡처 · 인쇄)']],
   ['v8.5','11.14',['🖨 견적 인쇄에 ⚖️ 일시불 비교 견적서 추가: 모델별 일시불 구매가 · 구독 총 납부액 표와 카드 · 포인트 반영 실부담 비교']],
