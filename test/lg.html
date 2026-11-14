@@ -277,12 +277,14 @@ function topUp(code,r){if(D.bd[r[R.bd]]==='소상공인')return 0;var a=actInfo(
   var tot=a.mid+(a.live?a.add:0);if(!tot)return 0;var tgt=Math.ceil(tot*1000/72/100)*100;return Math.max(0,tgt-r[R.act]);}
 function halfMonths(r){var n=D.notes[r[R.note]]||'',a=actInfo(r._code);var t=n+' '+(a&&a.live?a.note:'');var m=/(\d+)개월\s*(월요금\s*)?반값/.exec(t);return m?+m[1]:0;}
 
+var PRE_RATE=0.001875;
 function calc(code,r,pre){r._code=code;var extra=topUp(code,r),mon=r[R.fin]-extra,term=r[R.term];
   var hm=halfMonths(r),half=Math.floor(mon/2/10)*10;
-  var preCut=pre>0?Math.floor(pre/term/10)*10:0;
-  var monP=Math.max(0,mon-preCut),halfP=Math.max(0,half-preCut);
+  /* 선납: 월 요금 − 선납금÷개월 − 선납금×0.1875%(연 2.25%) → 100원 미만 버림 (CSMS 단가표 계산식과 동일) */
+  var monP=pre>0?Math.max(0,Math.floor((mon-pre/term-pre*PRE_RATE)/100)*100):mon,preCut=mon-monP;
+  var preSplit=pre>0?Math.floor(pre/term):0,preBonus=preCut-preSplit,halfP=Math.max(0,half-preCut);
   var total=pre+(hm?halfP*hm+monP*(term-hm):monP*term);
-  return {r:r,extra:extra,mon:mon,monP:monP,hm:hm,halfP:halfP,pre:pre,preCut:preCut,total:total,term:term};}
+  return {r:r,extra:extra,mon:mon,monP:monP,hm:hm,halfP:halfP,pre:pre,preCut:preCut,preSplit:preSplit,preBonus:preBonus,total:total,term:term};}
 function minMon(m){var best=null;m[2].forEach(function(r){if((D.bd[r[R.bd]]==='소상공인')!==(MODE==='sb'))return;var v=r[R.fin]-topUp(m[0],r);if(best===null||v<best)best=v;});return best;}
 
 /* ---------- 이번 주 활성화 ---------- */
@@ -357,7 +359,8 @@ function stepHtml(code,s,i){var st=s.st,k=st.k,idx=KEYI[k];
     var rs=s.rows.filter(function(r){return r[idx]===v;}),mn=minOf(code,rs),ac=actOf(code,rs),on=String(v)===String(SEL[k]);
     var sub=k==='bd'||k==='sb'?(function(){var r0=rs[0];return r0&&r0[R.rate]?r0[R.rate]+'% 할인':'';})():'';
     return '<button class="opt'+(on?' on':'')+'" data-v="'+esc(v)+'">'+(ac?'<span class="ab">'+(ac/10000>=1?(ac/10000)+'만':ac.toLocaleString())+'원 활성화</span>':'')+'<b>'+st.lab(v)+'</b>'+(sub?'<em>'+sub+'</em>':'')+'<small>월 '+won(mn)+(rs.length>1?'~':'')+'</small></button>';}).join('')+'</div></div>';}
-function preAmounts(r,ratio){if(!r[R.pmin])return [];if(ratio===30)return [r[R.pmin]];var a=[];for(var v=r[R.pmin];v<=r[R.pmax];v+=100000)a.push(v);if(a[a.length-1]!==r[R.pmax])a.push(r[R.pmax]);return a;}
+function preRatioAmt(r,p){return Math.floor(r[R.base]*r[R.term]*p/100/100)*100;}
+function preAmounts(r,ratio){if(!r[R.pmin])return [];if(ratio!=='f')return [preRatioAmt(r,ratio)];var a=[];for(var v=r[R.pmin];v<=r[R.pmax];v+=100000)a.push(v);if(a[a.length-1]!==r[R.pmax])a.push(r[R.pmax]);return a;}
 function renderPicked(){var el=$('#picked');if(!SEL){el.innerHTML='';return;}
   var m=BY[SEL.code],base=m[0].replace(/\..*$/,''),a=actInfo(m[0]);
   var h='<div class="picked"><div class="picked-h"><div><b>'+esc(m[0])+badges(m[0])+'</b><div class="meta">'+esc(D.cats[m[1]])+(m[3]?' · 기준가 '+won(m[3]):'')+'</div></div>'
@@ -372,10 +375,11 @@ function renderPicked(){var el=$('#picked');if(!SEL){el.innerHTML='';return;}
   h+=x.steps.map(function(s,i){return stepHtml(m[0],s,i);}).join('');
   var n=x.steps.length;
   if(r[R.pmin]){var ratios=D.pre[r[R.pre]]?D.pre[r[R.pre]].split(',').map(Number):[];if(!ratios.length)ratios=[30,50];
-    if(SEL.preR&&ratios.indexOf(SEL.preR)<0){SEL.preR=0;SEL.pre=0;}
-    h+='<div class="step"><div class="step-h"><span class="sn">'+(n+1)+'</span>선납 <small>(선택)</small></div><div class="opts" data-k="preR"><button class="opt'+(!SEL.preR?' on':'')+'" data-v="0"><b>선납 안 함</b></button>'+ratios.map(function(p){return '<button class="opt'+(SEL.preR===p?' on':'')+'" data-v="'+p+'"><b>'+p+'%</b><small>'+(preAmounts(r,p).length>1?(r[R.pmin]/10000)+'만~'+(r[R.pmax]/10000)+'만':(r[R.pmin]/10000)+'만원')+'</small></button>';}).join('')+'</div>';
+    if(SEL.preR&&SEL.preR!=='f'&&ratios.indexOf(SEL.preR)<0){SEL.preR=0;SEL.pre=0;}
+    var pv=function(P){return won(calc(m[0],r,P).monP);};
+    h+='<div class="step"><div class="step-h"><span class="sn">'+(n+1)+'</span>선납 <small>(선택)</small></div><div class="opts" data-k="preR"><button class="opt'+(!SEL.preR?' on':'')+'" data-v="0"><b>선납 안 함</b><small>월 '+won(calc(m[0],r,0).monP)+'</small></button>'+ratios.map(function(p){var P=preRatioAmt(r,p);return '<button class="opt'+(SEL.preR===p?' on':'')+'" data-v="'+p+'"><b>정률 '+p+'%</b><em>'+won(P)+'</em><small>월 '+pv(P)+'</small></button>';}).join('')+'<button class="opt'+(SEL.preR==='f'?' on':'')+'" data-v="f"><b>정액</b><em>'+(r[R.pmin]/10000)+'만~'+(r[R.pmax]/10000)+'만</em><small>10만원 단위</small></button></div>';
     if(SEL.preR){var am=preAmounts(r,SEL.preR);if(am.indexOf(SEL.pre)<0)SEL.pre=am[0];
-      h+='<div class="opts sm" data-k="pre">'+am.map(function(v){return '<button class="opt'+(SEL.pre===v?' on':'')+'" data-v="'+v+'"><b>'+(v/10000)+'만원</b></button>';}).join('')+'</div>';}
+      if(SEL.preR==='f')h+='<div class="opts sm" data-k="pre">'+am.map(function(v){return '<button class="opt'+(SEL.pre===v?' on':'')+'" data-v="'+v+'"><b>'+(v/10000)+'만원</b><small>월 '+pv(v)+'</small></button>';}).join('')+'</div>';}
     h+='</div>';}else{SEL.pre=0;SEL.preR=0;}
   var c=calc(m[0],r,SEL.pre);
   h+='<div class="brk"><div class="r"><span>정상 구독료</span><span>'+won(r[R.base])+'</span></div>';
@@ -383,7 +387,7 @@ function renderPicked(){var el=$('#picked');if(!SEL){el.innerHTML='';return;}
   if(promo)h+='<div class="r minus"><span>프로모션 할인 (활성화'+(c.extra?' · 추가 '+md(a.s)+'~'+md(a.e):'')+')</span><span>−'+won(promo)+'</span></div>';
   if(r[R.bdisc])h+='<div class="r minus"><span>결합 할인 ('+esc(D.bd[r[R.bd]])+' '+r[R.rate]+'%)</span><span>−'+won(r[R.bdisc])+'</span></div>';
   if(isSb(r)&&r[R.act])h+='<div class="r minus"><span>소상공인 할인 ('+esc(D.sb[r[R.sb]])+' '+r[R.rate]+'%)</span><span>−'+won(r[R.act])+'</span></div>';
-  if(c.preCut)h+='<div class="r minus"><span>선납 차감 ('+won(c.pre)+' ÷ '+c.term+'개월)</span><span>−'+won(c.preCut)+'</span></div>';
+  if(c.preCut)h+='<div class="r minus"><span>선납 차감 ('+won(c.pre)+' ÷ '+c.term+'개월)</span><span>−'+won(c.preSplit)+'</span></div><div class="r minus"><span>선납 할인 (선납금 × 연 2.25% ÷ 12 · 100원 미만 버림)</span><span>−'+won(c.preBonus)+'</span></div>';
   h+='<div class="tot"><div><small>'+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+'</small><br><b>월 '+won(c.monP)+'</b></div><div style="text-align:right"><small>총 금액 ('+(c.term/12)+'년'+(c.pre?', 선납 포함':'')+')</small><br><b style="font-size:17px">'+won(c.total)+'</b></div></div>';
   if(c.hm)h+='<div class="note gift">🎁 처음 '+c.hm+'개월은 반값 <b>월 '+won(c.halfP)+'</b> → 이후 월 '+won(c.monP)+'</div>';
   if(a&&a.type==='모상'&&a.live)h+='<div class="note gift">🎁 '+esc(a.note||'모바일상품권')+' ('+md(a.s)+'~'+md(a.e)+')</div>';
@@ -393,7 +397,7 @@ function renderPicked(){var el=$('#picked');if(!SEL){el.innerHTML='';return;}
   h+='<button class="btn pri wide" id="addBtn" style="margin-top:12px">＋ 견적에 담기</button></div></div>';
   el.innerHTML=h;
   $('#addBtn').onclick=function(){CART.push({code:m[0],sbm:MODE==='sb'?1:0,bd:r[R.bd],sb:r[R.sb],term:r[R.term],ct:r[R.ct],cs:r[R.cs],cy:r[R.cy],pre:SEL.pre});saveCart();renderCart();toast(m[0]+' 담았어요');};}
-$('#picked').addEventListener('click',function(e){var b=e.target.closest('.opt');if(!b||!SEL)return;var k=b.parentNode.dataset.k,v=+b.dataset.v;if(!k)return;
+$('#picked').addEventListener('click',function(e){var b=e.target.closest('.opt');if(!b||!SEL)return;var k=b.parentNode.dataset.k,v=b.dataset.v==='f'?'f':+b.dataset.v;if(!k)return;
   SEL[k]=v;if(k==='preR'){SEL.pre=0;}else if(k!=='pre'){var i=['bd','sb','term','ct','cs','cy'].indexOf(k);['bd','sb','term','ct','cs','cy'].slice(i+1).forEach(function(z){SEL[z]=null;});SEL.pre=0;SEL.preR=0;}
   renderPicked();});
 
