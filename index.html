@@ -503,6 +503,8 @@ body.preview{background:#e5e7eb;padding:0}
 .nt2-ver .p{font-size:12px;color:var(--sub);margin:4px 0 0 24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nt2-ver .b label{display:flex;gap:7px;align-items:flex-start;font-size:13px;padding:5px 0 5px 24px;line-height:1.45;cursor:pointer}.nt2-ver .b input{margin-top:3px}
 .nt2-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:28px 12px;border:1px dashed var(--line);border-radius:14px;margin-top:12px;font-size:13.5px}.nt2-empty span{color:var(--sub);font-size:12.5px}.nt2-empty .btn{margin-top:6px}
+.nt2-editbar{display:flex;align-items:center;gap:8px;margin-top:12px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:12px;padding:9px 12px;font-size:13px;font-weight:700}.nt2-editbar a{margin-left:auto;color:#b45309;font-weight:600}
+.nt2-re{display:flex;gap:8px;align-items:flex-start;margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-size:13.5px}.nt2-re input{margin-top:3px}.nt2-re small{display:block;color:var(--sub);font-size:12px;margin-top:2px;line-height:1.45}
 .nt2-bar{position:sticky;bottom:-1px;display:flex;gap:8px;margin-top:14px;padding:10px 0;background:#fff;border-top:1px solid var(--line)}.nt2-bar .pri{flex:1}
 </style>
 </head>
@@ -834,8 +836,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.13',VER_DATE='2026.11.14';
+var VERSION='v8.14',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.14','11.14',['관리자 📢 공지 수정: 올린 공지의 제목 · 내용 · 첨부 항목 수정, 다시 알리기 선택 가능']],
   ['v8.13','11.14',['관리자 📢 공지 화면 정리: 현재 공지 / 새 공지 작성 탭 분리, 확인율 크게 표시, 미확인 직원 이름 · 지점 표시, 업데이트 내역 버전별 접기']],
   ['v8.12','11.14',['🖨 견적서 오른쪽 위에 담당 직원(지점 · 이름) 표시','견적서에서 구매 채널 항목 삭제']],
   ['v8.11','11.14',['⚖️ 일시불 구매가 자동 입력: 삼성닷컴 기준가를 불러와 채움 (직접 고치면 그 금액 유지 · ↺로 기준가 복원)','담은 모델 · 선택한 모델 이름 옆에 삼성닷컴 기준가 표시']],
@@ -1958,7 +1961,7 @@ function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="a
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
-  $('#ntBody').innerHTML=(preview?'<div class="warn" style="margin:0 0 8px">미리보기예요. 아직 올라가지 않았어요.</div>':'')+'<div class="nt-t">'+esc(n.title||'(제목 없음)')+'</div><div class="nt-d">'+ntFmt(n.at)+' · 관리자</div>'
+  $('#ntBody').innerHTML=(preview?'<div class="warn" style="margin:0 0 8px">미리보기예요. 아직 올라가지 않았어요.</div>':'')+'<div class="nt-t">'+esc(n.title||'(제목 없음)')+'</div><div class="nt-d">'+ntFmt(n.at)+(n.edited?' (수정됨)':'')+' · 관리자</div>'
    +(n.body?'<div class="nt-b">'+esc(n.body)+'</div>':'<div style="height:10px"></div>')
    +(n.items&&n.items.length?'<div class="nt-u"><b>📝 이번 업데이트 내용</b><ul style="margin:0;padding-left:18px">'+n.items.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>':'');
   $('#ntOk').textContent=preview?'닫기':'✅ 확인했어요';$('#ntModal').classList.add('on');}
@@ -1975,12 +1978,12 @@ $('#ntOk').onclick=function(){$('#ntModal').classList.remove('on');var n=NT.cur;
 $('#ntClose').onclick=function(){$('#ntModal').classList.remove('on');};
 function admNoticeLoad(){NT.load=true;gsr('adminNotice',ADM.pw,function(r){NT.load=false;NT.info=r&&r.ok?r:{ok:false};if(ADM.tab==='notice')admRender();},function(){NT.load=false;NT.info={ok:false};if(ADM.tab==='notice')admRender();});
   if(!ADM.stat)gsr('adminStats',ADM.pw,function(r){if(r&&r.ok){ADM.stat=r;if(ADM.tab==='notice')admRender();}});}
-function ntPicked(){var out=[];CHANGELOG.forEach(function(v,k){v[2].forEach(function(x,j){if(NT.draft.pick[k+'_'+j])out.push(x);});});return out;}
+function ntPicked(){var out=[],d=NT.draft;if(NT.edit&&d.extra)d.extra.forEach(function(x,j){if(d.exOn[j]!==false)out.push(x);});CHANGELOG.forEach(function(v,k){v[2].forEach(function(x,j){if(NT.draft.pick[k+'_'+j])out.push(x);});});return out;}
 function admNoticeHtml(){
   var I=NT.info,h='',d=NT.draft,seg=NT.seg||'cur',pk=ntPicked().length;
   var pc=0,n=I&&I.ok&&I.notice;
   if(n){var ack0=I.acks||[],te0=(ADM.stat&&ADM.stat.todayEmps||[]).length,base0=Math.max(te0,ack0.length);pc=base0?Math.round(ack0.length/base0*100):0;}
-  h+='<div class="nt2-seg"><button data-ntseg="cur" class="'+(seg==='cur'?'on':'')+'">📌 현재 공지'+(n?' <small>확인 '+pc+'%</small>':'')+'</button><button data-ntseg="new" class="'+(seg==='new'?'on':'')+'">✏️ 새 공지 작성'+(d.title||pk?' <small>작성 중</small>':'')+'</button></div>';
+  h+='<div class="nt2-seg"><button data-ntseg="cur" class="'+(seg==='cur'?'on':'')+'">📌 현재 공지'+(n?' <small>확인 '+pc+'%</small>':'')+'</button><button data-ntseg="new" class="'+(seg==='new'?'on':'')+'">'+(NT.edit?'✏️ 공지 수정 <small>수정 중</small>':'✏️ 새 공지 작성'+(d.title||pk?' <small>작성 중</small>':''))+'</button></div>';
   if(seg==='cur'){
     if(!I)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
     if(!I.ok)return h+'<div class="warn" style="margin-top:12px">공지 정보를 불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
@@ -1988,27 +1991,30 @@ function admNoticeHtml(){
     var ack=I.acks||[],ackE={};ack.forEach(function(a){ackE[a.emp]=1;});
     var te=(ADM.stat&&ADM.stat.todayEmps||[]).map(function(x){return x.emp;}),un=te.filter(function(e){return !ackE[e];});
     var who=function(e){var r=rInfo(e);return r?'<b>'+esc(r[0])+'</b> <small>'+esc(r[1])+'</small>':'<b>'+esc(e)+'</b>';};
-    h+='<div class="nt2-card"><div class="nt2-top"><span class="nt2-live">● 게시 중</span><small>'+ntFmt(n.at)+' 게시</small></div>'
+    h+='<div class="nt2-card"><div class="nt2-top"><span class="nt2-live">● 게시 중</span><small>'+ntFmt(n.at)+' 게시'+(n.edited?' · '+ntFmt(n.edited)+' 수정':'')+'</small></div>'
       +'<div class="nt2-title">'+esc(n.title)+'</div>'
       +(n.body?'<div class="nt2-body">'+esc(n.body)+'</div>':'')
       +(n.items&&n.items.length?'<div class="nt2-items">📝 업데이트 내용 '+n.items.length+'개 첨부</div>':'')
       +'<div class="nt2-stat"><div class="nt2-pc"><b>'+pc+'</b>%</div><div style="flex:1"><div>확인 <b style="color:var(--ok)">'+ack.length+'명</b>'+(te.length?' <span style="color:var(--sub)">/ 오늘 접속 '+te.length+'명</span>':'')+'</div><div class="ack-bar"><i style="width:'+pc+'%"></i></div></div></div>'
-      +'<div class="nt2-act"><button class="btn line sm" id="ntView">👀 공지 보기</button><button class="btn line sm" id="ntReload">↻ 새로고침</button><button class="btn del sm" id="ntDel" style="margin-left:auto">공지 내리기</button></div></div>';
+      +'<div class="nt2-act"><button class="btn line sm" id="ntView">👀 공지 보기</button><button class="btn line sm" id="ntEdit">✏️ 수정</button><button class="btn line sm" id="ntReload">↻</button><button class="btn del sm" id="ntDel" style="margin-left:auto">공지 내리기</button></div></div>';
     h+='<div class="nt2-sec"><span>⏳ 아직 확인 안 함</span><b>'+un.length+'명</b><small>오늘 접속한 직원 기준</small></div>'
       +(un.length?'<div class="nt2-chips">'+un.map(function(e){return '<span class="nt2-chip">'+who(e)+'</span>';}).join('')+'</div>':'<div class="nt2-ok">🎉 오늘 접속한 직원 모두 확인했어요</div>');
     h+='<details class="nt2-det"'+(NT.ackOpen?' open':'')+'><summary><span>✅ 확인한 직원</span><b>'+ack.length+'명</b><i>▾</i></summary>'
       +(ack.length?'<div class="nt2-list">'+ack.map(function(a){return '<div>'+who(a.emp)+'<span>'+esc(a.dev)+'</span><time>'+esc(a.at)+'</time></div>';}).join('')+'</div>':'<div class="empty" style="margin:8px 0 0">아직 확인한 사람이 없어요.</div>')+'</details>';
     return h;
   }
+  if(NT.edit)h+='<div class="nt2-editbar">✏️ 지금 올라간 공지를 수정하고 있어요<a href="#" id="ntEditX">수정 취소</a></div>';
   h+='<div class="nt2-card"><label class="nt2-l">제목 <small id="ntTc">'+d.title.length+'/60</small></label><input type="text" id="ntTitle" maxlength="60" placeholder="예: 12월 정책 안내" value="'+esc(d.title)+'">'
     +'<label class="nt2-l" style="margin-top:10px">내용 <small id="ntBc">'+d.body.length+'/1000</small></label><textarea class="nt-ta" id="ntText" rows="5" maxlength="1000" placeholder="직원들에게 전할 내용을 적어주세요">'+esc(d.body)+'</textarea></div>';
+  if(NT.edit&&d.extra&&d.extra.length)h+='<div class="nt2-sec"><span>📎 기존 첨부 항목</span><small>체크 해제하면 빠져요</small></div><div class="nt2-ver sel" style="margin-top:8px"><div class="b">'+d.extra.map(function(x,j){return '<label><input type="checkbox" data-ex="'+j+'" '+(d.exOn[j]!==false?'checked':'')+'>'+esc(x)+'</label>';}).join('')+'</div></div>';
   h+='<div class="nt2-sec"><span>📝 업데이트 내역 첨부</span><b>'+pk+'개 선택</b>'+(pk?'<a href="#" id="ntClr">선택 해제</a>':'<small>선택한 항목이 공지 아래에 붙어요</small>')+'</div>';
   var shown=NT.more?CHANGELOG:CHANGELOG.slice(0,5);NT.open=NT.open||{};
   h+='<div class="nt2-vers">'+shown.map(function(v,k){var c=v[2].filter(function(x,j){return d.pick[k+'_'+j];}).length,all=c===v[2].length,op=NT.open[k];
     return '<div class="nt2-ver'+(c?' sel':'')+'"><div class="h"><label><input type="checkbox" data-ver="'+k+'" '+(all?'checked':'')+'><b>'+esc(v[0])+'</b><small>'+esc(v[1])+'</small></label><button type="button" data-vop="'+k+'">'+(c?'<em>'+c+'/'+v[2].length+'</em>':v[2].length+'개 항목')+' '+(op?'▴':'▾')+'</button></div>'
       +(op?'<div class="b">'+v[2].map(function(x,j){return '<label><input type="checkbox" data-cl="'+k+'_'+j+'" '+(d.pick[k+'_'+j]?'checked':'')+'>'+esc(x)+'</label>';}).join('')+'</div>':'<div class="p">'+esc(v[2][0])+(v[2].length>1?' 외 '+(v[2].length-1)+'개':'')+'</div>')+'</div>';}).join('')+'</div>';
   if(CHANGELOG.length>5)h+='<a href="#" class="link" id="ntMore" style="display:inline-block;margin-top:8px;font-size:13px">'+(NT.more?'접기 ▴':'이전 버전 더 보기 ▾ ('+(CHANGELOG.length-5)+'개)')+'</a>';
-  h+='<div class="nt2-bar"><button class="btn line" id="ntPrev">👀 미리보기</button><button class="btn pri" id="ntPost">📢 공지 올리기</button></div>'
+  if(NT.edit)h+='<label class="nt2-re"><input type="checkbox" id="ntRe" '+(NT.re?'checked':'')+'> <span><b>직원들에게 다시 알리기</b><small>체크하면 확인한 직원에게도 다시 팝업이 뜨고 확인 기록이 새로 시작돼요. 체크 안 하면 오타 수정처럼 조용히 바뀌어요.</small></span></label>';
+  h+='<div class="nt2-bar"><button class="btn line" id="ntPrev">👀 미리보기</button><button class="btn pri" id="ntPost">'+(NT.edit?'💾 수정 저장':'📢 공지 올리기')+'</button></div>'
    +'<div class="note">올리면 직원 화면에 75초 안에 팝업으로 떠요. "확인했어요"를 누른 직원에게는 다시 뜨지 않고, 새 공지를 올리면 이전 공지는 내려가요.</div>';
   return h;
 }
@@ -2020,13 +2026,20 @@ function admNoticeBind(){
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-ver]'),function(c){c.onchange=function(){var k=+c.dataset.ver;CHANGELOG[k][2].forEach(function(x,j){d.pick[k+'_'+j]=c.checked;});admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cl]'),function(c){c.onchange=function(){d.pick[c.dataset.cl]=c.checked;admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-vop]'),function(b){b.onclick=function(){var k=b.dataset.vop;NT.open[k]=!NT.open[k];admRender();};});
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-ex]'),function(c){c.onchange=function(){d.exOn[+c.dataset.ex]=c.checked;admRender();};});
+  var re=$('#ntRe');if(re)re.onchange=function(){NT.re=this.checked;};
+  var ex=$('#ntEditX');if(ex)ex.onclick=function(e){e.preventDefault();NT.edit=false;NT.draft=NT.saved||{title:'',body:'',pick:{}};NT.saved=null;NT.seg='cur';admRender();};
+  var ed=$('#ntEdit');if(ed)ed.onclick=function(){var n=NT.info.notice;if(!NT.edit)NT.saved=NT.draft;
+    var pick={},extra=[];(n.items||[]).forEach(function(x){var f=null;CHANGELOG.forEach(function(v,k){v[2].forEach(function(y,j){if(!f&&y===x)f=k+'_'+j;});});if(f)pick[f]=1;else extra.push(x);});
+    NT.draft={title:n.title||'',body:n.body||'',pick:pick,extra:extra,exOn:{}};NT.edit=true;NT.re=false;NT.seg='new';admRender();};
   var cl=$('#ntClr');if(cl)cl.onclick=function(e){e.preventDefault();d.pick={};admRender();};
   var m=$('#ntMore');if(m)m.onclick=function(e){e.preventDefault();NT.more=!NT.more;admRender();};
   var pv=$('#ntPrev');if(pv)pv.onclick=function(){ntShow({title:d.title,body:d.body,items:ntPicked(),at:Date.now()},true);};
   var po=$('#ntPost');if(po)po.onclick=function(){var items=ntPicked();if(!d.title.trim()){toast('제목을 적어주세요');$('#ntTitle').focus();return;}
     var b=this;b.disabled=true;b.textContent='올리는 중…';
-    gsr('adminPostNotice',{pw:ADM.pw,title:d.title.trim(),body:d.body.trim(),items:items},function(r){b.disabled=false;
-      if(r&&r.ok){toast('공지를 올렸어요');NT.draft={title:'',body:'',pick:{}};NT.seg='cur';admNoticeLoad();}else{toast('공지를 올리지 못했어요');admRender();}},
+    var ed=NT.edit,fn=ed?'adminEditNotice':'adminPostNotice';
+    gsr(fn,{pw:ADM.pw,title:d.title.trim(),body:d.body.trim(),items:items,renotify:ed&&NT.re},function(r){b.disabled=false;
+      if(r&&r.ok){toast(ed?(NT.re?'공지를 수정하고 다시 알렸어요':'공지를 수정했어요'):'공지를 올렸어요');NT.draft=ed&&NT.saved?NT.saved:{title:'',body:'',pick:{}};NT.edit=false;NT.saved=null;NT.seg='cur';admNoticeLoad();}else{toast((r&&r.msg)||(ed?'수정하지 못했어요':'공지를 올리지 못했어요'));admRender();}},
       function(){toast('서버에 연결하지 못했어요');admRender();});};
   var v=$('#ntView');if(v)v.onclick=function(){ntShow(NT.info.notice,true);};
   var rl=$('#ntReload');if(rl)rl.onclick=function(){NT.info=null;admRender();admNoticeLoad();};

@@ -32,7 +32,7 @@ var API_FUNCS = {
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
-  getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminClearNotice: adminClearNotice
+  getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
 function doPost(e) {
   var out;
@@ -698,6 +698,20 @@ function adminPostNotice(arg) {
   PropertiesService.getScriptProperties().setProperty('notice', JSON.stringify(n));
   CacheService.getScriptCache().put('nid', n.id, 21600);
   noticeSheet_();
+  return { ok: true, id: n.id };
+}
+/** 관리자: 현재 공지 수정 (renotify면 새 공지로 다시 띄우고 확인 기록은 새로 시작) */
+function adminEditNotice(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var cur = readNotice_();
+  if (!cur) return { ok: false, msg: '수정할 공지가 없어요.' };
+  var items = (arg.items || []).slice(0, 40).map(function (x) { return String(x).slice(0, 300); });
+  var n = { id: arg.renotify ? 'n' + Date.now() : cur.id, title: String(arg.title || '').slice(0, 60), body: String(arg.body || '').slice(0, 1000), items: items,
+            at: arg.renotify ? Date.now() : cur.at, edited: Date.now() };
+  while (n.items.length && Utilities.newBlob(JSON.stringify(n)).getBytes().length > 8500) n.items.pop();
+  PropertiesService.getScriptProperties().setProperty('notice', JSON.stringify(n));
+  CacheService.getScriptCache().put('nid', n.id, 21600);
   return { ok: true, id: n.id };
 }
 /** 관리자: 공지 내리기 */
