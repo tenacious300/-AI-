@@ -842,8 +842,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.16',VER_DATE='2026.11.14';
+var VERSION='v8.17',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.17','11.14',['🔄 새 버전으로 업데이트되면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
   ['v8.15','11.14',['관리자 📈 기능 사용: 📅 날짜별 보기 추가 (날짜 선택 · 전날/다음날 · 최근 14일 막대 그래프, 전날 대비 변화)']],
   ['v8.14','11.14',['관리자 📢 공지 수정: 올린 공지의 제목 · 내용 · 첨부 항목 수정, 다시 알리기 선택 가능']],
@@ -1737,6 +1738,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
     gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
+  lsPut('calcVer',VERSION);
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
   toast(v+' 님, 환영해요');BOX=[];boxLoaded=false;boxBadge();}
@@ -1745,7 +1747,9 @@ $('#empIn').addEventListener('keydown',function(e){if(e.key==='Enter')enter();})
 $('#meBtn').onclick=openGate;
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
-if(CUST){}else if(EMP)startBeat();else openGate();
+/* 새 버전으로 바뀌면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부를 새로 확인) */
+var RELOG=false;if(EMP&&lsGet('calcVer')!==VERSION){RELOG=true;EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}lsPut('calcMe',null);showMe();}
+if(CUST){}else if(EMP)startBeat();else{openGate();if(RELOG)$('#empErr').innerHTML='<span style="color:#1d4ed8">🔄 새 버전 '+VERSION+'으로 업데이트되어 로그아웃됐어요.<br>사번을 다시 입력해 주세요.</span>';}
 var ADM={pw:null,t:null};
 function admLogin(){
   $('#admBody').innerHTML='<div style="font-size:13px;color:var(--sub);margin-top:4px">관리자 비밀번호를 입력하면 상세 정보를 볼 수 있어요.</div>'
