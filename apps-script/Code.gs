@@ -190,7 +190,7 @@ function heartbeat(info) {
     var memp = cleanEmp_(info.emp), mraw = memp && CacheService.getScriptCache().get('msg_' + memp);
     if (mraw) { var mm = JSON.parse(mraw); if (mm.id !== String(info.msgAck || '')) res.msg = mm; }
   } catch (e) {}
-  if (isFirst) { try { res.dv = dataVersion_(); } catch (e) {} }
+  if (isFirst) { try { res.dv = dataVersion_(); } catch (e) {} try { res.me = meInfo_(info.emp); } catch (e) {} }
   return res;
 }
 
@@ -990,7 +990,11 @@ function checkEmp(arg) {
   var emp = typeof arg === 'object' && arg ? arg.emp : arg, did = typeof arg === 'object' && arg ? arg.did : '';
   if (isBlocked_(emp, did)) return { ok: false, reason: 'blocked' };
   if (!rosterAllowed_(emp)) { nrLog_(emp, 'r', typeof arg === 'object' ? arg : {}); return { ok: false, reason: 'roster' }; }
-  return { ok: true };
+  return { ok: true, me: meInfo_(emp) };
+}
+/** 본인 사번의 이름 · 지점 · 직책 (견적서 담당자 표시용) */
+function meInfo_(emp) {
+  try { var r = rosterMap_()[cleanEmp_(emp)]; return r ? { name: r[0] || '', br: r[1] || '', rank: r[2] || '' } : null; } catch (e) { return null; }
 }
 /** 관리자: 명부 + 설정 */
 function adminRoster(pw) {

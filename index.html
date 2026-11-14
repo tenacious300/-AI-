@@ -185,6 +185,7 @@ details.fold[open]>summary::after{content:'접기 ▴'}
 .pq .tot div{display:flex;justify-content:space-between;border-bottom:1px dashed #ccd;padding:4px 0}
 .pq .tot .em{font-weight:800;font-size:15px;border-bottom:2px solid #111}
 .pq .nt{margin-top:14px;color:#555;font-size:11px;line-height:1.6}
+.pq .staff{margin-top:3px;font-size:13px;color:#111}.pq .staff small{color:#666;margin-left:4px}
 body.preview>*:not(#printArea){display:none!important}
 body.preview #printArea{display:block;max-width:820px;margin:20px auto;padding:28px;background:#fff;box-shadow:0 2px 16px rgba(0,0,0,.1)}
 body.preview{background:#e5e7eb;padding:0}
@@ -1408,7 +1409,7 @@ function buildPrint(mode){
   if(chP)T.push(['구독포인트 (약 5%)','+'+chP.toLocaleString()+'P']);
   var allP=fp+wp+chP+PKp.pts;
   T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(allP?' + '+allP.toLocaleString()+'P':'')]);
-  var html='<div class="pq"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><small>견적일 '+ds+'</small></div>'
+  var html='<div class="pq"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
     +'<div class="cond"><span>고객 유형: <b>'+({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust]||'신규')+'</b></span><span>구매 채널: <b>'+chName+'</b></span><span>제휴카드: <b>'+(MC?MC.per.map(function(p){return p.name+' · 월 '+p.u+'만원↑';}).join(' / '):card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
     +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')
@@ -1457,6 +1458,8 @@ function buildPrint(mode){
   var imgs=Array.prototype.slice.call($('#printArea').querySelectorAll('img'));
   return Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]);
 }
+function staffLine(){var me=meGet();if(!EMP)return '';
+  return '<div class="staff">담당 <b>'+(me&&me.br?esc(me.br)+' ':'')+(me&&me.name?esc(me.name):'')+(me&&me.rank?' '+esc(me.rank):'')+'</b> <small>사번 '+esc(EMP)+'</small></div>';}
 function printQuote(mode){
   if(!S.cart.length){toast('담은 모델이 없어요');return;}
   toast('제품 이미지를 불러오는 중…');
@@ -1632,7 +1635,7 @@ function beat(){
   var evs=EVQ.splice(0,60),fus=FU;FU={};if(firstBeat)fus['dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;
   var idl=idleMin(),info={fu:fus,act:idl>=IDLE_MIN?'idle:'+idl:curAct(),away:!!document.hidden||idl>=IDLE_MIN,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
-  gsr('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);Object.keys(fus).forEach(function(k){FU[k]=(FU[k]||0)+fus[k];});}if(r&&r.blocked){if(r.reason==='roster'){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}showMe();openGate();rosterReject();return;}showBlocked();return;}if(r&&lsGet('calcBlocked')){lsPut('calcBlocked',null);$('#blockedScr').classList.remove('on');}if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.msg)msgShow(r.msg);if(r&&r.nid)ntCheck(r.nid);if(r&&r.mv&&verLt(VERSION,r.mv))doUpdate();},function(){$('#liveBtn').classList.add('off');});
+  gsr('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);Object.keys(fus).forEach(function(k){FU[k]=(FU[k]||0)+fus[k];});}if(r&&r.blocked){if(r.reason==='roster'){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}showMe();openGate();rosterReject();return;}showBlocked();return;}if(r&&lsGet('calcBlocked')){lsPut('calcBlocked',null);$('#blockedScr').classList.remove('on');}if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.me!==undefined)meSave(r.me);if(r&&r.msg)msgShow(r.msg);if(r&&r.nid)ntCheck(r.nid);if(r&&r.mv&&verLt(VERSION,r.mv))doUpdate();},function(){$('#liveBtn').classList.add('off');});
 }
 var EMP=null,beatStarted=false,EVQ=[],LASTACT={t:0,a:''};
 var FU={};function fuLog(k){FU[k]=(FU[k]||0)+1;if(k.indexOf(':')<0){var h='h:'+('0'+new Date().getHours()).slice(-2);FU[h]=(FU[h]||0)+1;}}
@@ -1679,6 +1682,9 @@ function fbInit(){
 }
 try{EMP=localStorage.getItem('calcEmp');}catch(e){}
 function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStarted||!HAS_GS)return;beatStarted=true;beat();setInterval(beat,75000);document.addEventListener('visibilitychange',function(){if(document.hidden){if(Date.now()-(window.__lastBeat||0)>5000)beat();}else{LASTIN=Date.now();if(FB.gone)fbPresence(true);if(Date.now()-(window.__lastBeat||0)>5000)beat();}});}
+var EMP_TMP=null;
+function meSave(me,emp){lsPut('calcMe',me?{emp:emp||EMP,name:me.name,br:me.br,rank:me.rank}:null);}
+function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';}
 function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function rosterReject(){$('#empErr').innerHTML='등록되지 않은 사번이에요.<br><small style="font-weight:500">명부에 없는 사번은 입장할 수 없어요. 소속 관리자에게 등록을 요청해 주세요.</small>';$('#empIn').style.borderColor='#dc2626';}
@@ -1686,7 +1692,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   if(!empOk(v)){$('#empErr').textContent='사번은 숫자 6자리로 입력해 주세요';$('#empIn').style.borderColor='#dc2626';$('#empIn').focus();return;}
   $('#empIn').style.borderColor='';
   if(HAS_GS&&!enter._ok){var bt=$('#empGo');bt.disabled=true;$('#empErr').textContent='확인 중…';
-    gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
+    gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   $('#gate').classList.remove('on');showMe();
