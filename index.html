@@ -420,8 +420,6 @@ body.preview{background:#e5e7eb;padding:0}
 .sum-l .tot-g .tot{border-top:1px dashed rgba(255,255,255,.25);margin-top:4px;padding-top:6px;font-weight:800}
 .foot{max-width:1180px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--sub)}
 /* v8.2 */
-.qtools{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap}
-.qtools .btn{min-height:34px}
 .rrow{margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .rrow .rl{display:flex;gap:6px;align-items:center;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .rrow .rl::-webkit-scrollbar{display:none}
@@ -455,10 +453,6 @@ body.preview{background:#e5e7eb;padding:0}
 #custView .cn{font-size:12px;color:#64748b;margin:12px 4px 0;line-height:1.6}
 #custView .cb2{display:flex;gap:8px;margin-top:14px}
 #custView .cb2 a,#custView .cb2 button{flex:1;text-align:center;text-decoration:none;border-radius:12px;padding:12px;font-weight:800;font-size:14px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;cursor:pointer}
-.ocrbox{position:fixed;inset:0;z-index:9998;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:20px}
-.ocrbox>div{background:#fff;border-radius:16px;max-width:380px;width:100%;padding:20px}
-.ocrbox img{max-width:100%;max-height:200px;border-radius:10px;display:block;margin:10px auto}
-.ocrbox .bar2{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden}.ocrbox .bar2 i{display:block;height:100%;background:var(--pri);width:0;transition:width .2s}
 </style>
 </head>
 <body>
@@ -510,7 +504,6 @@ body.preview{background:#e5e7eb;padding:0}
       <input type="text" id="q" placeholder="모델코드 또는 품목명 (예: WH90F, 4도어, 얼음정수기)" autocomplete="off" enterkeyhint="search">
       <button class="clr" id="qClr" aria-label="지우기">✕</button>
     </div>
-    <div class="qtools"><button class="btn line sm" id="qCam" type="button">📷 라벨 찍어서 찾기</button><input type="file" id="qCamIn" accept="image/*" capture="environment" style="display:none"></div>
     <div class="rrow" id="recentRow"></div>
     <div class="list" id="qList"></div>
     <div class="lbl">품목으로 찾기</div>
@@ -791,9 +784,10 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.2',VER_DATE='2026.11.14';
+var VERSION='v8.3',VER_DATE='2026.11.14';
 var CHANGELOG=[
-  ['v8.2','11.14',['💬 카톡으로 견적 보내기: 고객이 링크를 누르면 휴대폰에서 견적 카드를 바로 확인','⚖️ 일시불 구매와 비교 (선택): 구매가를 입력하면 구독 총 실부담과 비교, 켰을 때만 캡처 · 링크에 포함','📞 보관함 다시 연락할 날 + 오늘 연락할 고객 알림 · ⚠️ 보관 후 단가 변경 표시','⭐ 즐겨찾기 · 🕘 최근 본 모델','📷 라벨 찍어서 모델 찾기','📲 홈 화면에 앱처럼 설치 (인터넷이 끊겨도 마지막 단가로 계산)']],
+  ['v8.3','11.14',['📷 라벨 찍어서 찾기 기능 삭제','고객용 견적 링크 화면에서 \'삼성닷컴에서 보기\' 버튼 삭제']],
+  ['v8.2','11.14',['💬 카톡으로 견적 보내기: 고객이 링크를 누르면 휴대폰에서 견적 카드를 바로 확인','⚖️ 일시불 구매와 비교 (선택): 구매가를 입력하면 구독 총 실부담과 비교, 켰을 때만 캡처 · 링크에 포함','📞 보관함 다시 연락할 날 + 오늘 연락할 고객 알림 · ⚠️ 보관 후 단가 변경 표시','⭐ 즐겨찾기 · 🕘 최근 본 모델','📲 홈 화면에 앱처럼 설치 (인터넷이 끊겨도 마지막 단가로 계산)']],
   ['v8.1','11.14',['접속 현황 정확도 개선: 5분 넘게 조작이 없으면 \'자리 비움(○분째 조작 없음)\', 30분 넘으면 💤 표시 + 접속자 수에서 제외 (PC에서 창만 켜 둔 경우)','⚠️ 한 사번이 여러 기기에서 동시 접속하면 빨간 경고','지금 접속 지점 필터 · 💬 직원에게 개별 메시지 보내기','오늘 기록에 실사용 시간 · 모델 조회 · 담기 · 캡처 횟수 추가 (CSV 포함)']],
   ['v8.0','11.14',['접속 현황 ⚠️ 명부 외 탭: 명부에 없는 사번의 지금 접속 · 오늘 입장 거부(시도 횟수) · 접속 중 돌려보낸 기록을 따로 표시, 바로 허용 · 차단 · 기한 연장','입장 방식(명부 사번만 / 누구나 입장)은 그대로 전환 가능']],
   ['v7.9','11.14',['👥 직원 명부: 관리자가 명부 엑셀을 올리면 바로 반영 (신규 · 제외 · 변경 비교 후 적용, 드라이브에만 저장)','🔐 입장 방식: 명부 사번만 입장 / 누구나 입장(표시만) 전환, ✅ 예외 허용(기한 설정) 목록','접속 현황에 이름 · 소속 · 직책 · 구분 표시, 명부에 없는 사번 표시 · 바로 허용, 🏬 지점별 접속 현황, 오늘 기록 이름 검색 · 소속 필터']],
@@ -2379,7 +2373,7 @@ function custShow(){var P=CUST;if(!P||!P.s){return;}
   v.innerHTML='<div class="cw"><div class="ch">'+(P.n?'<b>'+esc(P.n)+'</b> 고객님, ':'')+'전자랜드에서 보내드린 <b>삼성 AI 구독 맞춤 견적</b>이에요.'+(ds?' <small>('+esc(ds)+' 기준)</small>':'')+'</div>'
     +(c?'<img alt="맞춤 구독 견적" src="'+c.toDataURL('image/png')+'">':'<div class="empty">견적 정보를 불러오지 못했어요. 매장에 다시 문의해 주세요.</div>')
     +'<div class="cn">※ 참고용 견적이에요. 판촉 · 카드 혜택은 기간과 조건에 따라 바뀔 수 있어서 최종 금액은 계약할 때 꼭 확인해 주세요.</div>'
-    +'<div class="cb2">'+(S.cart[0]?'<a href="'+stockUrl(S.cart[0].code)+'" target="_blank" rel="noopener">삼성닷컴에서 보기</a>':'')+(c?'<button type="button" id="custSave">이미지로 저장</button>':'')+'</div></div>';
+    +'<div class="cb2">'+(c?'<button type="button" id="custSave">이미지로 저장</button>':'')+'</div></div>';
   v.classList.add('on');document.body.style.overflow='hidden';
   var sv=$('#custSave');if(sv)sv.onclick=function(){var a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='구독견적.png';document.body.appendChild(a);a.click();a.remove();};}
 if(CUST)setTimeout(custShow,0);
@@ -2392,39 +2386,6 @@ $('#instGo').onclick=function(){$('#instBar').classList.remove('on');if(INST){IN
 $('#instX').onclick=function(){$('#instBar').classList.remove('on');lsPut('instX',1);};
 (function(){var ios=/iPhone|iPad/i.test(navigator.userAgent)&&!window.navigator.standalone;if(ios&&!CUST&&!lsGet('instX'))setTimeout(function(){var b=$('#instBar');b.querySelector('span').innerHTML='📲 공유 버튼 → <b>홈 화면에 추가</b>로 앱처럼 쓸 수 있어요';$('#instGo').style.display='none';b.classList.add('on');},4000);})();
 
-/* ---- 📷 라벨 찍어서 모델 찾기 (글자 인식) ---- */
-var OCR={lib:false};
-function nz(t){return String(t).toUpperCase().replace(/[^A-Z0-9]/g,'').replace(/O/g,'0').replace(/[IL]/g,'1');}
-function ocrMatch(text){var T=nz(text),hit=[];
-  MODELS.forEach(function(m){var k=nz(m[0]);if(k.length>=6&&T.indexOf(k)>=0)hit.push(m[0]);});
-  hit.sort(function(a,b){return b.length-a.length;});
-  if(hit.length){var top=hit[0];return {exact:hit.filter(function(c){return nz(top).indexOf(nz(c))>=0||nz(c)===nz(top);}).concat(hit).filter(function(c,i,a){return a.indexOf(c)===i;}).slice(0,8)};}
-  var toks=String(text).toUpperCase().split(/[^A-Z0-9\-]+/).filter(function(w){return w.length>=6&&/[A-Z]/.test(w)&&/[0-9]/.test(w);}).sort(function(a,b){return b.length-a.length;});
-  for(var i=0;i<toks.length;i++){for(var L=toks[i].length;L>=6;L--){var pre=nz(toks[i].slice(0,L)),c=MODELS.filter(function(m){return nz(m[0]).indexOf(pre)===0;});if(c.length)return {guess:toks[i].slice(0,L).replace(/[^A-Z0-9]/g,''),n:c.length};}}
-  return {none:true,toks:toks};}
-function ocrBox(html){var b=document.getElementById('ocrBox');if(!b){b=document.createElement('div');b.id='ocrBox';b.className='ocrbox';document.body.appendChild(b);}
-  b.innerHTML='<div>'+html+'</div>';b.onclick=function(e){if(e.target===b||e.target.closest('[data-ocrx]'))b.remove();};return b;}
-function ocrPrep(file,maxD,cb){var img=new Image();img.onload=function(){var s=Math.min(1,maxD/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);
-  var x=c.getContext('2d');x.filter='grayscale(1)';x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(img.src);cb(c);};img.onerror=function(){cb(null);};img.src=URL.createObjectURL(file);}
-function ocrWorker(){if(!OCR.w)OCR.w=Tesseract.createWorker('eng',1,{logger:function(m){var p=$('#ocrP');if(p&&m.status==='recognizing text')p.style.width=Math.round(m.progress*100)+'%';var st=$('#ocrS');if(st&&m.status)st.textContent=m.status==='recognizing text'?'글자 읽는 중… ('+OCR.pass+'/2)':'준비 중…';}});return OCR.w;}
-function ocrRun(file){fuLog('ocr');markAct('라벨 인식');
-  var prev=URL.createObjectURL(file),closeX='<button class="btn pri block" style="margin-top:12px" data-ocrx>닫기</button>';
-  ocrBox('<b>📷 모델명 읽는 중…</b><img src="'+prev+'"><div class="bar2"><i id="ocrP"></i></div><div class="hint" id="ocrS" style="margin-top:8px">처음 한 번은 인식 도구를 받느라 10초 정도 걸려요</div>');
-  var texts=[],done=function(){var R=ocrMatch(texts.join('\n'));OCR.last=texts.join('\n');
-      if(R.exact&&R.exact.length===1){var bx=document.getElementById('ocrBox');if(bx)bx.remove();$('#q').value=R.exact[0];pickModel(R.exact[0]);toast('📷 '+R.exact[0]+' 찾았어요');return;}
-      if(R.exact){ocrBox('<b>📷 이 중에 어떤 모델인가요?</b><img src="'+prev+'"><div style="display:flex;flex-direction:column;gap:6px">'+R.exact.map(function(c){var m=byCode[c];return '<button class="btn line" data-ocrc="'+esc(c)+'">'+esc(c)+' <small style="color:var(--sub)">'+esc(catOf(m))+'</small></button>';}).join('')+'</div><button class="btn block" style="margin-top:8px" data-ocrx>닫기</button>');
-        Array.prototype.forEach.call(document.querySelectorAll('[data-ocrc]'),function(b){b.onclick=function(){var c=b.dataset.ocrc;document.getElementById('ocrBox').remove();$('#q').value=c;pickModel(c);};});return;}
-      if(R.guess){var bx2=document.getElementById('ocrBox');if(bx2)bx2.remove();$('#q').value=R.guess;renderList();toast('📷 "'+R.guess+'"(으)로 검색했어요 · 목록에서 골라 주세요');return;}
-      ocrBox('<b>모델명을 찾지 못했어요</b><img src="'+prev+'"><div class="hint">모델명이 적힌 부분이 잘 보이게, 흔들리지 않도록 다시 찍어 주세요.'+(R.toks&&R.toks.length?'<br>읽은 글자: '+esc(R.toks.slice(0,3).join(', ')):'')+'</div>'+closeX);};
-  var fail=function(){ocrBox('글자 인식에 실패했어요. 인터넷 연결을 확인해 주세요.'+closeX);};
-  /* 글자 크기에 따라 인식률이 달라서 두 가지 크기로 읽어 봄 (첫 번째에서 찾으면 바로 끝) */
-  var pass=function(k){var dims=[1400,700];if(k>=dims.length){done();return;}OCR.pass=k+1;
-    ocrPrep(file,dims[k],function(c){if(!c){fail();return;}ocrWorker().then(function(w){return w.recognize(c);}).then(function(r){texts.push((r&&r.data&&r.data.text)||'');
-      var R=ocrMatch(texts.join('\n'));if(R.exact)done();else pass(k+1);}).catch(fail);});};
-  var go=function(){pass(0);};
-  if(window.Tesseract)go();else loadJs('https:\/\/cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',go,function(){ocrBox('인식 도구를 받지 못했어요. 인터넷 연결을 확인해 주세요.'+closeX);});}
-$('#qCam').onclick=function(){$('#qCamIn').value='';$('#qCamIn').click();};
-$('#qCamIn').onchange=function(){var f=this.files&&this.files[0];if(f)ocrRun(f);};
 })();
 </script>
 </body>
