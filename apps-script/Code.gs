@@ -185,7 +185,7 @@ function heartbeat(info) {
     }
   }
   try { mvMaybeFlush_(); } catch (e) {}
-  var res = { online: online, nid: noticeId_(), mv: minVer_() };
+  var res = { online: online, nid: noticeId_(), mv: minVer_(), mva: minVerAt_() };
   try {
     var memp = cleanEmp_(info.emp), mraw = memp && CacheService.getScriptCache().get('msg_' + memp);
     if (mraw) { var mm = JSON.parse(mraw); if (mm.id !== String(info.msgAck || '')) res.msg = mm; }
@@ -880,6 +880,11 @@ function adminBest(arg) {
 
 
 /* ===================== 강제 업데이트 (최소 버전) ===================== */
+function minVerAt_() {
+  var cache = CacheService.getScriptCache(), v = cache.get('minVerAt');
+  if (v == null) { v = PropertiesService.getScriptProperties().getProperty('minVerAt') || '0'; cache.put('minVerAt', v, 21600); }
+  return Number(v) || 0;
+}
 function minVer_() {
   var cache = CacheService.getScriptCache(), v = cache.get('minVer');
   if (v == null) { v = PropertiesService.getScriptProperties().getProperty('minVer') || ''; cache.put('minVer', v, 21600); }
@@ -890,8 +895,11 @@ function adminSetMinVer(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false };
   var v = String(arg.ver || '').replace(/[^v0-9.]/g, '').slice(0, 10);
+  var at = String(Date.now());
   PropertiesService.getScriptProperties().setProperty('minVer', v);
+  PropertiesService.getScriptProperties().setProperty('minVerAt', at);   // 강제 업데이트 누른 시각 (이전에 로그인한 화면은 로그아웃)
   CacheService.getScriptCache().put('minVer', v, 21600);
+  CacheService.getScriptCache().put('minVerAt', at, 21600);
   return { ok: true, ver: v };
 }
 
