@@ -165,6 +165,7 @@ details.fold[open]>summary::after{content:'접기 ▴'}
 .thumb{width:56px;height:56px;border-radius:10px;background:var(--soft);object-fit:contain;flex:none}
 .item-top{display:flex;gap:10px;align-items:flex-start;flex:1;min-width:0}
 .pname{font-size:13px;color:#334155;font-weight:600;margin-top:1px}
+.lpb{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:6px;background:#e0f2fe;color:#0369a1;font-size:11.5px;font-weight:700;white-space:nowrap}
 .stk{font-size:11.5px;font-weight:700;border-radius:6px;padding:1px 6px;margin-left:4px}
 .stk.y{background:var(--ok-soft);color:var(--ok)}.stk.n{background:var(--acc-soft);color:var(--acc)}
 #printArea{display:none}
@@ -456,7 +457,8 @@ body.preview{background:#e5e7eb;padding:0}
 .fav{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;white-space:nowrap}
 .fav.on{background:#fffbeb;border-color:#fcd34d;color:#b45309;font-weight:800}
 .lumpin{display:flex;align-items:center;gap:8px;padding:4px 0}
-.lumpin span{flex:1;font-size:13px;opacity:.85}
+.lumpin span{flex:1;font-size:13px;opacity:.9}
+.lumpin span small{display:block;font-size:11px;opacity:.7;margin-top:1px}.lumpin span small a{color:#7dd3fc}
 .lumpin input{width:130px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;padding:6px 8px;font-size:14px;text-align:right}
 .sum-l .sgrp.lump-g{background:rgba(56,189,248,.1);border:1px solid rgba(125,211,252,.45)}
 .stog.lump-b{border-color:rgba(125,211,252,.55);color:#bae6fd}
@@ -800,8 +802,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.10',VER_DATE='2026.11.14';
+var VERSION='v8.11',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.11','11.14',['⚖️ 일시불 구매가 자동 입력: 삼성닷컴 기준가를 불러와 채움 (직접 고치면 그 금액 유지 · ↺로 기준가 복원)','담은 모델 · 선택한 모델 이름 옆에 삼성닷컴 기준가 표시']],
   ['v8.10','11.14',['🖨 견적 인쇄에 🔥⚖️ 체감가 + 일시불 비교 견적서 추가 (체감가 계산과 일시불 비교를 한 장에)']],
   ['v8.9','11.14',['🕘 최근 본 모델: 모델마다 ✕ 삭제 · 전체 삭제 버튼']],
   ['v8.8','11.14',['🖨 일시불 비교 견적서 개선: 구독 장점 카드(목돈 부담 · 월 납부 · 혜택 합계 · 무상수리연장) · 구독 칸 강조 · 결론 문구 자동 (더 저렴 / 월 차액으로 무상수리연장까지)']],
@@ -885,6 +888,15 @@ var INFO={};
 function findModel(o,code,depth){if(!o||typeof o!=='object'||depth>4)return null;
   if(!Array.isArray(o)&&(String(o.modelCode||'').toUpperCase()===code||String(o.id||'').toUpperCase()===code))return o;
   for(var k in o){if(k==='embedding_text')continue;var v=o[k];if(v&&typeof v==='object'){var r=findModel(v,code,depth+1);if(r)return r;}}return null;}
+/* 삼성닷컴 검색 결과에서 삼성닷컴 기준가(가장 높은 판매가 항목)를 찾음 - 월 구독료 · 포인트 · 할인액 항목은 제외 */
+function listPrice(x){var best=null;
+  var walk=function(o,d){if(!o||typeof o!=='object'||d>3)return;for(var k in o){if(k==='embedding_text')continue;var v=o[k];
+    if(v&&typeof v==='object'){walk(v,d+1);continue;}
+    if(!/price|prc/i.test(k)||/month|mon$|subs|rent|instal|inst|point|pnt|benefit|discount|dc|coupon|save|unit|per|min|ship|deliv|fee|care|tax/i.test(k))continue;
+    var n=typeof v==='number'?v:+String(v).replace(/[^0-9.]/g,'');if(!n||n<50000||n>100000000)continue;
+    if(!best||n>best.v)best={v:Math.round(n),k:k};}};
+  walk(x,0);return best;}
+function lumpAuto(){var ch=false;S.cart.forEach(function(c){if(c.lumpManual)return;var o=INFO[c.code];var v=o&&o.st==='ok'&&o.lp>=c.mon*10?o.lp:0;if(v&&c.lump!==v){c.lump=v;ch=true;}});return ch;}
 function fetchInfo(code,force){
   if(INFO[code]&&INFO[code].p&&!(force&&INFO[code].st==='fail'))return INFO[code].p;
   var o=INFO[code]={st:'loading'};var CU=String(code).toUpperCase();
@@ -895,7 +907,8 @@ function fetchInfo(code,force){
     rs.forEach(function(a){if(x)return;if(String(a.modelCode||'').toUpperCase()===CU||String(a.id||'').toUpperCase()===CU){x=a;return;}var g=findModel(a,CU,0);if(g)x=Object.assign({},a,g);});
     if(!x)return 'none';
     var im=x.images||{};var img=(im.largeImage&&im.largeImage.url)||im.laImage||(im.smallImage&&im.smallImage.url)||im.smImage||'';
-    return {name:x.name||x.productDisplayName||'',img:img,stock:x.stockStatus||'',pdp:x.pdpURL||''};
+    var lp=listPrice(x);
+    return {name:x.name||x.productDisplayName||'',img:img,stock:x.stockStatus||'',pdp:x.pdpURL||'',lp:lp?lp.v:0,lpk:lp?lp.k:''};
   }).catch(function(){return 'timeout';});
   o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';}else o.st=(v==='none'?'none':'fail');render();return o;});
   return o.p;
@@ -968,7 +981,8 @@ function infoName(code){var o=INFO[code];if(!o)return '';if(o.st==='loading')ret
   if(o.st==='none')return '<div class="pname" style="color:var(--sub)">삼성닷컴에서 이 모델을 찾지 못했어요 <span class="stk n">닷컴 미검색</span></div>';
   if(o.st==='fail')return '<div class="pname" style="color:var(--sub)">제품 정보를 불러오지 못했어요 <a href="#" class="link" data-reinfo="'+esc(code)+'">다시 시도</a></div>';
   if(o.st!=='ok')return '';var stk=o.stock==='InStock'?'<span class="stk y">닷컴 재고 있음</span>':(o.stock?'<span class="stk n">닷컴 품절</span>':'');
-  return '<div class="pname">'+esc(o.name)+stk+'</div>';}
+  var lp=infoLp(code);return '<div class="pname">'+esc(o.name)+stk+(lp?'<span class="lpb">삼성닷컴 기준가 '+won(lp)+'</span>':'')+'</div>';}
+function infoLp(code){var o=INFO[code],m=byCode[code];return o&&o.st==='ok'&&m&&o.lp>=minPrice(m)*10?o.lp:0;}
 function toast(msg){var t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('on');},1600);}
 
 function calcPlan(mon,y,parts,pre){
@@ -1065,6 +1079,7 @@ function renderRecent(){var el=$('#recentRow');if(!el)return;var F=favList(),R=r
 function favSync(){var m=S.sel.m,b=$('#pkFav');if(!m||!b)return;var on=favList().indexOf(m[0])>=0;b.classList.toggle('on',on);b.textContent=on?'⭐ 즐겨찾기':'☆ 즐겨찾기';}
 function pickModel(code){
   var m=byCode[code];if(!m)return;mvLog(code,'view');
+  fetchInfo(code);
   var rv=recentList().filter(function(c){return c!==code;});rv.unshift(code);lsPut('recentV',rv.slice(0,15));renderRecent();
   S.sel.m=m;
   var ys=uniqYears(m);
@@ -1080,7 +1095,7 @@ function renderPicked(){
   var m=S.sel.m;if(!m)return;
   var ys=uniqYears(m);
   $('#pkCode').textContent=m[0];favSync();
-  $('#pkMeta').textContent=catOf(m)+' · '+subOf(m);
+  var plp=infoLp(m[0]);$('#pkMeta').innerHTML=esc(catOf(m)+' · '+subOf(m))+(plp?' <span class="lpb">삼성닷컴 기준가 '+won(plp)+'</span>':'');
   $('#stockLink').href=stockUrl(m[0]);
   $('#terms').innerHTML=ys.map(function(y){return '<button class="chip '+(y===S.sel.y?'on':'')+'" data-v="'+y+'">'+y+'년'+(y===maxYears(catOf(m))?' <small>최장</small>':'')+'</button>';}).join('');
   var plans=m[3].filter(function(p){return p[0]===S.sel.y;});
@@ -1107,6 +1122,7 @@ function renderPicked(){
 }
 
 function render(){
+  if(S.lumpOn)lumpAuto();
   var items=calcItems();
   var n=items.length;
   $('#cartCnt').textContent=n?n+'개':'';
@@ -1240,7 +1256,9 @@ function render(){
     h+='<button class="stog lump-b" id="lTog" type="button">'+(S.lumpOn?'⚖️ 일시불 비교 끄기 ▴':'⚖️ 일시불 구매와 비교 <small style="font-weight:500;opacity:.8">(선택)</small> ▾')+'</button>';
     if(S.lumpOn){
       h+='<div class="sgrp lump-g"><div class="sg-h">⚖️ 일시불 구매 vs 구독 ('+yy+')</div>'
-        +items.map(function(it,i){return '<div class="lumpin"><span>'+esc(it.code)+' 구매가</span><input type="text" inputmode="numeric" data-lump="'+i+'" value="'+(it.lump?it.lump.toLocaleString():'')+'" placeholder="금액 입력"></div>';}).join('');
+        +items.map(function(it,i){var o=INFO[it.code]||{},lp=o.st==='ok'&&o.lp>=it.mon*10?o.lp:0;
+          var src=it.lumpManual?(lp?'직접 입력 · <a href="#" data-lreset="'+i+'">↺ 기준가 '+won(lp)+'</a>':'직접 입력'):lp?'삼성닷컴 기준가':(o.st==='loading'?'기준가 불러오는 중…':'기준가를 못 찾았어요 · 직접 입력');
+          return '<div class="lumpin"><span>'+esc(it.code)+' 구매가<small>'+src+'</small></span><input type="text" inputmode="numeric" data-lump="'+i+'" value="'+(it.lump?it.lump.toLocaleString():'')+'" placeholder="금액 입력"></div>';}).join('');
       if(LP.ok){
         h+=row('일시불 구매가 합계',won(LP.L))+row('구독 총 실부담 <small style="opacity:.7">(카드·포인트 반영)</small>',won(feelT))
           +'<div class="tot"><span>'+(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요')+'</span><span>'+won(Math.abs(LP.diff))+' <small style="opacity:.7">(월 '+won(Math.abs(LP.diffM))+')</small></span></div>'
@@ -1260,7 +1278,8 @@ function render(){
   var lt=$('#lTog');if(lt)lt.onclick=function(){S.lumpOn=!S.lumpOn;if(S.lumpOn)fuLog('lump');render();};
   Array.prototype.forEach.call(document.querySelectorAll('#sList [data-lump]'),function(inp){
     inp.oninput=function(){var v=this.value.replace(/[^0-9]/g,'');this.value=v?(+v).toLocaleString():'';};
-    inp.onchange=function(){var i=+this.dataset.lump;if(S.cart[i]){S.cart[i].lump=+(this.value.replace(/[^0-9]/g,''))||0;render();}};});
+    inp.onchange=function(){var i=+this.dataset.lump;if(S.cart[i]){var v=+(this.value.replace(/[^0-9]/g,''))||0;S.cart[i].lump=v;S.cart[i].lumpManual=!!v;render();}};});
+  Array.prototype.forEach.call(document.querySelectorAll('#sList [data-lreset]'),function(a){a.onclick=function(e){e.preventDefault();var c=S.cart[+a.dataset.lreset];if(c){c.lumpManual=false;render();}};});
   var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;if(S.showTot)fuLog('detail');render();};var fg=$('#fTog');if(fg)fg.onclick=function(){S.showFeel=!S.showFeel;if(S.showFeel)fuLog('feel');render();};
   var ph='';
   if(n){
@@ -1431,7 +1450,7 @@ function buildPrint(mode){
       +(LP.diff<=0
         ?'<div class="verdict good">✅ 구독이 일시불보다 <b>'+won(-LP.diff)+'</b> 더 저렴해요 <small>(월 '+won(-LP.diffM)+' 절약 + '+yTxt+' 무상수리연장)</small></div>'
         :'<div class="verdict">💡 월 <b>'+won(LP.diffM)+'</b> 차이로 <b>'+yTxt+' 무상수리연장</b>까지 <small>(총 차액 '+won(LP.diff)+' · 목돈 없이 매달 나눠서)</small></div>')
-      +'<small>※ 구독은 무상수리연장 서비스가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 상담 시 입력한 금액입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
+      +'<small>※ 구독은 무상수리연장 서비스가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 삼성닷컴 기준가(또는 상담 시 입력한 금액)입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');
   }
   $('#printArea').innerHTML=html;
@@ -1446,7 +1465,8 @@ function printQuote(mode){
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
 $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};
 Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');
-    if((b.dataset.pm==='lump'||b.dataset.pm==='feellump')&&!S.cart.every(function(i){return i.lump>0;})){S.lumpOn=true;render();var lb=$('#lTog');if(lb)lb.scrollIntoView({behavior:'smooth',block:'start'});toast('⚖️ 모델별 일시불 구매가를 먼저 입력해 주세요');return;}fuLog('print');fuLog('print:'+b.dataset.pm);printQuote(b.dataset.pm);S.cart.forEach(function(i){mvLog(i.code,'print');});markAct('견적 인쇄');gsr('logEvent',{name:'print',emp:EMP});};});
+    if(b.dataset.pm==='lump'||b.dataset.pm==='feellump'){S.lumpOn=true;render();}
+    if((b.dataset.pm==='lump'||b.dataset.pm==='feellump')&&!S.cart.every(function(i){return i.lump>0;})){var lb=$('#lTog');if(lb)lb.scrollIntoView({behavior:'smooth',block:'start'});toast('⚖️ 모델별 일시불 구매가를 먼저 입력해 주세요');return;}fuLog('print');fuLog('print:'+b.dataset.pm);printQuote(b.dataset.pm);S.cart.forEach(function(i){mvLog(i.code,'print');});markAct('견적 인쇄');gsr('logEvent',{name:'print',emp:EMP});};});
 window.__previewQuote=function(){return Promise.all(S.cart.map(function(it){return fetchInfo(it.code);})).then(buildPrint).then(function(){document.body.classList.add('preview');});};
 window.__addModel=function(code,y,typeKw,pre){var m=byCode[code];var p=m[3].filter(function(p){return p[0]===y&&D.types[p[1]].indexOf(typeKw)>=0;})[0];S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:S.win,pre:pre||0});fetchInfo(code);render();};
 window.__S=S;
@@ -2308,7 +2328,7 @@ function fmtPhone(v){var d=String(v||'').replace(/[^0-9]/g,'').slice(0,11);
 $('#qName').addEventListener('input',function(){$('#qErr').textContent='';});
 function curState(){return JSON.stringify({v:1,pkgPrev:S.pkgPrev||0,cust:S.cust,card:S.card,usage:S.usage,promo:S.promo,win:S.win,multi:!!S.multi,mc:S.mc,mu:S.mu,
   lumpOn:!!S.lumpOn,feel:!!S.showFeel,
-  cart:S.cart.map(function(i){return {code:i.code,y:i.y,type:i.type,pre:i.pre,win:!!i.win,cmp:i.cmp!==false,pc:i.pc,m:i.mon,lump:i.lump||0};})});}
+  cart:S.cart.map(function(i){return {code:i.code,y:i.y,type:i.type,pre:i.pre,win:!!i.win,cmp:i.cmp!==false,pc:i.pc,m:i.mon,lump:i.lump||0,lm:!!i.lumpManual};})});}
 function curSummary(){var items=calcItems();
   return {items:items,summary:items.map(function(i){return i.code+'('+i.y+'년)';}).join(', '),monthly:items.reduce(function(a,i){return a+i.mon2;},0),prepay:items.reduce(function(a,i){return a+i.P;},0)};}
 function openSave(){
@@ -2340,7 +2360,7 @@ function loadQuote(q){
   S.cart=[];(st.cart||[]).forEach(function(c){var m=byCode[c.code];if(!m){miss.push(c.code);return;}
     var p=m[3].filter(function(p){return p[0]===c.y&&D.types[p[1]]===c.type;})[0];if(!p){miss.push(c.code);return;}
     if(c.m&&c.m!==p[2])chg.push(c.code+' '+won(c.m)+'→'+won(p[2]));
-    S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!c.win,cmp:c.cmp!==false,pre:c.pre||0,pc:c.pc,lump:c.lump||0});if(!CUST)fetchInfo(m[0]);});
+    S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!c.win,cmp:c.cmp!==false,pre:c.pre||0,pc:c.pc,lump:c.lump||0,lumpManual:c.lm===undefined?!!c.lump:!!c.lm});if(!CUST)fetchInfo(m[0]);});
   S.pkgPrev=st.pkgPrev||0;S.cust=st.cust==='new'?'combo':(st.cust||'single');S._lastN=null;S.card=st.card||'none';S.usage=st.usage||100;S.promo=st.promo!==false;S.win=!!st.win;S.cmpY=null;S.multi=!!st.multi;S.mc=st.mc||[];S.mu=st.mu||{};S.lumpOn=!!st.lumpOn;
   setOn($('#custType'),S.cust);$('#promoOn').checked=S.promo;
   if(CUST){S.showFeel=!!st.feel;return;}
