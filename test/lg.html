@@ -580,7 +580,7 @@ body.preview{background:#e5e7eb;padding:0}
 
     <div class="picked" id="picked">
       <div class="picked-h">
-        <div><b id="pkCode"></b><div class="meta" id="pkMeta"></div></div>
+        <div class="item-top"><img class="thumb" id="pkImg" alt="" style="display:none"><div><b id="pkCode"></b><div class="meta" id="pkMeta"></div></div></div>
         <div style="display:flex;gap:8px;align-items:center"><button class="fav" id="pkFav" type="button">☆ 즐겨찾기</button><a class="link" id="stockLink" target="_blank" rel="noopener">LG전자 ↗</a></div>
       </div>
       <div class="lbl">계약 기간</div>
@@ -704,7 +704,7 @@ body.preview{background:#e5e7eb;padding:0}
 
 <script>
 (function(){var d=new Date(),day=''+d.getFullYear()+(d.getMonth()+1)+d.getDate();
-document.write('<script src="data/lg.js?d='+day+'"><\/script><script src="lg-parse.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script>');})();
+document.write('<script src="data/lg.js?d='+day+'"><\/script><script src="data/lg-img.js?d='+day+'"><\/script><script src="lg-parse.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script>');})();
 </script>
 <script>
 (function(){
@@ -797,7 +797,13 @@ function preRatioAmt(r,p){return Math.floor(r[R.base]*r[R.term]*p/100/100)*100;}
 function preOptsOf(r){var o=[['0','안 함',0]];if(!r||!r[R.pmin])return o;
   (D.pre[r[R.pre]]||'30,50').split(',').filter(Boolean).forEach(function(p){o.push([p,p+'%',preRatioAmt(r,+p)]);});
   for(var v=r[R.pmin];v<=r[R.pmax];v+=100000)o.push(['f'+v,'정액 '+(v/10000)+'만원',v]);return o;}
-function lgUrl(code){return 'https://www.lge.co.kr/search/result?search='+encodeURIComponent(code.replace(/\..*$/,''));}
+function lgUrl(code){var o=infoOf(code);return o&&o.url?o.url:'https://www.lge.co.kr/search?keyword='+encodeURIComponent(code.replace(/\..*$/,''))+'&tab=all';}
+/* ====== LG전자 제품 사진 · 이름 (data/lg-img.js · lge.co.kr 검색 기준) ====== */
+var LGIMG=window.LG_IMG||{},INFO={};
+function infoOf(code){var v=LGIMG[code]||INFO[code];return v&&v[0]?{img:'https://static.lge.co.kr'+v[0],name:v[1]||'',url:v[2]?'https://www.lge.co.kr'+v[2]:''}:null;}
+function fetchInfo(codes){}
+function infoThumb(code){var o=infoOf(code);return o?'<img class="thumb" src="'+esc(o.img)+'" alt="" loading="lazy">':'<div class="thumb"></div>';}
+function infoName(code){var o=infoOf(code);return o&&o.name?'<div class="pname">'+esc(o.name)+'</div>':'';}
 function giftOf(code){var a=actInfo(code);if(!a||a.type!=='모상'||!a.live)return null;return {won:(a.mid+a.add)*1000,note:a.note||'모바일상품권'};}
 
 /* ====== 고객 조건 ====== */
@@ -867,8 +873,9 @@ function selRow(m){var rows=candRows(m),s=S.sel;
   return {ys:ys,plans:plans,cares:cares,cyc:cyc,p:cyc.filter(function(r){return r[R.cy]===s.cy;})[0]};}
 function renderPicked(){if(!S.sel)return;var m=BY[S.sel.code],code=m[0];if(!m){S.sel=null;$('#picked').style.display='none';return;}
   var x=selRow(m),p=x.p,maxY=Math.max.apply(null,x.ys);
-  $('#pkCode').textContent=code;favSync();
-  $('#pkMeta').innerHTML=esc(D.cats[m[1]])+(m[3]?' <span class="lpb">기준가 '+won(m[3])+'</span>':'');
+  $('#pkCode').textContent=code;favSync();fetchInfo([code]);
+  $('#pkMeta').innerHTML=infoName(code)+esc(D.cats[m[1]])+(m[3]?' <span class="lpb">기준가 '+won(m[3])+'</span>':'');
+  var pi=$('#pkImg'),po0=infoOf(code);if(po0){pi.src=po0.img;pi.style.display='';}else pi.style.display='none';
   $('#stockLink').href=lgUrl(code);
   $('#terms').innerHTML=x.ys.map(function(y){return '<button class="chip '+(y===S.sel.y?'on':'')+'" data-v="'+y+'">'+(y/12)+'년'+(y===maxY?' <small>최장</small>':'')+'</button>';}).join('');
   $('#types').innerHTML=x.cares.map(function(c){var ps=x.plans.filter(function(r){return careK(r)===c;}),mn=Math.min.apply(null,ps.map(function(r){return monOf(code,r);}));
@@ -963,13 +970,13 @@ function totals(items){var card=CARDS.filter(function(c){return c.id===S.card;})
   t.feelT=t.totPay-t.cardTot-t.extra-t.gifts;t.feelM=t.feelN?Math.round(t.feelT/t.feelN/10)*10:0;return t;}
 function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.card;}))S.card='none';save();
   var items=calcItems(),n=items.length,t=totals(items),card=t.card,cs=t.cs;
-  renderCond(n);
+  renderCond(n);fetchInfo(items.map(function(i){return i.code;}));
   $('#cartCnt').textContent=n?n+'개':'';
   if(!n)$('#cart').innerHTML='<div class="empty">아직 담은 모델이 없어요.<br>위에서 모델을 찾아 <b>+ 담기</b>를 눌러주세요.<br>신규 결합으로 2개 제품군 이상 담으면 결합 할인이 적용돼요.</div>';
   else $('#cart').innerHTML=items.map(function(it,i){
     var tags=it.parts.map(function(p){return '<span class="tag '+p[1]+'">'+esc(p[0])+'</span>';}).join('');
     return '<div class="item">'
-      +'<div class="item-h"><div class="item-top"><div><b>'+esc(it.code)+'</b><div class="meta">'+esc(it.cat)+(it.lp?' · 기준가 '+won(it.lp):'')+'<br>'+it.y+'년 · '+esc(it.type)+'</div></div></div><button class="x" data-del="'+i+'" aria-label="삭제">✕</button></div>'
+      +'<div class="item-h"><div class="item-top">'+infoThumb(it.code)+'<div><b>'+esc(it.code)+'</b>'+infoName(it.code)+'<div class="meta">'+esc(it.cat)+(it.lp?' · 기준가 '+won(it.lp):'')+'<br>'+it.y+'년 · '+esc(it.type)+'</div></div></div><button class="x" data-del="'+i+'" aria-label="삭제">✕</button></div>'
       +'<div class="tags">'+tags+'<span class="tag gr">총 '+pct(it.rate)+'</span></div>'
       +'<div class="item-g"><div><span>정상 월</span><b>'+won(it.mon)+'</b></div>'
       +'<div><span>'+(it.P?'선납금':'할인 후 월')+'</span><b>'+(it.P?won(it.P):won(it.mon1))+'</b></div>'
@@ -1098,7 +1105,8 @@ function buildPrint(mode){
   var items=calcItems(),t=totals(items),card=t.card,cs=t.cs,sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,sumDisc=t.sumDisc,f=t.firstCard,cardTot=t.cardTot,allP=t.gifts,extra=t.extra;
   var d=new Date(),ds=d.getFullYear()+'.'+(d.getMonth()+1)+'.'+d.getDate(),meta=D.meta||{};
   var rows=items.map(function(i,k){
-    return '<tr><td style="text-align:center">'+(k+1)+'</td><td><div class="pn">'+esc(i.cat)+'</div>'+esc(i.code)+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span>'+(i.hm||i.gift?'<br><span style="color:#047857;font-size:11px">🎁 '+(i.hm?'처음 '+i.hm+'개월 '+won(i.halfP):'')+(i.hm&&i.gift?' · ':'')+(i.gift?esc(i.gift.note):'')+'</span>':'')+'</td>'
+    var o=infoOf(i.code),img=o?'<img class="pimg" src="'+esc(o.img)+'" alt="">':'<div class="noimg">이미지 없음</div>';
+    return '<tr><td style="text-align:center">'+(k+1)+'</td><td style="width:96px">'+img+'</td><td><div class="pn">'+esc(o&&o.name?o.name:i.cat)+'</div>'+esc(i.code)+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span>'+(i.hm||i.gift?'<br><span style="color:#047857;font-size:11px">🎁 '+(i.hm?'처음 '+i.hm+'개월 '+won(i.halfP):'')+(i.hm&&i.gift?' · ':'')+(i.gift?esc(i.gift.note):'')+'</span>':'')+'</td>'
       +'<td class="r">'+won(i.mon)+'</td><td class="r">'+pct(i.rate)+'<br><span style="color:#555;font-size:11px">'+i.parts.map(function(p){return esc(p[0]);}).join('<br>')+'</span></td>'
       +'<td class="r">'+(i.P?won(i.P)+'<br><span style="color:#555;font-size:11px">('+esc(i.preLab)+')</span>':'-')+'</td><td class="r"><b>'+won(i.mon2)+'</b></td></tr>';}).join('');
   var T=[['정상 월 구독료 합계',won(sumMon)],['정책 할인 합계','−'+won(sumDisc)],['선납금 합계 (일시불)',sumP?won(sumP):'-'],['할인 후 월 납부액',won(sumMon2)]];
@@ -1107,7 +1115,7 @@ function buildPrint(mode){
   T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(t.gifts?' + 상품권 '+won(t.gifts):'')]);
   var html='<div class="pq"><div class="hd"><div><h1>LG 가전구독 견적서</h1><small>'+esc(String(meta.price||'').replace('전자랜드_','단가표 '))+' · '+esc(String(meta.act||'').replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1 활성화'))+' 기준</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
     +'<div class="cond"><span>고객 유형: <b>'+CUSTN[S.cust]+(S.cust==='sb'?' '+S.sbN:'')+'</b></span><span>제휴카드: <b>'+(card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
-    +'<table><tr><th>No</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
+    +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')
     +'<div class="em"><span>'+(card&&cs.tier?'카드 적용 월 실 납부액 (첫 달)':'월 납부액')+'</span><span>'+won(t.net)+'</span></div></div>'
     +'<div class="nt">※ 본 견적은 참고용이며 실제 계약 금액과 다를 수 있습니다. 구독 가능 여부와 최종 금액은 계약 시 확인해 주세요.<br>※ 활성화(요금 인하)·제휴카드 프로모션은 기간 한정입니다. 선납 후 월 요금은 100원 미만 버림.</div></div>';
@@ -1144,7 +1152,9 @@ function buildPrint(mode){
       +'<small>※ 구독은 계약 기간 케어 서비스와 무상 A/S가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 단가표 기준가(또는 상담 시 입력한 금액)입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');}
   $('#printArea').innerHTML=html;}
-function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요');return;}buildPrint(mode);setTimeout(function(){window.print();},200);}
+function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요');return;}buildPrint(mode);
+  var imgs=Array.prototype.slice.call($('#printArea').querySelectorAll('img'));
+  Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]).then(function(){setTimeout(function(){window.print();},200);});}
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
 $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};
 Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');var lm=b.dataset.pm==='lump'||b.dataset.pm==='feellump';
