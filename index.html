@@ -505,6 +505,12 @@ body.preview{background:#e5e7eb;padding:0}
 .nt2-empty{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:28px 12px;border:1px dashed var(--line);border-radius:14px;margin-top:12px;font-size:13.5px}.nt2-empty span{color:var(--sub);font-size:12.5px}.nt2-empty .btn{margin-top:6px}
 .nt2-editbar{display:flex;align-items:center;gap:8px;margin-top:12px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:12px;padding:9px 12px;font-size:13px;font-weight:700}.nt2-editbar a{margin-left:auto;color:#b45309;font-weight:600}
 .nt2-re{display:flex;gap:8px;align-items:flex-start;margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-size:13.5px}.nt2-re input{margin-top:3px}.nt2-re small{display:block;color:var(--sub);font-size:12px;margin-top:2px;line-height:1.45}
+.afd-nav{display:flex;gap:6px;align-items:center;margin-top:10px}.afd-nav input{flex:1;min-height:36px;border:1px solid var(--line);border-radius:10px;padding:4px 10px;font:inherit;font-size:14px;text-align:center}
+.afd-chart{display:flex;align-items:flex-end;gap:3px;margin-top:10px;padding-bottom:2px;border-bottom:1px solid var(--line)}
+.afd-chart button{flex:1;min-width:0;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;font:inherit}
+.afd-chart i{display:block;width:72%;background:#c7d2fe;border-radius:4px 4px 0 0}.afd-chart button.on i{background:#4f46e5}
+.afd-chart em{font-style:normal;font-size:9.5px;color:var(--sub)}.afd-chart button.on em{color:#4f46e5;font-weight:800}
+.afd-chart span{font-size:9.5px;color:var(--sub);white-space:nowrap}.afd-chart small{font-size:9px;color:#94a3b8}.afd-chart small.su{color:#ef4444}.afd-chart small.sa{color:#3b82f6}.afd-chart button.on span{color:#4f46e5;font-weight:800}
 .nt2-bar{position:sticky;bottom:-1px;display:flex;gap:8px;margin-top:14px;padding:10px 0;background:#fff;border-top:1px solid var(--line)}.nt2-bar .pri{flex:1}
 </style>
 </head>
@@ -836,8 +842,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.14',VER_DATE='2026.11.14';
+var VERSION='v8.15',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.15','11.14',['관리자 📈 기능 사용: 📅 날짜별 보기 추가 (날짜 선택 · 전날/다음날 · 최근 14일 막대 그래프, 전날 대비 변화)']],
   ['v8.14','11.14',['관리자 📢 공지 수정: 올린 공지의 제목 · 내용 · 첨부 항목 수정, 다시 알리기 선택 가능']],
   ['v8.13','11.14',['관리자 📢 공지 화면 정리: 현재 공지 / 새 공지 작성 탭 분리, 확인율 크게 표시, 미확인 직원 이름 · 지점 표시, 업데이트 내역 버전별 접기']],
   ['v8.12','11.14',['🖨 견적서 오른쪽 위에 담당 직원(지점 · 이름) 표시','견적서에서 구매 채널 항목 삭제']],
@@ -1841,14 +1848,23 @@ function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(functi
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
 var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기']};
 var AFEAT={days:7,data:null};
-function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,days:AFEAT.days},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
-function admFeatHtml(){var R=AFEAT.data,h='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
+function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,days:AFEAT.days==='d'?1:AFEAT.days,date:AFEAT.days==='d'?(AFEAT.date||todayStr().replace(/-/g,'')):''},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
+function afDs(d){return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);}
+function afMd(d){return (+d.slice(4,6))+'/'+(+d.slice(6,8));}
+function afShift(d,k){var t=new Date(+d.slice(0,4),+d.slice(4,6)-1,+d.slice(6,8)+k);return t.getFullYear()+('0'+(t.getMonth()+1)).slice(-2)+('0'+t.getDate()).slice(-2);}
+function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().replace(/-/g,''),h='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],['d','📅 날짜별']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
+  if(day){var dd=AFEAT.date||td;
+    h+='<div class="afd-nav"><button class="btn line sm" data-afs="-1">‹ 전날</button><input type="date" id="afDate" value="'+afDs(dd)+'" max="'+afDs(td)+'"><button class="btn line sm" data-afs="1" '+(dd>=td?'disabled':'')+'>다음날 ›</button></div>';
+    if(R&&R.ok&&R.daily){var mx2=Math.max.apply(null,[1].concat(R.daily.map(function(x){return x.n;})));
+      h+='<div class="afd-chart">'+R.daily.map(function(x){var w=['일','월','화','수','목','금','토'][new Date(+x.d.slice(0,4),+x.d.slice(4,6)-1,+x.d.slice(6,8)).getDay()];
+        return '<button data-afday="'+x.d+'" class="'+(x.d===dd?'on':'')+'" title="'+x.n+'회 · '+x.u+'명"><em>'+(x.n?x.n:'')+'</em><i style="height:'+Math.max(2,Math.round(x.n/mx2*70))+'px"></i><span>'+afMd(x.d)+'</span><small class="'+(w==='일'?'su':w==='토'?'sa':'')+'">'+w+'</small></button>';}).join('')+'</div><div class="hint" style="margin:4px 0 0">최근 14일 · 막대를 누르면 그날 기록을 봐요</div>';}
+  }
   if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
   var L=R.list.filter(function(x){return FNAME[x.k];}),D={};R.list.forEach(function(x){D[x.k]=x;});
   var tot=L.reduce(function(a,x){return a+x.n;},0),mx=Math.max.apply(null,[1].concat(L.map(function(x){return x.n;})));
   h+='<div class="adm-kpi" style="margin-top:10px"><div><span>총 사용</span><b>'+tot.toLocaleString()+'</b></div><div><span>사용 사번</span><b>'+R.users+'</b></div><div><span>1인 평균</span><b>'+(R.users?Math.round(tot/R.users):0)+'회</b></div><div><span>견적 완성률</span><b>'+(R.addUsers?Math.round(R.done/R.addUsers*100):0)+'%</b></div><div><span>가장 많이 쓴 기능</span><b style="font-size:16px">'+(L[0]?FNAME[L[0].k][1]:'-')+'</b></div></div>';
-  h+='<div class="adm-sec">기능별 사용 순위 <small>이전 '+(AFEAT.days===1?'날':AFEAT.days+'일')+' 대비 · 사번 = 그 기능을 쓴 사람 수</small></div>';
+  h+='<div class="adm-sec">'+(day?afMd(AFEAT.date||td)+' ':'')+'기능별 사용 순위 <small>'+(day?'전날':'이전 '+(AFEAT.days===1?'날':AFEAT.days+'일'))+' 대비 · 사번 = 그 기능을 쓴 사람 수</small></div>';
   var dv=function(x){if(!x.prev)return '<span style="color:#16a34a">NEW</span>';var d=Math.round((x.n-x.prev)/x.prev*100);return d>0?'<span style="color:#dc2626">▲'+d+'%</span>':d<0?'<span style="color:#2563eb">▼'+(-d)+'%</span>':'<span style="color:#94a3b8">–</span>';};
   h+=L.length?'<div class="fu fuh"><span></span><span>기능</span><span>사용 횟수</span><span style="text-align:right">횟수</span><span style="text-align:right">사번</span><span style="text-align:right">변화</span></div>'+L.map(function(x){var f=FNAME[x.k];return '<div class="fu"><span class="ic">'+f[0]+'</span><span class="nm">'+f[1]+'</span><span class="fbar"><i style="width:'+Math.max(2,x.n/mx*100)+'%"></i></span><span class="n">'+x.n.toLocaleString()+'</span><span class="u">'+x.u+'명</span><span class="d">'+dv(x)+'</span></div>';}).join('')
     :'<div class="empty" style="margin-top:8px">아직 기록이 없어요. v7.7 이상 화면에서 쓴 기능부터 쌓여요.</div>';
@@ -1856,7 +1872,7 @@ function admFeatHtml(){var R=AFEAT.data,h='<div style="display:flex;justify-cont
     a=a.filter(function(v){return v[1];}).map(function(v){return [v[0],Math.round(v[1]/s*100),v[2]];});
     return '<div><h5>'+'</h5><div class="sb">'+a.map(function(v){return '<span style="width:'+v[1]+'%;background:'+v[2]+'"></span>';}).join('')+'</div><div class="sl">'+a.map(function(v){return '<span><i style="background:'+v[2]+'"></i>'+esc(v[0])+' '+v[1]+'%</span>';}).join('')+'</div></div>';};
   var G=[['고객 유형',grp('cust:',[['combo','신규 결합'],['single','신규 단건'],['exist','기존 구독']],['#6366f1','#93c5fd','#f59e0b'])],
-    ['견적 인쇄 종류',grp('print:',[['basic','기본'],['feel','체감가']],['#64748b','#e11d48'])],
+    ['견적 인쇄 종류',grp('print:',[['basic','기본'],['feel','체감가'],['lump','일시불 비교'],['feellump','체감가+일시불']],['#64748b','#e11d48','#0284c7','#7c3aed'])],
     ['선택한 제휴카드',grp('card:',CARDS.map(function(c){return [c.id,c.name.replace('카드','').replace('은행BC','BC')];}),['#1d4ed8','#f59e0b','#ef4444','#0ea5e9','#10b981','#94a3b8'])],
     ['선납 선택',grp('pre:',[['0','안 함'],['20','20%'],['30','30%'],['40','40%'],['50','50%']],['#cbd5e1','#a5b4fc','#818cf8','#6366f1','#4338ca'])],
     ['사용 기기',grp('dev:',[['PC','PC'],['모바일','모바일']],['#334155','#22c55e'])],
@@ -2064,8 +2080,12 @@ function admRender(){
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
   if(t==='roster'&&RS.data&&RS.data.ok)admRosterBind();
-  if(t==='feat'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afd]'),function(b){b.onclick=function(){AFEAT.days=+b.dataset.afd;admFeatLoad();admRender();};});
-    var fc=$('#afCsv');if(fc)fc.onclick=function(){var R=AFEAT.data;if(!R||!R.ok)return;csvDown([['기능','횟수','사번 수','이전 기간']].concat(R.list.map(function(x){return [FNAME[x.k]?FNAME[x.k][1]:x.k,x.n,x.u,x.prev];})),'기능사용_'+AFEAT.days+'일_'+todayStr()+'.csv');};}
+  if(t==='feat'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afd]'),function(b){b.onclick=function(){AFEAT.days=b.dataset.afd==='d'?'d':+b.dataset.afd;admFeatLoad();admRender();};});
+    var afGo=function(d){var td=todayStr().replace(/-/g,'');if(!d||d>td)return;AFEAT.date=d;admFeatLoad();admRender();};
+    Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afs]'),function(b){b.onclick=function(){afGo(afShift(AFEAT.date||todayStr().replace(/-/g,''),+b.dataset.afs));};});
+    Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afday]'),function(b){b.onclick=function(){afGo(b.dataset.afday);};});
+    var adi=$('#afDate');if(adi)adi.onchange=function(){afGo(this.value.replace(/-/g,''));};
+    var fc=$('#afCsv');if(fc)fc.onclick=function(){var R=AFEAT.data;if(!R||!R.ok)return;csvDown([['기능','횟수','사번 수','이전 기간']].concat(R.list.map(function(x){return [FNAME[x.k]?FNAME[x.k][1]:x.k,x.n,x.u,x.prev];})),(AFEAT.days==='d'?'기능사용_'+(AFEAT.date||todayStr().replace(/-/g,''))+'.csv':'기능사용_'+AFEAT.days+'일_'+todayStr()+'.csv'));};}
   if(t==='best'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-abd]'),function(b){b.onclick=function(){ABEST.days=+b.dataset.abd;admBestLoad();admRender();};});
     var ac=$('#abCsv');if(ac)ac.onclick=function(){var R=ABEST.data;if(!R||!R.ok)return;csvDown([['순위','모델','품목','조회','담기','인쇄','보관']].concat(R.list.map(function(x,i){var m=byCode[x[0]];return [i+1,x[0],m?catOf(m)+' '+subOf(m):'',x[1],x[2],x[3],x[4]];})),'베스트모델_'+ABEST.days+'일_'+todayStr()+'.csv');};}
   if(t==='stat'){
