@@ -536,6 +536,7 @@ body.preview{background:#e5e7eb;padding:0}
 <header class="top"><div class="top-in">
   <button class="btag" id="brandTag" title="삼성 / LG 바꾸기">LG ▾</button>
   <h1>AI 구독 계산기</h1>
+  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="me lo" id="logoutBtn" title="로그아웃"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
   <span class="per" id="perTag"></span>
@@ -544,6 +545,7 @@ body.preview{background:#e5e7eb;padding:0}
 
 <div class="wrap">
 <main>
+  <section class="tb" id="bestSec" style="display:none"></section>
   <section class="card" id="secCond">
     <h2><span class="num">1</span>고객 조건</h2>
     <div class="cond">
@@ -871,7 +873,7 @@ $('#pkFav').onclick=function(){if(!S.sel)return;var F=favList(),i=F.indexOf(S.se
 
 /* ====== 선택한 모델 ====== */
 function prefer(list,cur,pref){if(cur!=null&&list.indexOf(cur)>=0)return cur;for(var i=0;i<pref.length;i++)if(list.indexOf(pref[i])>=0)return pref[i];return list[0];}
-function pickModel(code){if(!BY[code])return;S.sel={code:code,y:null,care:null,cy:null,preK:'0'};
+function pickModel(code){if(!BY[code])return;mvLog(code,'view');S.sel={code:code,y:null,care:null,cy:null,preK:'0'};
   var Rc=(lsGet('lgRecent')||[]).filter(function(c){return c!==code;});Rc.unshift(code);lsPut('lgRecent',Rc.slice(0,15));renderRecent();
   $('#list').style.display='none';$('#qList').style.display='none';$('#picked').style.display='block';renderPicked();
   $('#picked').scrollIntoView({behavior:'smooth',block:'nearest'});}
@@ -918,7 +920,7 @@ $('#cycles').addEventListener('click',function(e){var b=e.target.closest('.chip'
 $('#pkPre').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.preK=b.dataset.v;renderPicked();});
 $('#addBtn').onclick=function(){if(!S.sel)return;var m=BY[S.sel.code],p=selRow(m).p;
   S.cart.push({code:m[0],term:p[R.term],ct:p[R.ct],cs:p[R.cs],cy:p[R.cy],preK:S.sel.preK});
-  S.sel=null;$('#picked').style.display='none';$('#q').value='';renderList();render();toast(m[0]+' 담았어요 ('+S.cart.length+'개)');};
+  mvLog(m[0],'add');S.sel=null;$('#picked').style.display='none';$('#q').value='';CAT=null;SUB=null;renderCats();renderList();render();toast(m[0]+' 담았어요 ('+S.cart.length+'개)');};
 
 /* ====== 계산 ====== */
 function calcItems(){var out=[];S.cart=S.cart.filter(function(it){var m=BY[it.code];if(!m)return false;
@@ -1165,7 +1167,7 @@ function buildPrint(mode){
       +'<small>※ 구독은 계약 기간 케어 서비스와 무상 A/S가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 단가표 기준가(또는 상담 시 입력한 금액)입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');}
   $('#printArea').innerHTML=html;}
-function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요');return;}buildPrint(mode);
+function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요');return;}S.cart.forEach(function(i){mvLog(i.code,'print');});buildPrint(mode);
   var imgs=Array.prototype.slice.call($('#printArea').querySelectorAll('img'));
   Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]).then(function(){setTimeout(function(){window.print();},200);});}
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
@@ -1230,12 +1232,72 @@ $('#winQ').addEventListener('input',winRender);
 $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;careClose();pickModel(b.dataset.pick);
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
+/* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
+var LG_VER='v8.21',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
+var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
+  if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
+  try{localStorage.setItem('calcDid',v);}catch(e){}try{document.cookie='calcDid='+v+';max-age=31536000;path=/;SameSite=Lax';}catch(e){}return v;})();
+function devName(){var u=navigator.userAgent;var m=/Mobi|Android|iPhone|iPad/i.test(u)?'모바일':'PC';
+  var b=/SamsungBrowser/.test(u)?'삼성인터넷':/Whale/.test(u)?'웨일':/Edg/.test(u)?'엣지':/KAKAOTALK/i.test(u)?'카카오톡':/NAVER/.test(u)?'네이버앱':/CriOS|Chrome/.test(u)?'크롬':/Safari/.test(u)?'사파리':'기타';return m+' · '+b;}
+var firstBeat=true;
+function mvLog(code,type){if(code)EVQ.push(['LG--'+code,type]);if(EVQ.length>200)EVQ=EVQ.slice(-200);}
+function idleMin(){return Math.floor((Date.now()-LASTIN)/60000);}
+['pointerdown','keydown','touchstart','wheel','scroll','input'].forEach(function(e){window.addEventListener(e,function(){LASTIN=Date.now();if(FB.gone)fbPresence(true);},{passive:true,capture:true});});
+function curAct(){if($('#cmpDrawer').classList.contains('on'))return 'LG · 비교하기';if($('#winDrawer').classList.contains('on'))return 'LG · 활성화 모델';if($('#picked').style.display==='block')return 'LG · 모델 선택 중';if($('#q').value.trim())return 'LG · 모델 검색 중';if(S.cart.length)return 'LG · 견적 작성 중';return 'LG · 대기';}
+function beat(){if(!EMP||!window.API_URL)return;window.__lastBeat=Date.now();
+  var evs=EVQ.splice(0,60),idl=idleMin(),fu={};if(firstBeat){fu['dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;fu['lg']=1;}
+  var info={fu:fu,act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:LG_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
+  firstBeat=false;
+  api('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);}
+    if(r&&r.blocked){if(r.reason==='roster'){try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(e){}}else lsPut('calcBlocked',1);location.href='./';return;}
+    if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}
+    if(r&&r.me!==undefined&&r.me)lsPut('calcMe',{emp:EMP,name:r.me.name,br:r.me.br,rank:r.me.rank});},function(){EVQ=evs.concat(EVQ);if(!FB.on)$('#liveBtn').classList.add('off');});}
+function fbPresence(on){if(!FB.me)return;try{if(on){FB.gone=false;FB.me.onDisconnect().remove();FB.me.set(firebase.database.ServerValue.TIMESTAMP);}else{FB.gone=true;FB.me.remove();}}catch(e){}}
+setInterval(function(){if(FB.me&&!FB.gone&&idleMin()>=30)fbPresence(false);},60000);
+function loadJs(u,cb){var sc=document.createElement('script');sc.src=u;sc.onload=cb;document.head.appendChild(sc);}
+function fbInit(){var c=window.FIREBASE_CONFIG;if(FB.started||!c||!c.databaseURL||!EMP)return;FB.started=true;
+  var base='https:\/\/www.gstatic.com\/firebasejs\/10.12.2\/';
+  loadJs(base+'firebase-app-compat.js',function(){loadJs(base+'firebase-database-compat.js',function(){
+    try{var app=firebase.apps&&firebase.apps.length?firebase.app():firebase.initializeApp(c),db=firebase.database(app),me=db.ref('online/'+SID);FB.me=me;
+      db.ref('.info/connected').on('value',function(snap){if(snap.val()!==true||FB.gone)return;me.onDisconnect().remove().then(function(){me.set(firebase.database.ServerValue.TIMESTAMP);});});
+      db.ref('online').on('value',function(snap){FB.on=true;$('#liveN').textContent=snap.numChildren();$('#liveBtn').classList.remove('off');});
+    }catch(e){FB.on=false;}});});}
+$('#liveBtn').onclick=function(){location.href='./?admin=lg';};
+var BEST={days:7,all:false,data:{}};
+function hScroll(w){if(!w)return;var r=w.querySelector('.row');if(!r)return;
+  var upd=function(){w.classList.toggle('cl',r.scrollLeft>4);w.classList.toggle('cr',r.scrollLeft+r.clientWidth<r.scrollWidth-4);};
+  r.addEventListener('scroll',upd);setTimeout(upd,0);
+  r.addEventListener('wheel',function(e){if(r.scrollWidth<=r.clientWidth||Math.abs(e.deltaX)>Math.abs(e.deltaY))return;e.preventDefault();r.scrollLeft+=e.deltaY;},{passive:false});
+  w.querySelector('.arr.l').onclick=function(){r.scrollBy({left:-r.clientWidth*0.8,behavior:'smooth'});};
+  w.querySelector('.arr.r').onclick=function(){r.scrollBy({left:r.clientWidth*0.8,behavior:'smooth'});};
+  var dn=null,moved=false;
+  r.addEventListener('mousedown',function(e){dn={x:e.clientX,l:r.scrollLeft};moved=false;});
+  window.addEventListener('mousemove',function(e){if(!dn)return;var dx=e.clientX-dn.x;if(Math.abs(dx)>5){moved=true;r.classList.add('drag');}r.scrollLeft=dn.l-dx;});
+  window.addEventListener('mouseup',function(){if(!dn)return;dn=null;setTimeout(function(){r.classList.remove('drag');},0);});
+  r.addEventListener('click',function(e){if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);}
+function bestLoad(){if(!window.API_URL)return;var d=BEST.days;if(BEST.data[d]&&Date.now()-BEST.data[d].ts<300000){bestRender();return;}
+  api('getBest',{days:d,brand:'lg'},function(r){if(r&&r.list){r.ts=Date.now();BEST.data[d]=r;bestRender();}},function(){});}
+function bestRender(){var el=$('#bestSec'),r=BEST.data[BEST.days];el.style.display='';
+  var h='<div class="tbh"><div class="tabs"><button class="on">🔥 많이 찾는</button></div><div class="per">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button data-bd="'+x[0]+'" class="'+(BEST.days===x[0]?'on':'')+'">'+x[1]+'</button>';}).join('')+'</div><button class="more" data-ball="1">'+(BEST.all?'접기 ‹':'전체 ›')+'</button></div>';
+  var NK={};D.m.forEach(function(m){NK[m[0].replace(/[^0-9A-Za-z\-]/g,'')]=m[0];});
+  var list=r?r.list.filter(function(x){return /^LG--/.test(x.code);}).map(function(x){return {code:NK[String(x.code).slice(4)],view:x.view,prev:x.prev};}).filter(function(x){return x.code&&BY[x.code];}).slice(0,BEST.all?20:10):[];
+  var mv=function(x,i){if(!x.prev)return '<em style="color:#16a34a">NEW</em>';var d=x.prev-(i+1);return d>0?'<em style="color:#dc2626">▲'+d+'</em>':d<0?'<em style="color:#2563eb">▼'+(-d)+'</em>':'';};
+  h+=!r?'<div class="empty2">불러오는 중…</div>':!list.length?'<div class="empty2">아직 집계된 조회가 없어요. 모델을 찾아보면 순위가 쌓여요 (5분마다 갱신)</div>'
+    :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row'+(BEST.all?' all':'')+'">'+list.map(function(x,i){return '<button class="pl'+(i<3?' t':'')+'" data-bc="'+esc(x.code)+'"><i>'+(i+1)+'</i><b>'+esc(x.code)+'</b><s>'+esc(grp(D.cats[BY[x.code][1]]))+' · '+x.view+'회</s>'+mv(x,i)+'</button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
+  el.innerHTML=h;hScroll(el.querySelector('.rw'));
+  Array.prototype.forEach.call(el.querySelectorAll('[data-bd]'),function(b){b.onclick=function(){BEST.days=+b.dataset.bd;bestRender();bestLoad();};});
+  var ba=el.querySelector('[data-ball]');if(ba)ba.onclick=function(){BEST.all=!BEST.all;bestRender();};
+  Array.prototype.forEach.call(el.querySelectorAll('[data-bc]'),function(b){b.onclick=function(){pickModel(b.dataset.bc);};});}
+function startBeat(){if(!EMP||$('#gate').classList.contains('on'))return;fbInit();bestRender();bestLoad();beat();setInterval(beat,75000);setInterval(bestLoad,300000);
+  document.addEventListener('visibilitychange',function(){if(!document.hidden){LASTIN=Date.now();if(FB.gone)fbPresence(true);}if(Date.now()-(window.__lastBeat||0)>5000)beat();});}
+
 function renderAll(){renderCats();renderList();renderRecent();render();}
 
 /* ---------- 관리자: 삼성 계산기의 관리자 모드(LG 단가표 탭)로 이동 ---------- */
 $('#admLink').onclick=function(e){e.preventDefault();location.href='./?admin=lg';};
 function refresh(){if(S.sel&&!BY[S.sel.code]){S.sel=null;$('#picked').style.display='none';}renderAll();}
-renderAll();syncData();
+renderAll();syncData();startBeat();
 })();
 </script>
 </body>
