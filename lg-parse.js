@@ -47,7 +47,7 @@
     need.forEach(function (n) { if (col[n] === undefined) throw new Error('단가표에 \'' + n + '\' 열이 없어요'); });
     var C = function (n) { return col[n] === undefined ? -1 : col[n]; };
     var cRate = C('할인율'), cSb = C('소상공인구분'), cBd = C('결합할인'), cAct = C('활성화'),
-      cPre = C('선납가능정률'), cPmin = C('선납정액최소금액'), cPmax = C('선납정액최대금액'), cNote = C('비고');
+      cList = C('기준가'), cPre = C('선납가능정률'), cPmin = C('선납정액최소금액'), cPmax = C('선납정액최대금액'), cNote = C('비고');
 
     var dict = { cats: [], ct: [], cs: [], cy: [], bd: ['결합없음', '신규결합', '기존결합', '소상공인'], sb: ['', '1대', '2대이상', '4대이상'], pre: [''], notes: [''] };
     var idx = function (arr, v) { var k = arr.indexOf(v); if (k < 0) { arr.push(v); k = arr.length - 1; } return k; };
@@ -58,7 +58,8 @@
       var term = num(r2[col['계약기간']]), fin = num(r2[col['최종요금']]);
       if (!term || !fin) continue;
       var cat = str(r2[col['제품군']]);
-      if (!models[code]) { models[code] = [code, idx(dict.cats, cat), []]; order.push(code); }
+      if (!models[code]) { models[code] = [code, idx(dict.cats, cat), [], 0]; order.push(code); }
+      if (cList >= 0 && !models[code][3]) models[code][3] = num(r2[cList]);
       var g = function (k) { return k < 0 ? null : r2[k]; };
       models[code][2].push([
         idx(dict.ct, str(r2[col['케어십형태']])),
