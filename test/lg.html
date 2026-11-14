@@ -38,8 +38,6 @@ button{-webkit-tap-highlight-color:transparent;cursor:pointer}
 .wrap{max-width:1180px;margin:0 auto;padding:12px 16px 16px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;align-items:start}
 @media(max-width:959px){.wrap{grid-template-columns:minmax(0,1fr);padding:10px 12px}}
 main,aside{min-width:0}
-aside{position:sticky;top:70px}
-@media(max-width:959px){aside{position:static}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:14px}
 @media(max-width:520px){.card{padding:15px}}
 .card h2{margin:0 0 14px;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:-.3px}
@@ -127,6 +125,37 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 .gate{position:fixed;inset:0;background:var(--navy);color:#fff;display:none;align-items:center;justify-content:center;z-index:80;text-align:center;padding:20px}
 .gate.on{display:flex}
 .gate .b{background:#fff;color:var(--ink);border-radius:20px;padding:26px 22px;max-width:360px;width:100%}
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.modes button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 6px;font-size:20px;line-height:1.3}
+.modes button b{display:block;font-size:15px;margin-top:4px}
+.modes button small{display:block;font-size:11.5px;color:var(--sub)}
+.modes button.on{border-color:var(--pri);background:var(--pri-soft)}
+.modes button.on b{color:var(--pri)}
+.step{margin-top:16px}
+.step-h{font-size:14px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.step-h small{font-weight:500;color:var(--sub)}
+.sn{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--pri);color:#fff;font-size:11.5px;font-weight:800}
+.opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+.opts.sm{grid-template-columns:repeat(auto-fill,minmax(84px,1fr));margin-top:8px}
+.opt{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:9px 8px;text-align:center;line-height:1.3;position:relative}
+.opt b{display:block;font-size:14.5px}
+.opt em{display:block;font-style:normal;font-size:11.5px;color:var(--ok);font-weight:700}
+.opt small{display:block;font-size:12px;color:var(--sub);margin-top:2px}
+.opt .ab{display:inline-block;background:var(--pri);color:#fff;font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px;margin-bottom:4px}
+.opt.on{border-color:var(--pri);background:var(--pri-soft);box-shadow:0 0 0 1px var(--pri) inset}
+.opt.on small{color:var(--pri-d);font-weight:700}
+.feel{background:#1f2328;color:#fff;border-radius:var(--r);padding:18px;text-align:center;margin-bottom:14px}
+.feel small{display:block;font-size:13.5px;opacity:.8;border-bottom:1px solid rgba(255,255,255,.25);padding-bottom:10px;margin-bottom:8px}
+.feel b{font-size:30px;letter-spacing:-.6px}
+.feel em{display:block;font-style:normal;font-size:13px;opacity:.85;margin-top:2px}
+.benefit .bx{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:10px}
+.benefit .bx.red .big span{color:var(--pri)}
+.benefit .r{display:flex;justify-content:space-between;font-size:13.5px;padding:2px 0}
+.benefit .r.big{font-size:15.5px;font-weight:800}
+.benefit select{min-height:42px;font-size:15px}
+.ck{display:flex;gap:6px;align-items:center;font-size:12.5px;color:var(--sub);margin-top:8px}
+.cart .ci .tg{display:inline-block;font-size:10.5px;font-weight:800;color:#fff;background:var(--pri);border-radius:6px;padding:1px 6px;margin-bottom:3px}
+.cart .ci .tg.lump{background:#475569}
 </style>
 </head>
 <body>
@@ -146,6 +175,11 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 
 <div class="wrap">
 <main>
+  <section class="card">
+    <h2>결제 방식</h2>
+    <div class="modes" id="modeSel"><button data-v="gen">📅<b>구독-일반</b><small>월 단위로 부담 없이</small></button><button data-v="sb">🏪<b>구독-소상공인</b><small>소상공인 전용 구독</small></button><button data-v="lump">💳<b>일시불</b><small>한 번에 결제</small></button></div>
+  </section>
+
   <section class="card" id="actCard" style="display:none">
     <h2>🔥 이번 주 활성화 모델 <span class="cnt" id="actCnt"></span></h2>
     <div class="chips" id="actCats"></div>
@@ -162,6 +196,8 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center;justify-conten
 </main>
 
 <aside>
+  <div class="feel" id="feel"></div>
+  <section class="card benefit" id="benefit"></section>
   <section class="card cart">
     <h2><span class="num">2</span>견적 <span class="cnt" id="cartCnt"></span></h2>
     <div id="cart"></div>
@@ -231,7 +267,7 @@ function syncData(){if(!window.API_URL||window.TEST_MODE)return;
 var R={ct:0,cs:1,cy:2,term:3,bd:4,sb:5,rate:6,base:7,bdisc:8,act:9,fin:10,pre:11,pmin:12,pmax:13,note:14};
 function careName(r){var a=D.ct[r[R.ct]],b=D.cs[r[R.cs]];return b?a+' · '+b:a;}
 function careKey(r){return r[R.ct]+'_'+r[R.cs];}
-function bdName(r){var b=D.bd[r[R.bd]];if(b==='소상공인')return '소상공인 '+D.sb[r[R.sb]];return b;}
+function bdName(r){var b=D.bd[r[R.bd]];if(b==='소상공인')return '소상공인 '+D.sb[r[R.sb]];return b==='결합없음'?'기본요금':b;}
 
 /* 활성화 요약 기준 추가 할인(주말·기간 추가분이 단가표에 아직 반영 안 된 경우) */
 function actInfo(code){var a=D.act&&D.act[code];if(!a)return null;var t=todayStr();
@@ -247,7 +283,7 @@ function calc(code,r,pre){r._code=code;var extra=topUp(code,r),mon=r[R.fin]-extr
   var monP=Math.max(0,mon-preCut),halfP=Math.max(0,half-preCut);
   var total=pre+(hm?halfP*hm+monP*(term-hm):monP*term);
   return {r:r,extra:extra,mon:mon,monP:monP,hm:hm,halfP:halfP,pre:pre,preCut:preCut,total:total,term:term};}
-function minMon(m){var best=null;m[2].forEach(function(r){if(D.bd[r[R.bd]]==='소상공인')return;var v=r[R.fin]-topUp(m[0],r);if(best===null||v<best)best=v;});return best;}
+function minMon(m){var best=null;m[2].forEach(function(r){if((D.bd[r[R.bd]]==='소상공인')!==(MODE==='sb'))return;var v=r[R.fin]-topUp(m[0],r);if(best===null||v<best)best=v;});return best;}
 
 /* ---------- 이번 주 활성화 ---------- */
 var ACTCAT='전체';
@@ -279,93 +315,165 @@ function renderList(){var q=$('#q').value.trim().toUpperCase().replace(/\s+/g,''
   var res=D.m.filter(function(m){return (!CAT||grp(D.cats[m[1]])===CAT)&&(!q||m[0].replace(/[^A-Z0-9]/g,'').indexOf(q.replace(/[^A-Z0-9]/g,''))>=0);});
   if(!res.length){L.innerHTML='<div class="msg">찾는 모델이 없어요</div>';return;}
   var more=res.length>150;res=res.slice(0,150);
-  L.innerHTML=res.map(function(m){var mm=minMon(m);return '<div class="it" data-c="'+esc(m[0])+'"><div><b>'+esc(m[0])+badges(m[0])+'</b><span>'+esc(D.cats[m[1]])+'</span></div><div class="pr">'+(mm!==null?'월 '+won(mm)+'~':'')+'</div></div>';}).join('')+(more?'<div class="msg">150개까지만 보여요. 모델명을 더 입력해 주세요.</div>':'');}
+  L.innerHTML=res.map(function(m){var mm=MODE==='lump'?null:minMon(m);if(MODE==='lump')return '<div class="it" data-c="'+esc(m[0])+'"><div><b>'+esc(m[0])+badges(m[0])+'</b><span>'+esc(D.cats[m[1]])+'</span></div><div class="pr">'+(m[3]?won(m[3]):'')+'</div></div>';return '<div class="it" data-c="'+esc(m[0])+'"><div><b>'+esc(m[0])+badges(m[0])+'</b><span>'+esc(D.cats[m[1]])+'</span></div><div class="pr">'+(mm!==null?'월 '+won(mm)+'~':'')+'</div></div>';}).join('')+(more?'<div class="msg">150개까지만 보여요. 모델명을 더 입력해 주세요.</div>':'');}
 $('#q').addEventListener('input',renderList);
 $('#list').addEventListener('click',function(e){var it=e.target.closest('.it');if(it)pick(it.dataset.c);});
 
-/* ---------- 선택한 모델 ---------- */
+/* ---------- 결제 방식 (구독-일반 / 구독-소상공인 / 일시불) ---------- */
+var MODE=lsGet('lgMode')||'gen';
+function renderMode(){Array.prototype.forEach.call(document.querySelectorAll('#modeSel button'),function(b){b.classList.toggle('on',b.dataset.v===MODE);});}
+$('#modeSel').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;MODE=b.dataset.v;lsPut('lgMode',MODE);renderMode();renderList();if(SEL){SEL.bd=null;SEL.sb=null;SEL.pre=0;SEL.preR=0;}renderPicked();});
+function isSb(r){return D.bd[r[R.bd]]==='소상공인';}
+function modeRows(m){return m[2].filter(function(r){return MODE==='sb'?isSb(r):!isSb(r);});}
+
+/* ---------- 선택한 모델 (결합유형 → 계약기간 → 케어십형태 → 관리유형 → 방문주기 → 선납) ---------- */
 var SEL=null;
-function pick(code){var m=BY[code];if(!m)return;SEL={code:code,care:null,cy:null,term:null,bd:null,sb:null,pre:0,preMode:0};renderPicked();}
+function pick(code){var m=BY[code];if(!m)return;SEL={code:code,bd:null,sb:null,term:null,ct:null,cs:null,cy:null,pre:0,preR:0};renderPicked();
+  setTimeout(function(){var p=$('#picked');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},30);}
 function uniq(arr){var o=[];arr.forEach(function(v){if(o.indexOf(v)<0)o.push(v);});return o;}
 function prefer(list,cur,pref){if(cur!=null&&list.indexOf(cur)>=0)return cur;for(var i=0;i<pref.length;i++)if(list.indexOf(pref[i])>=0)return pref[i];return list[0];}
-function resolve(){var m=BY[SEL.code],rows=m[2];
-  var cares=uniq(rows.map(careKey));
-  var prefCare=[];rows.forEach(function(r){if(D.ct[r[R.ct]]==='방문관리'&&/^라이트/.test(D.cs[r[R.cs]]))prefCare.push(careKey(r));});
-  SEL.care=prefer(cares,SEL.care,prefCare);rows=rows.filter(function(r){return careKey(r)===SEL.care;});
-  var cys=uniq(rows.map(function(r){return r[R.cy];}));
-  var freq={};rows.forEach(function(r){freq[r[R.cy]]=(freq[r[R.cy]]||0)+1;});
-  SEL.cy=prefer(cys,SEL.cy,cys.slice().sort(function(a,b){return freq[b]-freq[a];}));rows=rows.filter(function(r){return r[R.cy]===SEL.cy;});
-  var terms=uniq(rows.map(function(r){return r[R.term];})).sort(function(a,b){return b-a;});
-  SEL.term=prefer(terms,SEL.term,[72]);rows=rows.filter(function(r){return r[R.term]===SEL.term;});
-  var bds=uniq(rows.map(function(r){return r[R.bd];})).sort(function(a,b){return a-b;});
-  SEL.bd=prefer(bds,SEL.bd,[0]);rows=rows.filter(function(r){return r[R.bd]===SEL.bd;});
-  var sbs=uniq(rows.map(function(r){return r[R.sb];})).sort(function(a,b){return a-b;});
-  SEL.sb=prefer(sbs,SEL.sb,[1]);rows=rows.filter(function(r){return r[R.sb]===SEL.sb;});
-  return {m:m,cares:cares,cys:cys,terms:terms,bds:bds,sbs:sbs,row:rows[0]};}
-function chipRow(key,list,label,cur){return '<div class="chips" data-k="'+key+'">'+list.map(function(v){return '<button class="chip sm'+(String(v)===String(cur)?' on':'')+'" data-v="'+esc(v)+'">'+label(v)+'</button>';}).join('')+'</div>';}
-function careLabel(k){var p=k.split('_'),a=D.ct[+p[0]],b=D.cs[+p[1]];return esc(b?a+' · '+b:a);}
-function preOpts(r){var o=[[0,'안 함']];if(r[R.pmin])o.push([r[R.pmin],'최소 '+(r[R.pmin]/10000)+'만']);if(r[R.pmax]&&r[R.pmax]!==r[R.pmin])o.push([r[R.pmax],'최대 '+(r[R.pmax]/10000)+'만']);if(r[R.pmin])o.push(['c','직접 입력']);return o;}
+var BD_ORDER=['결합없음','기존결합','신규결합'];
+function bdLabel(v){var n=D.bd[v];return n==='결합없음'?'기본요금':n;}
+var STEPS=[
+  {k:'bd',t:'결합유형',show:function(){return MODE!=='sb';},list:function(rows){return uniq(rows.map(function(r){return r[R.bd];})).sort(function(a,b){return BD_ORDER.indexOf(D.bd[a])-BD_ORDER.indexOf(D.bd[b]);});},pref:function(){return [D.bd.indexOf('결합없음')];},lab:bdLabel},
+  {k:'sb',t:'소상공인 대수',show:function(){return MODE==='sb';},list:function(rows){return uniq(rows.map(function(r){return r[R.sb];})).sort(function(a,b){return a-b;});},pref:function(){return [1];},lab:function(v){return esc(D.sb[v]);}},
+  {k:'term',t:'계약기간',show:function(){return true;},list:function(rows){return uniq(rows.map(function(r){return r[R.term];})).sort(function(a,b){return b-a;});},pref:function(){return [72];},lab:function(v){return (v/12)+'년';}},
+  {k:'ct',t:'케어십 형태',show:function(){return true;},list:function(rows){return uniq(rows.map(function(r){return r[R.ct];}));},pref:function(){return [D.ct.indexOf('방문관리')];},lab:function(v){return esc(D.ct[v]);}},
+  {k:'cs',t:'관리유형',show:function(rows){return rows.some(function(r){return D.cs[r[R.cs]];});},list:function(rows){return uniq(rows.map(function(r){return r[R.cs];}));},pref:function(list){return list.filter(function(v){return /^라이트/.test(D.cs[v]);});},lab:function(v){return esc(D.cs[v]||'없음');}},
+  {k:'cy',t:'방문주기',show:function(rows){return rows.some(function(r){return D.cy[r[R.cy]];});},list:function(rows){return uniq(rows.map(function(r){return r[R.cy];}));},pref:function(list,rows){var f={};rows.forEach(function(r){f[r[R.cy]]=(f[r[R.cy]]||0)+1;});return list.slice().sort(function(a,b){return f[b]-f[a];});},lab:function(v){return esc(D.cy[v]||'없음');}}
+];
+var KEYI={bd:R.bd,sb:R.sb,term:R.term,ct:R.ct,cs:R.cs,cy:R.cy};
+function resolve(){var m=BY[SEL.code],rows=modeRows(m),out=[];
+  if(!rows.length)return {m:m,steps:[],row:null};
+  STEPS.forEach(function(st){if(!st.show(rows)){SEL[st.k]=rows[0][KEYI[st.k]];rows=rows.filter(function(r){return r[KEYI[st.k]]===SEL[st.k];});return;}
+    var list=st.list(rows);SEL[st.k]=prefer(list,SEL[st.k],st.pref(list,rows));
+    out.push({st:st,list:list,rows:rows});rows=rows.filter(function(r){return r[KEYI[st.k]]===SEL[st.k];});});
+  return {m:m,steps:out,row:rows[0]};}
+function monOf(code,r){return r[R.fin]-topUp(code,r);}
+function minOf(code,rows){var v=null;rows.forEach(function(r){var x=monOf(code,r);if(v===null||x<v)v=x;});return v;}
+function actOf(code,rows){var v=0;rows.forEach(function(r){var x=(isSb(r)?0:r[R.act])+topUp(code,r);if(x>v)v=x;});return v;}
+function stepHtml(code,s,i){var st=s.st,k=st.k,idx=KEYI[k];
+  return '<div class="step"><div class="step-h"><span class="sn">'+(i+1)+'</span>'+st.t+'</div><div class="opts" data-k="'+k+'">'+s.list.map(function(v){
+    var rs=s.rows.filter(function(r){return r[idx]===v;}),mn=minOf(code,rs),ac=actOf(code,rs),on=String(v)===String(SEL[k]);
+    var sub=k==='bd'||k==='sb'?(function(){var r0=rs[0];return r0&&r0[R.rate]?r0[R.rate]+'% 할인':'';})():'';
+    return '<button class="opt'+(on?' on':'')+'" data-v="'+esc(v)+'">'+(ac?'<span class="ab">'+(ac/10000>=1?(ac/10000)+'만':ac.toLocaleString())+'원 활성화</span>':'')+'<b>'+st.lab(v)+'</b>'+(sub?'<em>'+sub+'</em>':'')+'<small>월 '+won(mn)+(rs.length>1?'~':'')+'</small></button>';}).join('')+'</div></div>';}
+function preAmounts(r,ratio){if(!r[R.pmin])return [];if(ratio===30)return [r[R.pmin]];var a=[];for(var v=r[R.pmin];v<=r[R.pmax];v+=100000)a.push(v);if(a[a.length-1]!==r[R.pmax])a.push(r[R.pmax]);return a;}
 function renderPicked(){var el=$('#picked');if(!SEL){el.innerHTML='';return;}
-  var x=resolve(),r=x.row,m=x.m;if(!r){el.innerHTML='';return;}
-  if(SEL.pre&&(SEL.pre<r[R.pmin]||SEL.pre>r[R.pmax]||!r[R.pmin])){SEL.pre=0;SEL.preMode=0;}
-  var c=calc(m[0],r,SEL.pre),a=actInfo(m[0]);
-  var base=m[0].replace(/\..*$/,'');
-  var h='<div class="picked"><div class="picked-h"><div><b>'+esc(m[0])+'</b><div class="meta">'+esc(D.cats[m[1]])+'</div></div>'
-    +'<a class="btn line sm" href="https://www.lge.co.kr/search/result?search='+encodeURIComponent(base)+'" target="_blank" rel="noopener">LG전자에서 보기 ↗</a></div>';
-  h+='<div class="lbl">케어 서비스</div>'+chipRow('care',x.cares,careLabel,SEL.care);
-  if(x.cys.length>1||D.cy[x.cys[0]])h+='<div class="lbl">방문 주기</div>'+chipRow('cy',x.cys,function(v){return esc(D.cy[v]||'없음');},SEL.cy);
-  h+='<div class="lbl">계약 기간</div>'+chipRow('term',x.terms,function(v){return (v/12)+'년';},SEL.term);
-  h+='<div class="lbl">결합 할인</div>'+chipRow('bd',x.bds,function(v){var rr=m[2].filter(function(z){return careKey(z)===SEL.care&&z[R.cy]===SEL.cy&&z[R.term]===SEL.term&&z[R.bd]===v;})[0];return esc(D.bd[v])+(rr&&rr[R.rate]&&D.bd[v]!=='소상공인'?'<small>'+rr[R.rate]+'%</small>':'');},SEL.bd);
-  if(D.bd[SEL.bd]==='소상공인')h+='<div class="lbl">소상공인 대수</div>'+chipRow('sb',x.sbs,function(v){var rr=m[2].filter(function(z){return careKey(z)===SEL.care&&z[R.cy]===SEL.cy&&z[R.term]===SEL.term&&z[R.bd]===SEL.bd&&z[R.sb]===v;})[0];return esc(D.sb[v])+(rr?'<small>'+rr[R.rate]+'%</small>':'');},SEL.sb);
-  if(r[R.pmin]){h+='<div class="lbl">선납 <small style="font-weight:500">(가능 '+(r[R.pmin]/10000)+'만~'+(r[R.pmax]/10000)+'만원)</small></div>'+chipRow('pre',preOpts(r).map(function(o){return o[0];}),function(v){var o=preOpts(r).filter(function(z){return String(z[0])===String(v);})[0];return o?o[1]:v;},SEL.preMode==='c'?'c':SEL.pre);
-    if(SEL.preMode==='c')h+='<div class="pre-in"><input type="number" id="preIn" inputmode="numeric" step="10000" min="'+r[R.pmin]+'" max="'+r[R.pmax]+'" placeholder="'+r[R.pmin]+' ~ '+r[R.pmax]+'" value="'+(SEL.pre||'')+'"><button class="btn line sm" id="preOk">적용</button></div>';}
-  h+='<div class="brk"><div class="r"><span>기본 월 요금</span><span>'+won(r[R.base])+'</span></div>';
-  if(r[R.bdisc])h+='<div class="r minus"><span>결합 할인 ('+esc(bdName(r))+' '+r[R.rate]+'%)</span><span>−'+won(r[R.bdisc])+'</span></div>';
-  if(r[R.act]){var isSb=D.bd[r[R.bd]]==='소상공인';h+='<div class="r minus"><span>'+(isSb?'소상공인 할인 ('+r[R.rate]+'%)':'활성화 요금 인하')+'</span><span>−'+won(r[R.act])+'</span></div>';}
-  if(c.extra)h+='<div class="r wk"><span>추가 활성화 ('+md(a.s)+'~'+md(a.e)+')</span><span>−'+won(c.extra)+'</span></div>';
+  var m=BY[SEL.code],base=m[0].replace(/\..*$/,''),a=actInfo(m[0]);
+  var h='<div class="picked"><div class="picked-h"><div><b>'+esc(m[0])+badges(m[0])+'</b><div class="meta">'+esc(D.cats[m[1]])+(m[3]?' · 기준가 '+won(m[3]):'')+'</div></div>'
+    +'<a class="btn line sm" href="https://www.lge.co.kr/search/result?search='+encodeURIComponent(base)+'" target="_blank" rel="noopener">LG전자 ↗</a></div>';
+  if(MODE==='lump'){
+    h+='<div class="brk"><div class="tot"><div><small>일시불 기준가</small><br><b>'+(m[3]?won(m[3]):'정보 없음')+'</b></div></div>';
+    h+='<div class="note">일시불은 단가표의 기준가예요. 실제 판매가는 매장 정책에 따라 달라질 수 있어요.</div></div>';
+    h+='<button class="btn pri wide" id="addBtn" style="margin-top:14px"'+(m[3]?'':' disabled')+'>＋ 견적에 담기</button></div>';el.innerHTML=h;
+    if(m[3])$('#addBtn').onclick=function(){CART.push({code:m[0],lump:1});saveCart();renderCart();toast(m[0]+' 담았어요');};return;}
+  var x=resolve(),r=x.row;
+  if(!r){el.innerHTML=h+'<div class="note">이 모델은 '+(MODE==='sb'?'소상공인 요금이 없어요':'일반 구독 요금이 없어요')+'</div></div>';return;}
+  h+=x.steps.map(function(s,i){return stepHtml(m[0],s,i);}).join('');
+  var n=x.steps.length;
+  if(r[R.pmin]){var ratios=D.pre[r[R.pre]]?D.pre[r[R.pre]].split(',').map(Number):[];if(!ratios.length)ratios=[30,50];
+    if(SEL.preR&&ratios.indexOf(SEL.preR)<0){SEL.preR=0;SEL.pre=0;}
+    h+='<div class="step"><div class="step-h"><span class="sn">'+(n+1)+'</span>선납 <small>(선택)</small></div><div class="opts" data-k="preR"><button class="opt'+(!SEL.preR?' on':'')+'" data-v="0"><b>선납 안 함</b></button>'+ratios.map(function(p){return '<button class="opt'+(SEL.preR===p?' on':'')+'" data-v="'+p+'"><b>'+p+'%</b><small>'+(preAmounts(r,p).length>1?(r[R.pmin]/10000)+'만~'+(r[R.pmax]/10000)+'만':(r[R.pmin]/10000)+'만원')+'</small></button>';}).join('')+'</div>';
+    if(SEL.preR){var am=preAmounts(r,SEL.preR);if(am.indexOf(SEL.pre)<0)SEL.pre=am[0];
+      h+='<div class="opts sm" data-k="pre">'+am.map(function(v){return '<button class="opt'+(SEL.pre===v?' on':'')+'" data-v="'+v+'"><b>'+(v/10000)+'만원</b></button>';}).join('')+'</div>';}
+    h+='</div>';}else{SEL.pre=0;SEL.preR=0;}
+  var c=calc(m[0],r,SEL.pre);
+  h+='<div class="brk"><div class="r"><span>정상 구독료</span><span>'+won(r[R.base])+'</span></div>';
+  var promo=(isSb(r)?0:r[R.act])+c.extra;
+  if(promo)h+='<div class="r minus"><span>프로모션 할인 (활성화'+(c.extra?' · 추가 '+md(a.s)+'~'+md(a.e):'')+')</span><span>−'+won(promo)+'</span></div>';
+  if(r[R.bdisc])h+='<div class="r minus"><span>결합 할인 ('+esc(D.bd[r[R.bd]])+' '+r[R.rate]+'%)</span><span>−'+won(r[R.bdisc])+'</span></div>';
+  if(isSb(r)&&r[R.act])h+='<div class="r minus"><span>소상공인 할인 ('+esc(D.sb[r[R.sb]])+' '+r[R.rate]+'%)</span><span>−'+won(r[R.act])+'</span></div>';
   if(c.preCut)h+='<div class="r minus"><span>선납 차감 ('+won(c.pre)+' ÷ '+c.term+'개월)</span><span>−'+won(c.preCut)+'</span></div>';
-  h+='<div class="tot"><div><small>'+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+'</small><br><b>월 '+won(c.monP)+'</b></div><div style="text-align:right"><small>총 납부액'+(c.pre?' (선납 포함)':'')+'</small><br><b style="font-size:17px">'+won(c.total)+'</b></div></div>';
+  h+='<div class="tot"><div><small>'+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+'</small><br><b>월 '+won(c.monP)+'</b></div><div style="text-align:right"><small>총 금액 ('+(c.term/12)+'년'+(c.pre?', 선납 포함':'')+')</small><br><b style="font-size:17px">'+won(c.total)+'</b></div></div>';
   if(c.hm)h+='<div class="note gift">🎁 처음 '+c.hm+'개월은 반값 <b>월 '+won(c.halfP)+'</b> → 이후 월 '+won(c.monP)+'</div>';
   if(a&&a.type==='모상'&&a.live)h+='<div class="note gift">🎁 '+esc(a.note||'모바일상품권')+' ('+md(a.s)+'~'+md(a.e)+')</div>';
-  else if(a&&a.type==='요금인하'&&a.note&&a.note!=='-')h+='<div class="note wk">🔥 '+esc(a.note)+(a.add?' · 추가 활성화 '+md(a.s)+'~'+md(a.e)+(a.live?'':' (종료)'):'')+'</div>';
+  else if(a&&a.type==='요금인하'&&a.note)h+='<div class="note wk">🔥 '+esc(a.note)+(a.add?' · 추가 활성화 '+md(a.s)+'~'+md(a.e)+(a.live?'':' (종료)'):'')+'</div>';
   var nt=D.notes[r[R.note]];if(nt)h+='<div class="note">📋 '+esc(nt.split('|').join(' / '))+'</div>';
-  h+='<button class="btn pri wide" id="addBtn" style="margin-top:14px">＋ 견적에 담기</button></div>';
-  h+='</div>';el.innerHTML=h;
-  var pi=$('#preIn'),po=$('#preOk');if(po)po.onclick=function(){var v=Math.round(+pi.value||0);if(v<r[R.pmin]||v>r[R.pmax]){toast('선납은 '+(r[R.pmin]/10000)+'만~'+(r[R.pmax]/10000)+'만원 사이로 입력해 주세요');return;}SEL.pre=v;renderPicked();};
-  $('#addBtn').onclick=function(){CART.push({code:m[0],care:SEL.care,cy:SEL.cy,term:SEL.term,bd:SEL.bd,sb:SEL.sb,pre:SEL.pre});saveCart();renderCart();toast(m[0]+' 담았어요');};}
-$('#picked').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b||!SEL)return;var k=b.parentNode.dataset.k,v=b.dataset.v;if(!k)return;
-  if(k==='care')SEL.care=v;else if(k==='pre'){if(v==='c'){SEL.preMode='c';}else{SEL.preMode=0;SEL.pre=+v;}}else SEL[k]=+v;
-  if(k!=='pre'&&k!=='sb'){SEL.pre=0;SEL.preMode=0;}renderPicked();});
+  h+='<div class="hint">제휴카드 할인은 오른쪽 견적에서 카드를 고르면 월 합계에 적용돼요</div>';
+  h+='<button class="btn pri wide" id="addBtn" style="margin-top:12px">＋ 견적에 담기</button></div></div>';
+  el.innerHTML=h;
+  $('#addBtn').onclick=function(){CART.push({code:m[0],sbm:MODE==='sb'?1:0,bd:r[R.bd],sb:r[R.sb],term:r[R.term],ct:r[R.ct],cs:r[R.cs],cy:r[R.cy],pre:SEL.pre});saveCart();renderCart();toast(m[0]+' 담았어요');};}
+$('#picked').addEventListener('click',function(e){var b=e.target.closest('.opt');if(!b||!SEL)return;var k=b.parentNode.dataset.k,v=+b.dataset.v;if(!k)return;
+  SEL[k]=v;if(k==='preR'){SEL.pre=0;}else if(k!=='pre'){var i=['bd','sb','term','ct','cs','cy'].indexOf(k);['bd','sb','term','ct','cs','cy'].slice(i+1).forEach(function(z){SEL[z]=null;});SEL.pre=0;SEL.preR=0;}
+  renderPicked();});
+
+/* ---------- 제휴카드 (LG전자 구독 제휴카드 안내, 2026.11 기준 · 프로모션 11/1~11/30) ---------- */
+var CARD_META={from:'2026-11-01',to:'2026-11-30',src:'LG전자 구독 혜택 안내 (2026.11)'};
+var CARDS=[
+  {id:'shinhan',n:'신한 The 구독케어',t:[[30,17000,4000],[70,27000,1000],[130,30000,0]],mo:72,pc:'프로모션은 해외겸용 Mastercard만',fee:'연회비 국내 22,000 / Master 25,000원'},
+  {id:'kb',n:'KB국민 LG전자',t:[[30,15000,5000],[80,20000,5000]],mo:36,pm:36,pc:'',fee:'연회비 15,000원 · 발급 다음 달 말까지 실적 무관 1만원'},
+  {id:'lotte',n:'롯데 LG구독엔로카',t:[[40,20000,7000],[80,23000,5000],[160,26000,0]],mo:72,pc:'프로모션은 AMEX만',fee:'연회비 20,000원'},
+  {id:'woori',n:'우리 LG전자',t:[[30,16000,6000],[70,21000,6000],[120,22000,2000]],mo:72,pc:'프로모션은 최초 자동납부 고객',fee:'연회비 15,000원'},
+  {id:'wooripl',n:'우리 LG전자 Platinum',t:[[100,35000,6000],[150,39000,5000],[200,42000,2000]],mo:72,pc:'프로모션은 최초 자동납부 고객',fee:'연회비 25,000원'},
+  {id:'nh',n:'NH 올원 LG전자',t:[[30,10000,0],[60,15000,0],[100,20000,0]],mo:60,pc:'',fee:'연회비 국내 15,000 / 해외 17,000원'},
+  {id:'hana',n:'하나 LG전자 플러스',t:[[30,13000,0],[70,17000,0],[100,20000,0]],mo:60,pc:'',fee:'연회비 23,000원 · 사용등록 다음 달 말까지 30만 구간'},
+  {id:'hyundai',n:'현대 LG전자',t:[[40,8000,0],[80,12000,0],[120,16000,0]],mo:60,pc:'',fee:'연회비 20,000원 · 기소지 회원 대상'},
+  {id:'jb',n:'전북 베스트케어',t:[[30,8000,0],[100,20000,0]],mo:60,pc:'',fee:'연회비 14,000원 · 무실적 기간 8,000원'},
+  {id:'kj',n:'광주 베스트케어',t:[[30,8000,0],[100,20000,0]],mo:60,pc:'',fee:'연회비 14,000원 · 무실적 기간 8,000원'}
+];
+var CARD=lsGet('lgCard')||{id:'',tier:0,promo:true};
+function cardOf(){return CARDS.filter(function(c){return c.id===CARD.id;})[0]||null;}
+function cardPromoLive(){var t=todayStr();return t>=CARD_META.from&&t<=CARD_META.to;}
+function cardDisc(totalMon,maxTerm){var c=cardOf();if(!c)return null;var tr=c.t[Math.min(CARD.tier,c.t.length-1)];
+  var pr=CARD.promo&&cardPromoLive()?tr[2]:0,want=tr[1]+pr,d=Math.min(want,totalMon),mo=Math.min(c.mo,maxTerm||c.mo),pmo=Math.min(c.pm||c.mo,mo);
+  return {c:c,tr:tr,base:Math.min(tr[1],totalMon),promo:Math.max(0,d-Math.min(tr[1],totalMon)),d:d,mo:mo,pmo:pmo,cap:d<want};}
+function cardHtml(){var c=cardOf(),h='<div class="cardbox"><div class="lbl" style="margin-top:4px">💳 제휴카드</div><select id="cardSel"><option value="">사용 안 함</option>'+CARDS.map(function(x){return '<option value="'+x.id+'"'+(x.id===CARD.id?' selected':'')+'>'+esc(x.n)+'</option>';}).join('')+'</select>';
+  if(c){h+='<div class="chips" id="tierSel" style="margin-top:8px">'+c.t.map(function(t,i){return '<button class="chip sm'+(i===CARD.tier?' on':'')+'" data-v="'+i+'">전월 '+t[0]+'만↑<small>'+(t[1]/10000)+'만'+(t[2]?'+'+(t[2]/1000)+'천':'')+'</small></button>';}).join('')+'</div>';
+    if(c.t.some(function(t){return t[2];}))h+='<label class="ck"><input type="checkbox" id="cardPromo"'+(CARD.promo?' checked':'')+'> 카드 프로모션 추가 할인 ('+md(CARD_META.from)+'~'+md(CARD_META.to)+')'+(c.pc?' · '+esc(c.pc):'')+'</label>';
+    h+='<div class="hint" style="margin-top:6px">최대 '+c.mo+'개월 · '+esc(c.fee)+'</div>';}
+  return h+'</div>';}
 
 /* ---------- 견적 ---------- */
-var CART=lsGet('lgCart')||[];
-function saveCart(){lsPut('lgCart',CART);}
-function rowOf(it){var m=BY[it.code];if(!m)return null;return m[2].filter(function(r){return careKey(r)===it.care&&r[R.cy]===it.cy&&r[R.term]===it.term&&r[R.bd]===it.bd&&r[R.sb]===it.sb;})[0]||null;}
-function cartCalc(){return CART.map(function(it){var r=rowOf(it);return r?{it:it,c:calc(it.code,r.slice(),it.pre||0),cat:D.cats[BY[it.code][1]]}:null;}).filter(Boolean);}
+var CART=lsGet('lgCart2')||[];
+function saveCart(){lsPut('lgCart2',CART);}
+function rowOf(it){var m=BY[it.code];if(!m)return null;return m[2].filter(function(r){return (it.sbm?isSb(r):!isSb(r))&&r[R.bd]===it.bd&&r[R.sb]===it.sb&&r[R.term]===it.term&&r[R.ct]===it.ct&&r[R.cs]===it.cs&&r[R.cy]===it.cy;})[0]||null;}
+function cartCalc(){return CART.map(function(it){var m=BY[it.code];if(!m)return null;if(it.lump)return m[3]?{it:it,lump:m[3],cat:D.cats[m[1]]}:null;var r=rowOf(it);return r?{it:it,c:calc(it.code,r.slice(),it.pre||0),cat:D.cats[m[1]]}:null;}).filter(Boolean);}
 function renderCart(){var L=cartCalc();if(L.length!==CART.length){CART=L.map(function(x){return x.it;});saveCart();}
+  var S=L.filter(function(x){return x.c;}),U=L.filter(function(x){return x.lump;});
   $('#cartCnt').textContent=L.length?L.length+'개':'';
+  var normal=S.reduce(function(s,x){return s+x.c.r[R.base];},0),promo=S.reduce(function(s,x){return s+(isSb(x.c.r)?0:x.c.r[R.act])+x.c.extra;},0),
+      bdisc=S.reduce(function(s,x){return s+x.c.r[R.bdisc]+(isSb(x.c.r)?x.c.r[R.act]:0);},0),preCut=S.reduce(function(s,x){return s+x.c.preCut;},0),
+      mon=S.reduce(function(s,x){return s+x.c.monP;},0),maxT=S.reduce(function(s,x){return Math.max(s,x.c.term);},0),
+      tot=S.reduce(function(s,x){return s+x.c.total;},0),pre=S.reduce(function(s,x){return s+x.c.pre;},0),lump=U.reduce(function(s,x){return s+x.lump;},0);
+  var cd=S.length?cardDisc(mon,maxT):null;if(cd){tot-=cd.base*cd.mo+cd.promo*cd.pmo;}
+  var feel=mon-(cd?cd.d:0);
+  $('#feel').innerHTML='<small>최종 체감 구독료(월)</small><b>'+won(feel)+'</b>'+(lump?'<em>+ 일시불 '+won(lump)+'</em>':'');
+  var h='<div class="bx"><div class="r big"><span>정상 구독료</span><span>'+won(normal)+'</span></div></div>';
+  h+='<div class="bx red"><div class="r big"><span>총 할인 혜택(월)</span><span>'+won(normal-feel)+'</span></div>'
+    +'<div class="r"><span>- 프로모션 할인</span><span>'+won(promo)+'</span></div><div class="r"><span>- 결합·소상공인 할인</span><span>'+won(bdisc)+'</span></div>'
+    +'<div class="r"><span>- 제휴카드 할인</span><span>'+won(cd?cd.d:0)+'</span></div>'+(preCut?'<div class="r"><span>- 선납 차감</span><span>'+won(preCut)+'</span></div>':'')+'</div>';
+  h+=cardHtml();
+  if(cd&&cd.cap)h+='<div class="note wk">💳 카드 할인이 월 구독료보다 커서 '+won(cd.d)+'까지만 적용돼요</div>';
+  $('#benefit').innerHTML=h;bindCard();
   if(!L.length){$('#cart').innerHTML='<div class="empty">모델을 골라 <b>견적에 담기</b>를 눌러주세요</div>';$('#sum').innerHTML='';mbar(0,0);return;}
-  $('#cart').innerHTML=L.map(function(x,i){var c=x.c,r=c.r;return '<div class="ci"><b>'+esc(x.it.code)+'</b><div class="o">'+esc(x.cat)+' · '+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+' · '+esc(bdName(r))+(c.pre?' · 선납 '+(c.pre/10000)+'만':'')+'</div><div class="m">월 '+won(c.monP)+(c.hm?' <small>(처음 '+c.hm+'개월 '+won(c.halfP)+')</small>':'')+(c.extra?' <small>추가활성화 포함</small>':'')+'</div><button class="x" data-i="'+i+'" aria-label="빼기">✕</button></div>';}).join('');
-  var mon=L.reduce(function(s,x){return s+x.c.monP;},0),tot=L.reduce(function(s,x){return s+x.c.total;},0),pre=L.reduce(function(s,x){return s+x.c.pre;},0);
-  var gs=uniq(L.map(function(x){return grp(x.cat);})),noBd=L.filter(function(x){return D.bd[x.c.r[R.bd]]==='결합없음';}).length;
-  var h='<div class="sum"><div class="big"><span>월 합계</span><b>'+won(mon)+'</b></div>';
-  h+='<div class="r"><span>총 납부액</span><span>'+won(tot)+'</span></div>';if(pre)h+='<div class="r"><span>선납금 합계</span><span>'+won(pre)+'</span></div>';
-  if(gs.length>=2&&noBd)h+='<div class="note wk">💡 제품군 '+gs.length+'개를 함께 구독하면 <b>신규결합 할인</b>을 받을 수 있어요. 결합없음으로 담긴 '+noBd+'개를 확인해 보세요.</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn pri" id="copyBtn">📋 견적 복사</button><button class="btn line" id="clrBtn">비우기</button></div>';
-  h+='<div class="hint">카카오톡 · 문자에 붙여넣을 수 있는 글로 복사돼요</div></div>';
-  $('#sum').innerHTML=h;mbar(L.length,mon);
+  $('#cart').innerHTML=L.map(function(x,i){if(x.lump)return '<div class="ci"><span class="tg lump">일시불</span><b>'+esc(x.it.code)+'</b><div class="o">'+esc(x.cat)+'</div><div class="m">'+won(x.lump)+'</div><button class="x" data-i="'+i+'" aria-label="빼기">✕</button></div>';
+    var c=x.c,r=c.r;return '<div class="ci"><span class="tg">'+(isSb(r)?'소상공인':'구독')+'</span><b>'+esc(x.it.code)+'</b><div class="o">'+esc(x.cat)+' · '+(c.term/12)+'년 · '+esc(careName(r))+(D.cy[r[R.cy]]?' '+esc(D.cy[r[R.cy]]):'')+' · '+esc(bdName(r))+(c.pre?' · 선납 '+(c.pre/10000)+'만':'')+'</div><div class="m">월 '+won(c.monP)+(c.hm?' <small>(처음 '+c.hm+'개월 '+won(c.halfP)+')</small>':'')+'</div><button class="x" data-i="'+i+'" aria-label="빼기">✕</button></div>';}).join('');
+  var gs=uniq(S.map(function(x){return grp(x.cat);})),noBd=S.filter(function(x){return D.bd[x.c.r[R.bd]]==='결합없음';}).length;
+  var s='<div class="sum">';
+  if(S.length)s+='<div class="r"><span>구독 총 금액'+(cd?' (카드 할인 반영)':'')+'</span><span>'+won(tot)+'</span></div>';
+  if(pre)s+='<div class="r"><span>선납금 합계</span><span>'+won(pre)+'</span></div>';
+  if(lump)s+='<div class="r"><span>일시불 합계</span><span>'+won(lump)+'</span></div>';
+  if(cd)s+='<div class="r"><span>카드 할인 기간</span><span>'+cd.mo+'개월'+(cd.promo&&cd.pmo<cd.mo?' (추가 '+cd.pmo+'개월)':'')+'</span></div>';
+  if(gs.length>=2&&noBd)s+='<div class="note wk">💡 제품군 '+gs.length+'개를 함께 구독하면 <b>신규결합 할인</b>을 받을 수 있어요. 기본요금으로 담긴 '+noBd+'개를 확인해 보세요.</div>';
+  s+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn pri" id="copyBtn">📋 견적 복사</button><button class="btn line" id="clrBtn">비우기</button></div><div class="hint">카카오톡 · 문자에 붙여넣을 수 있는 글로 복사돼요</div></div>';
+  $('#sum').innerHTML=s;mbar(L.length,feel);
   $('#copyBtn').onclick=copyQuote;$('#clrBtn').onclick=function(){if(!confirm('견적을 모두 비울까요?'))return;CART=[];saveCart();renderCart();};}
+function bindCard(){var cs=$('#cardSel');if(cs)cs.onchange=function(){CARD.id=cs.value;CARD.tier=0;lsPut('lgCard',CARD);renderCart();};
+  var ts=$('#tierSel');if(ts)ts.onclick=function(e){var b=e.target.closest('.chip');if(!b)return;CARD.tier=+b.dataset.v;lsPut('lgCard',CARD);renderCart();};
+  var cp=$('#cardPromo');if(cp)cp.onchange=function(){CARD.promo=cp.checked;lsPut('lgCard',CARD);renderCart();};}
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('.x');if(!b)return;CART.splice(+b.dataset.i,1);saveCart();renderCart();});
 function mbar(n,mon){$('#mbN').textContent=n;$('#mbT').textContent='월 '+won(mon);}
 $('#mbGo').onclick=function(){$('aside').scrollIntoView({behavior:'smooth'});};
 function quoteText(){var L=cartCalc(),d=new Date(),me=meGet();
-  var t=['[LG 가전구독 견적] '+(d.getMonth()+1)+'/'+d.getDate(),''];
-  L.forEach(function(x,i){var c=x.c,r=c.r;t.push((i+1)+'. '+x.it.code.replace(/\..*$/,'')+' ('+x.cat+')');
+  var t=['[LG 가전구독 견적] '+(d.getMonth()+1)+'/'+d.getDate(),''];var mon=0,maxT=0;
+  L.forEach(function(x,i){if(x.lump){t.push((i+1)+'. '+x.it.code.replace(/\..*$/,'')+' ('+x.cat+') · 일시불 '+won(x.lump));return;}
+    var c=x.c,r=c.r;mon+=c.monP;maxT=Math.max(maxT,c.term);t.push((i+1)+'. '+x.it.code.replace(/\..*$/,'')+' ('+x.cat+')');
     t.push('   '+(c.term/12)+'년 · '+careName(r)+(D.cy[r[R.cy]]?' '+D.cy[r[R.cy]]:'')+' · '+bdName(r));
     t.push('   월 '+won(c.monP)+(c.hm?' (처음 '+c.hm+'개월 '+won(c.halfP)+')':'')+(c.pre?' · 선납 '+won(c.pre):''));});
-  var mon=L.reduce(function(s,x){return s+x.c.monP;},0);
-  t.push('');t.push('▶ 월 합계 '+won(mon));
-  t.push('※ 활성화·프로모션은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
+  t.push('');if(mon)t.push('▶ 월 구독료 합계 '+won(mon));
+  var cd=mon?cardDisc(mon,maxT):null;if(cd){t.push('▶ '+cd.c.n+' (전월 '+cd.tr[0]+'만↑) 월 −'+won(cd.d));t.push('▶ 카드 할인 후 월 '+won(mon-cd.d));}
+  var lump=L.reduce(function(s,x){return s+(x.lump||0);},0);if(lump)t.push('▶ 일시불 합계 '+won(lump));
+  t.push('※ 활성화·카드 프로모션은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
   if(me)t.push('담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' '));
   return t.join('\n');}
 function copyQuote(){var t=quoteText();var done=function(){toast('견적을 복사했어요');};
@@ -409,7 +517,7 @@ function minMonOf(d,m){var s=D;D=d;var v=minMon(m);D=s;return v;}
 $('#admLink').onclick=function(e){e.preventDefault();admOpen();};
 $('#admClose').onclick=function(){$('#admModal').classList.remove('on');};
 
-function refresh(){renderCats();renderList();renderAct();if(SEL&&!BY[SEL.code])SEL=null;renderPicked();renderCart();}
+function refresh(){renderMode();renderCats();renderList();renderAct();if(SEL&&!BY[SEL.code])SEL=null;renderPicked();renderCart();}
 refresh();syncData();
 })();
 </script>
