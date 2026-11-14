@@ -347,6 +347,21 @@ body.preview{background:#e5e7eb;padding:0}
 .pq .lump{margin-top:12px;border:2px solid #0284c7;border-radius:8px;padding:8px 12px;break-inside:avoid}
 .pq .lump td,.pq .lump th{padding:4px 8px}
 .pq .lump .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.pq .lump h3 small{font-weight:500;color:#555;font-size:12px}
+.pq .lump .why{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:8px}
+.pq .lump .why>div{background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:5px 9px}
+.pq .lump .why span{display:block;font-size:11px;color:#0369a1;font-weight:700}
+.pq .lump .why b{display:block;font-size:15px;color:#0f172a;margin:1px 0}
+.pq .lump .why small{font-size:10.5px}
+.pq .lump .why .hl{background:#0369a1;border-color:#0369a1}.pq .lump .why .hl span,.pq .lump .why .hl b,.pq .lump .why .hl small{color:#fff}
+.pq .lump th.sub{background:#0369a1;color:#fff}.pq .lump th.sub small{color:#e0f2fe}
+.pq .lump td.sub{background:#f0f9ff}
+.pq .lump tr.lsum td{background:#f8fafc;font-weight:700;color:#0f172a}.pq .lump tr.lsum td.sub{background:#e0f2fe}
+.pq .lump .calc{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-bottom:6px}
+.pq .lump .calc .fr{font-size:12px}
+.pq .lump .verdict{background:#0369a1;color:#fff;border-radius:8px;padding:7px 12px;font-size:15px;margin:4px 0}
+.pq .lump .verdict.good{background:#047857}
+.pq .lump .verdict small{color:#e0f2fe;font-size:12px}
 .pq .lump h3{margin:0 0 8px;font-size:14px;color:#0369a1}
 .pq .lump table{margin-bottom:8px}.pq .lump th{background:#f0f9ff}
 .pq .lump .fr{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed #bae6fd}
@@ -781,8 +796,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.7',VER_DATE='2026.11.14';
+var VERSION='v8.8',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.8','11.14',['🖨 일시불 비교 견적서 개선: 구독 장점 카드(목돈 부담 · 월 납부 · 혜택 합계 · 무상수리연장) · 구독 칸 강조 · 결론 문구 자동 (더 저렴 / 월 차액으로 무상수리연장까지)']],
   ['v8.7','11.14',['일시불 비교 안내에서 카드 무이자 · 매장 할인 · 사은품 문구 삭제']],
   ['v8.6','11.14',['일시불 비교 안내 문구 통일: \'구독은 무상수리연장 서비스가 들어있습니다\' (화면 · 캡처 · 인쇄)']],
   ['v8.5','11.14',['🖨 견적 인쇄에 ⚖️ 일시불 비교 견적서 추가: 모델별 일시불 구매가 · 구독 총 납부액 표와 카드 · 포인트 반영 실부담 비교']],
@@ -1389,16 +1405,26 @@ function buildPrint(mode){
   if(mode==='lump'){
     var lN=Math.max.apply(null,items.map(function(i){return i.N;})),lSame=items.every(function(i){return i.N===lN;});
     var subTot=items.reduce(function(a,i){return a+i.mon2*i.N+i.P;},0),lT=subTot-cardTot-extra-allP,LP=lumpCalc(items,lT,lN);
+    var ys=items.map(function(i){return i.y;}),yMin=Math.min.apply(null,ys),yMax=Math.max.apply(null,ys),yTxt=yMin===yMax?yMax+'년':yMin+'~'+yMax+'년';
+    var benefit=sumDisc+cardTot+extra+allP,monNow=Math.max(0,sumMon2-f);
     var lr=function(a,b,c){return '<div class="fr'+(c?' '+c:'')+'"><span>'+a+'</span><span>'+b+'</span></div>';};
-    var lh='<div class="lump"><h3>⚖️ 일시불 구매 vs 구독 비교 ('+(lSame?'':'최장 ')+lN+'개월 기준)</h3>'
-      +'<table><tr><th>모델</th><th>계약</th><th>일시불 구매가</th><th>구독 총 납부액<br><small>(정책 할인·선납 반영)</small></th></tr>'
-      +items.map(function(i){return '<tr><td>'+esc(i.code)+'</td><td>'+i.y+'년 · '+esc(careLabel(splitType(i.type).care))+'</td><td class="r">'+won(i.lump||0)+'</td><td class="r">'+won(i.mon2*i.N+i.P)+'</td></tr>';}).join('')
-      +'<tr><th colspan="2">합계</th><th class="r" style="text-align:right">'+won(LP.L)+'</th><th class="r" style="text-align:right">'+won(subTot)+'</th></tr></table>'
-      +'<div class="cols"><div>'+lr('구독 총 납부액',won(subTot))
-      +(cardTot?lr('− 제휴카드 할인 총액','−'+won(cardTot)):'')+(extra?lr('− 카드 캐시백','−'+won(extra)):'')
-      +(allP?lr('− 포인트 <small>(1P=1원 환산)</small>','−'+won(allP)):'')
-      +'</div><div>'+lr('<b>= 구독 총 실부담</b>','<b>'+won(lT)+'</b>')+lr('일시불 구매가 합계',won(LP.L))+'</div></div>'
-      +lr(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요',won(Math.abs(LP.diff))+' <small>(월 '+won(Math.abs(LP.diffM))+')</small>','fb')
+    var lh='<div class="lump"><h3>💙 일시불 대신 구독을 추천드리는 이유 <small>('+(lSame?'':'최장 ')+lN+'개월 기준)</small></h3>'
+      +'<div class="why">'
+        +'<div><span>목돈 부담</span><b>'+(sumP?'선납 '+won(sumP):'0원')+'</b><small>일시불은 '+won(LP.L)+'</small></div>'
+        +'<div><span>매달 내는 금액</span><b>월 '+won(monNow)+'</b><small>'+(card&&cs&&cs.tier?'제휴카드 적용 첫 달 기준':'할인 적용 기준')+'</small></div>'
+        +'<div><span>구독 혜택 합계</span><b>'+won(benefit)+'</b><small>할인 · 카드 · 포인트(1P=1원)</small></div>'
+        +'<div class="hl"><span>무상수리연장</span><b>'+yTxt+' 포함</b><small>계약 기간 내내 수리 걱정 없이</small></div>'
+      +'</div>'
+      +'<table><tr><th>모델</th><th class="sub">구독 <small>(월 납부 × 기간'+(sumP?' + 선납':'')+')</small></th><th>일시불 구매가</th></tr>'
+      +items.map(function(i){return '<tr><td><b>'+esc(i.code)+'</b> <small>'+i.y+'년</small></td><td class="r sub"><small>월 '+won(i.mon2)+' × '+i.N+'개월'+(i.P?' + 선납 '+won(i.P):'')+' =</small> <b>'+won(i.mon2*i.N+i.P)+'</b></td><td class="r">'+won(i.lump||0)+'</td></tr>';}).join('')
+      +'<tr class="lsum"><td>합계</td><td class="r sub"><b>'+won(subTot)+'</b></td><td class="r"><b>'+won(LP.L)+'</b></td></tr></table>'
+      +'<div class="calc"><div>'+lr('구독 총 납부액',won(subTot))
+        +(cardTot?lr('− 제휴카드 할인','−'+won(cardTot)):'')+(extra?lr('− 카드 캐시백','−'+won(extra)):'')
+        +(allP?lr('− 포인트 적립 <small>(1P=1원)</small>','−'+won(allP)):'')
+        +lr('<b>= 구독 실부담</b>','<b>'+won(lT)+'</b>')+'</div><div>'+lr('일시불 구매가',won(LP.L))+'</div></div>'
+      +(LP.diff<=0
+        ?'<div class="verdict good">✅ 구독이 일시불보다 <b>'+won(-LP.diff)+'</b> 더 저렴해요 <small>(월 '+won(-LP.diffM)+' 절약 + '+yTxt+' 무상수리연장)</small></div>'
+        :'<div class="verdict">💡 월 <b>'+won(LP.diffM)+'</b> 차이로 <b>'+yTxt+' 무상수리연장</b>까지 <small>(총 차액 '+won(LP.diff)+' · 목돈 없이 매달 나눠서)</small></div>')
       +'<small>※ 구독은 무상수리연장 서비스가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 상담 시 입력한 금액입니다.'+(lSame?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');
   }
