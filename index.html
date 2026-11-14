@@ -712,8 +712,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v7.4',VER_DATE='2026.11.14';
+var VERSION='v7.5',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v7.5','11.14',['스마트 패키지: \'11월에 이미 구매·가입한 품목\' 입력 기능 삭제 (담은 모델 기준으로만 계산)']],
   ['v7.4','11.14',['스마트 패키지: 모니터 · 식기세척기 카운터탑은 품목 수에서 빼고 대당 3만P만 추가']],
   ['v7.3','11.14',['신규 (단건)은 담은 개수와 관계없이 단건 정책만 적용 (자동 변경 없음)','신규 결합 · 기존 구독은 담은 개수에 따라 다품목 할인 · 스마트 패키지 포인트 자동 계산 (담은 개수 기준)']],
   ['v7.2','11.14',['🎁 스마트 패키지(11/1~11/30) 반영: 신규 결합 · 기존 구독에서 대상 품목 수에 따라 10만~600만P 추가 적립 (포인트 합계 · 체감가 · 견적서 반영)','11월에 이미 구매한 품목 수 입력, 다음 구간까지 남은 포인트 안내']],
@@ -890,7 +891,7 @@ function pkgKey(it){var c=it.cat,sub=String(it.sub||'');
   if(c==='모니터'||(c==='식기세척기'&&/카운터탑/.test(sub)))return '+3만';
   if(c==='TV')return 'TV';if(c==='청소기')return /로봇/.test(sub)?'청소기(로봇)':'청소기(스틱)';return M[c]||null;}
 function pkgCalc(items){var keys=[],skip=[],bonus=[];items.forEach(function(it){var k=pkgKey(it);if(!k){skip.push(it.code);return;}if(k==='+3만'){bonus.push(it.code);return;}keys.push(k);});
-  var on=pkgLive()&&(S.cust==='combo'||S.cust==='exist'),prev=on?(S.pkgPrev||0):0,n=keys.length+prev,cap=PKG.tiers.length-1;
+  var on=pkgLive()&&(S.cust==='combo'||S.cust==='exist'),prev=0,n=keys.length+prev,cap=PKG.tiers.length-1;
   var bonusPts=on?bonus.length*PKG.bonus:0,tierPts=on&&n>=2?PKG.tiers[Math.min(n,cap)]:0,pts=tierPts+bonusPts,next=n<cap?PKG.tiers[Math.min(n+1,cap)]:0,bigN=PKG.big.filter(function(b){return b>n;})[0];
   return {on:on,keys:keys,bonus:bonus,bonusPts:bonusPts,tierPts:tierPts,prev:prev,n:n,pts:pts,next:next,nextGain:next-tierPts,bigN:bigN,bigPts:bigN?PKG.tiers[bigN]:0,skip:skip};}
 function calcItems(){
@@ -1029,10 +1030,8 @@ function render(){
     pb.innerHTML='<div class="ph"><b>🎁 '+esc(PKG.name)+' · 품목 수만큼 포인트 <small style="color:var(--sub);font-weight:500">'+fmtMD(PKG.start)+'~'+fmtMD(PKG.end)+'</small></b><span>'+PK.n+'품목'+(PK.bonus.length?' + 모니터·카운터탑 '+PK.bonus.length+'대':'')+' → <span class="pv">'+(PK.pts?'+'+PK.pts.toLocaleString()+'P':'2품목부터')+'</span></span></div>'
       +'<div class="steps">'+PKG.tiers.map(function(v,k){if(k<2)return '';return '<span class="'+(k===Math.min(PK.n,PKG.tiers.length-1)?'on ':'')+(PKG.big.indexOf(k)>=0?'big':'')+'"><b>'+k+'</b>'+man(v)+'</span>';}).join('')+'</div>'
       +'<div class="nx">'+(PK.n<PKG.tiers.length-1?'👉 1품목 더 담으면 <b>+'+PK.nextGain.toLocaleString()+'P</b>'+(PK.bigN&&PK.bigN>PK.n+1?' · '+PK.bigN+'품목이면 <b style="color:#dc2626">'+man(PK.bigPts)+'P</b>':(PK.bigN===PK.n+1?' <b style="color:#dc2626">(큰 폭 상승 구간!)</b>':'')):'최대 구간이에요')+'</div>'
-      +'<div class="keys">이번 견적 품목: '+(PK.keys.length?PK.keys.map(esc).join(' · '):'없음')+(PK.bonus.length?' · <span style="color:#4338ca">품목 수 제외 · 대당 +3만P: '+PK.bonus.map(esc).join(', ')+'</span>':'')+(PK.skip.length?' · <span style="color:#b45309">대상 아님: '+PK.skip.map(esc).join(', ')+'</span>':'')+'</div>'
-      +'<div class="prev">11월에 이미 구매·가입한 대상 품목 <button type="button" data-pp="-1">−</button><b>'+(S.pkgPrev||0)+'</b><button type="button" data-pp="1">+</button> <span>(같은 기간 다른 구매도 합산돼요)</span></div>';
+      +'<div class="keys">이번 견적 품목: '+(PK.keys.length?PK.keys.map(esc).join(' · '):'없음')+(PK.bonus.length?' · <span style="color:#4338ca">품목 수 제외 · 대당 +3만P: '+PK.bonus.map(esc).join(', ')+'</span>':'')+(PK.skip.length?' · <span style="color:#b45309">대상 아님: '+PK.skip.map(esc).join(', ')+'</span>':'')+'</div>';
     pb.style.display='block';
-    Array.prototype.forEach.call(pb.querySelectorAll('[data-pp]'),function(b){b.onclick=function(){S.pkgPrev=Math.max(0,Math.min(20,(S.pkgPrev||0)+(+b.dataset.pp)));render();};});
   }else pb.style.display='none';
 
   $('#cardSel').innerHTML=['<button class="chip '+(S.card==='none'?'on':'')+'" data-v="none">사용 안 함</button>'].concat(CARDS.map(function(c){return '<button class="chip '+(S.card===c.id?'on':'')+'" data-v="'+c.id+'">'+c.name+'</button>';})).join('');
