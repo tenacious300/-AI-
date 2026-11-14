@@ -382,6 +382,8 @@ body.preview{background:#e5e7eb;padding:0}
 .fu{display:grid;grid-template-columns:26px 1fr minmax(80px,220px) 64px 54px 52px;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px solid var(--line);font-size:13.5px}.fu .ic{font-size:17px}.fu .nm{font-weight:700}.fu .fbar{display:block;background:#eef2ff;border-radius:99px;height:10px;overflow:hidden}.fu .fbar i{display:block;height:10px;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:99px}.fu .n{text-align:right;font-weight:800}.fu .u{text-align:right;color:var(--sub);font-size:12.5px}.fu .d{text-align:right;font-size:12px;font-weight:800}.fuh{font-size:12px;color:var(--sub);font-weight:700;border-bottom:2px solid var(--line)}
 @media(max-width:600px){.fu{grid-template-columns:22px 1fr 60px 50px 44px}.fu .fbar,.fuh>span:nth-child(3){display:none}}
 .split{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}@media(max-width:600px){.split{grid-template-columns:1fr}}.split>div{background:var(--soft);border-radius:12px;padding:10px 12px}.split h5{margin:0 0 8px;font-size:13px}.sb{display:flex;height:12px;border-radius:99px;overflow:hidden;margin-bottom:6px}.sl{font-size:12px;color:var(--sub);display:flex;flex-wrap:wrap;gap:4px 10px}.sl i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px}
+.sum-h{display:block!important}.sum-h small{display:block;font-size:10.5px;letter-spacing:3px;opacity:.6;font-weight:600;margin-bottom:2px}
+.cap-btn{grid-column:1/-1;background:linear-gradient(135deg,#f59e0b,#f97316)!important;color:#fff!important;border:0!important}.cap-btn small{font-weight:500;opacity:.9;margin-left:4px}
 .feel-c{color:rgba(255,255,255,.6);font-weight:400}.feel-t{color:#fb7185}#sBig.feel{color:#fb7185}.sum-l .sgrp.feel-g{background:rgba(244,63,94,.12);border:1px solid rgba(251,113,133,.55)}
 .sum-l .sgrp{display:block;padding:8px 12px}
 .sgrp{background:rgba(255,255,255,.07);border-radius:12px;padding:8px 12px;margin-top:10px}
@@ -556,13 +558,14 @@ body.preview{background:#e5e7eb;padding:0}
 
 <aside class="sticky" id="secSum">
   <section class="card sum">
-    <h2>예상 결과</h2>
+    <h2 class="sum-h"><small>SAMSUNG AI SUBSCRIPTION</small>맞춤 구독 견적</h2>
     <div class="cap" id="sCap"></div>
     <div class="big" id="sBig">0원</div>
     <div class="cap" id="sSub"></div>
     <div class="sum-l" id="sList"></div>
     <div id="sPhase"></div>
     <div class="btns">
+      <button class="btn sm cap-btn" id="capBtn">📸 견적 캡처 <small>이미지 저장 · 카톡 전송</small></button>
       <button class="btn sm" id="saveBtn">💾 견적 보관</button>
       <button class="btn sm" id="printBtn">🖨 견적 인쇄</button>
       <button class="btn sm" id="copyBtn">견적 복사</button>
@@ -715,8 +718,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v7.7',VER_DATE='2026.11.14';
+var VERSION='v7.8',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v7.8','11.14',['\'예상 결과\' → \'맞춤 구독 견적\'으로 이름 변경','📸 견적 캡처: 견적을 카드 이미지(PNG)로 저장 · 휴대폰은 카톡 등으로 바로 공유, PC는 저장 + 클립보드 복사']],
   ['v7.7','11.14',['관리자 📈 기능 사용 탭: 기능별 사용 횟수 · 사번 수 · 변화, 견적 완성률, 고객 유형 · 견적서 · 카드 · 선납 · 기기 · 계약기간 비율, 시간대별 사용, CSV']],
   ['v7.6','11.14',['새 버전 자동 업데이트: 새 버전이 올라오면 15초 뒤 자동 새로고침 (담은 모델 유지, 입력 중이면 기다림)','관리자 ⚡ 강제 업데이트: 지금 접속 탭에서 누르면 v7.6 이상 모든 화면이 75초 안에 최신 버전으로 새로고침']],
   ['v7.5','11.14',['스마트 패키지: \'11월에 이미 구매·가입한 품목\' 입력 기능 삭제 (담은 모델 기준으로만 계산)']],
@@ -1574,7 +1578,7 @@ function admCsv(){var L=(ADM.stat&&ADM.stat.todayEmps)||[];var rows=[['사번','
   csvDown(rows,'접속기록_'+todayStr()+'.csv');}
 function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
-var FNAME={search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기']};
+var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기']};
 var AFEAT={days:7,data:null};
 function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,days:AFEAT.days},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
 function admFeatHtml(){var R=AFEAT.data,h='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
@@ -1770,6 +1774,51 @@ function hScroll(w){if(!w)return;var r=w.querySelector('.row');if(!r)return;
   window.addEventListener('mousemove',function(e){if(!dn)return;var dx=e.clientX-dn.x;if(Math.abs(dx)>5){moved=true;r.classList.add('drag');}r.scrollLeft=dn.l-dx;});
   window.addEventListener('mouseup',function(){if(!dn)return;dn=null;setTimeout(function(){r.classList.remove('drag');},0);});
   r.addEventListener('click',function(e){if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);}
+function capData(){var items=calcItems();if(!items.length)return null;
+  var sumMon=0,sumMon2=0,sumP=0;items.forEach(function(i){sumMon+=i.mon;sumMon2+=i.mon2;sumP+=i.P;});
+  var card=CARDS.filter(function(c){return c.id===S.card;})[0],cs=card?cardSchedule(card,items,S.usage,S.promo):null,cardTxt='';
+  if(S.multi&&S._mc){cs=S._mc.cs;cardTxt=S._mc.per.map(function(p){return p.name+' '+p.u+'만↑';}).join(' / ');}else if(card&&cs&&cs.tier)cardTxt=card.name+' '+S.usage+'만↑';
+  var f=cs&&cs.months&&cs.months[0]?cs.months[0].b+cs.months[0].p:0,cardTot=cs?cs.baseSum+cs.promoSum:0,extra=cs?cs.extra:0;
+  var pts=Math.floor(items.reduce(function(a,i){return a+i.T;},0)*5/100/10)*10+items.reduce(function(a,i){return a+i.recPt+i.winPt;},0),PK=pkgCalc(items);pts+=PK.pts;
+  var N=Math.max.apply(null,items.map(function(i){return i.N;})),totPay=items.reduce(function(a,i){return a+i.mon2*i.N+i.P;},0),feel=Math.round((totPay-cardTot-extra-pts)/N/10)*10;
+  return {items:items,sumMon:sumMon,sumMon2:sumMon2,sumP:sumP,f:f,net:Math.max(0,sumMon2-f),cardTxt:cardTxt,pts:pts,feel:feel,PK:PK};}
+function capDraw(){var d=capData();if(!d)return null;var W=760,P=40,F='"Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif';
+  var H=3000;
+  var c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+  var R=function(X,Y,w,h,r,col){x.fillStyle=col;x.beginPath();x.moveTo(X+r,Y);x.arcTo(X+w,Y,X+w,Y+h,r);x.arcTo(X+w,Y+h,X,Y+h,r);x.arcTo(X,Y+h,X,Y,r);x.arcTo(X,Y,X+w,Y,r);x.fill();};
+  var T=function(t,X,Y,sz,col,wt,al){x.font=(wt||400)+' '+sz+'px '+F;x.fillStyle=col;x.textAlign=al||'left';x.fillText(t,X,Y);};
+  var fit=function(t,max,sz,wt){x.font=(wt||400)+' '+sz+'px '+F;if(x.measureText(t).width<=max)return t;while(t.length&&x.measureText(t+'…').width>max)t=t.slice(0,-1);return t+'…';};
+  R(0,0,W,H,36,'#ffffff');x.save();x.beginPath();x.rect(0,0,W,196);x.clip();var g=x.createLinearGradient(0,0,W,196);g.addColorStop(0,'#0f1d45');g.addColorStop(1,'#1d4ed8');R(0,0,W,236,36,g);x.restore();
+  x.save();x.font='600 20px '+F;x.fillStyle='rgba(255,255,255,.65)';if(x.letterSpacing!==undefined)x.letterSpacing='6px';x.fillText('SAMSUNG AI SUBSCRIPTION',P,58);x.restore();
+  T('맞춤 구독 견적',P,112,40,'#fff',800);
+  var dt=new Date(),ds=dt.getFullYear()+'.'+(dt.getMonth()+1)+'.'+dt.getDate();
+  T(fit(({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust]||'')+(d.cardTxt?' · '+d.cardTxt:'')+' · '+ds+' 견적',W-P*2,23),P,158,23,'rgba(255,255,255,.8)');
+  var y=246;T(d.f?'카드 할인 후 월 실 납부액 (첫 달)':'할인 후 월 납부액',P,y,24,'#64748b');y+=66;T(won(d.net),P,y,60,'#0f172a',800);
+  y+=44;if(S.showFeel){T('🔥 월 체감가 '+won(d.feel)+' (선납·카드·포인트 반영)',P,y,24,'#e11d48',700);y+=44;}
+  T('정상 월 '+won(d.sumMon)+(d.sumP?' · 선납금 '+won(d.sumP)+' 별도':''),P,y,22,'#94a3b8');y+=26;
+  x.fillStyle='#eef0f4';x.fillRect(0,y,W,2);
+  d.items.forEach(function(i){var o=INFO[i.code]||{};y+=46;T(i.code,P,y,27,'#0f172a',800);T('월 '+won(i.mon2),W-P,y+12,28,'#0f172a',800,'right');
+    y+=36;T(fit((o.st==='ok'&&o.name?o.name+' · ':i.cat+' · ')+i.y+'년 · '+i.type+(i.P?' · 선납 '+i.pre+'%':''),W-P*2-220,23),P,y,23,'#64748b');y+=22;
+    x.setLineDash([6,6]);x.strokeStyle='#e5e7eb';x.lineWidth=2;x.beginPath();x.moveTo(0,y);x.lineTo(W,y);x.stroke();x.setLineDash([]);});
+  var L=function(a,b,col,wt){y+=40;T(a,P,y,25,col||'#334155',wt);T(b,W-P,y,25,col||'#334155',wt,'right');};
+  y+=10;L('할인 후 월 납부액',won(d.sumMon2));if(d.sumP)L('선납금 (일시불)',won(d.sumP));if(d.f)L('제휴카드 월 할인 (첫 달)','−'+won(d.f),'#ea580c');
+  L('🎁 포인트 합계',d.pts.toLocaleString()+'P','#059669',700);
+  y+=22;x.fillStyle='#e5e7eb';x.fillRect(P,y,W-P*2,2);y+=48;T(d.f?'매달 결제 (카드 적용)':'매달 결제',P,y,29,'#0f172a',800);T(won(d.net),W-P,y,31,'#0f172a',800,'right');
+  y+=36;x.fillStyle='#f8fafc';x.fillRect(0,y,W,90);
+  T('전자랜드 여수본점'+(EMP?' · 담당 '+EMP:''),P,y+52,20,'#94a3b8');T('※ 참고용 견적 · 최종 금액은 계약 시 확인',W-P,y+52,20,'#94a3b8',400,'right');
+  var FH=y+90,o=document.createElement('canvas');o.width=W;o.height=FH;var ox=o.getContext('2d');
+  ox.beginPath();ox.moveTo(36,0);ox.arcTo(W,0,W,FH,36);ox.arcTo(W,FH,0,FH,36);ox.arcTo(0,FH,0,0,36);ox.arcTo(0,0,W,0,36);ox.clip();ox.drawImage(c,0,0);
+  return o;}
+function capQuote(){var c=capDraw();if(!c){toast('담은 모델이 없어요');return;}fuLog('capture');markAct('견적 캡처');
+  var dt=new Date(),name='구독견적_'+dt.getFullYear()+('0'+(dt.getMonth()+1)).slice(-2)+('0'+dt.getDate()).slice(-2)+'_'+('0'+dt.getHours()).slice(-2)+('0'+dt.getMinutes()).slice(-2)+'.png';
+  c.toBlob(function(b){if(!b){toast('이미지를 만들지 못했어요');return;}
+    var file=null;try{file=new File([b],name,{type:'image/png'});}catch(e){}
+    var mobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if(mobile&&file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'맞춤 구독 견적'}).catch(function(){});return;}
+    var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
+    var msg='견적 이미지를 저장했어요';
+    if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(function(){toast(msg+' · 복사도 됐어요 (카톡에 Ctrl+V)');},function(){toast(msg);});}else toast(msg);},'image/png');}
+$('#capBtn').onclick=capQuote;
 var AI={cache:null,key:'',cat:null,sort:'rate',win:false};
 function aiTop(){var live=promoLive(),key=MODELS.length+'|'+Object.keys(PROMO).length+'|'+live;if(AI.cache&&AI.key===key)return AI.cache;
   var NOVS=['정수기','식기세척기','청소기','에어드레서','공기청정기'],out={};
