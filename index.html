@@ -450,6 +450,9 @@ body.preview{background:#e5e7eb;padding:0}
 .rrow .rl>span{font-size:12px;color:var(--sub);white-space:nowrap;font-weight:700}
 .rrow .rc{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 10px;font-size:12.5px;font-weight:700;white-space:nowrap;cursor:pointer;color:var(--ink)}
 .rrow .rc.f{border-color:#fde68a;background:#fffbeb}
+.rrow .rc .rx{font-style:normal;display:inline-grid;place-items:center;width:18px;height:18px;margin-left:6px;margin-right:-4px;border-radius:50%;background:var(--soft);color:var(--sub);font-size:10px;font-weight:700}
+.rrow .rc .rx:hover{background:#fee2e2;color:#dc2626}
+.rrow .rclr{border:1px dashed #fca5a5;background:#fff;color:#dc2626;font-size:12px;font-weight:700;border-radius:99px;white-space:nowrap;cursor:pointer;padding:5px 9px}
 .fav{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 10px;font-size:13px;cursor:pointer;white-space:nowrap}
 .fav.on{background:#fffbeb;border-color:#fcd34d;color:#b45309;font-weight:800}
 .lumpin{display:flex;align-items:center;gap:8px;padding:4px 0}
@@ -796,8 +799,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.8',VER_DATE='2026.11.14';
+var VERSION='v8.9',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.9','11.14',['🕘 최근 본 모델: 모델마다 ✕ 삭제 · 전체 삭제 버튼']],
   ['v8.8','11.14',['🖨 일시불 비교 견적서 개선: 구독 장점 카드(목돈 부담 · 월 납부 · 혜택 합계 · 무상수리연장) · 구독 칸 강조 · 결론 문구 자동 (더 저렴 / 월 차액으로 무상수리연장까지)']],
   ['v8.7','11.14',['일시불 비교 안내에서 카드 무이자 · 매장 할인 · 사은품 문구 삭제']],
   ['v8.6','11.14',['일시불 비교 안내 문구 통일: \'구독은 무상수리연장 서비스가 들어있습니다\' (화면 · 캡처 · 인쇄)']],
@@ -1054,8 +1058,8 @@ function renderList(){
 function recentList(){return (lsGet('recentV')||[]).filter(function(c){return byCode[c];});}
 function favList(){return (lsGet('favM')||[]).filter(function(c){return byCode[c];});}
 function renderRecent(){var el=$('#recentRow');if(!el)return;var F=favList(),R=recentList().filter(function(c){return F.indexOf(c)<0;}).slice(0,10);
-  var chip=function(c,f){return '<button class="rc'+(f?' f':'')+'" data-rv="'+esc(c)+'">'+(f?'⭐ ':'')+esc(c)+'</button>';};
-  el.innerHTML=(F.length?'<div class="rl"><span>즐겨찾기</span>'+F.map(function(c){return chip(c,1);}).join('')+'</div>':'')+(R.length?'<div class="rl"><span>최근 본</span>'+R.map(function(c){return chip(c,0);}).join('')+'</div>':'');}
+  var chip=function(c,f){return '<button class="rc'+(f?' f':'')+'" data-rv="'+esc(c)+'">'+(f?'⭐ ':'')+esc(c)+(f?'':'<i class="rx" data-rd="'+esc(c)+'" title="삭제">✕</i>')+'</button>';};
+  el.innerHTML=(F.length?'<div class="rl"><span>즐겨찾기</span>'+F.map(function(c){return chip(c,1);}).join('')+'</div>':'')+(R.length?'<div class="rl"><span>최근 본</span><button class="rclr" data-rdall="1">전체 삭제</button>'+R.map(function(c){return chip(c,0);}).join('')+'</div>':'');}
 function favSync(){var m=S.sel.m,b=$('#pkFav');if(!m||!b)return;var on=favList().indexOf(m[0])>=0;b.classList.toggle('on',on);b.textContent=on?'⭐ 즐겨찾기':'☆ 즐겨찾기';}
 function pickModel(code){
   var m=byCode[code];if(!m)return;mvLog(code,'view');
@@ -2394,7 +2398,10 @@ $('#loadedNew').onclick=function(){S.loaded=null;showLoaded();reset();toast('새
 promoUI();
 renderCats();render();renderRecent();
 $('#pkFav').onclick=function(){var m=S.sel.m;if(!m)return;var F=favList(),i=F.indexOf(m[0]);if(i>=0)F.splice(i,1);else{F.unshift(m[0]);fuLog('fav');}lsPut('favM',F.slice(0,20));favSync();renderRecent();toast(i>=0?'즐겨찾기에서 뺐어요':'⭐ 즐겨찾기에 추가했어요');};
-$('#recentRow').addEventListener('click',function(e){var b=e.target.closest('[data-rv]');if(!b)return;$('#q').value=b.dataset.rv;pickModel(b.dataset.rv);});
+$('#recentRow').addEventListener('click',function(e){
+  var d=e.target.closest('[data-rd]');if(d){e.stopPropagation();lsPut('recentV',recentList().filter(function(c){return c!==d.dataset.rd;}));renderRecent();return;}
+  if(e.target.closest('[data-rdall]')){lsPut('recentV',[]);renderRecent();toast('최근 본 모델을 모두 지웠어요');return;}
+  var b=e.target.closest('[data-rv]');if(!b)return;$('#q').value=b.dataset.rv;pickModel(b.dataset.rv);});
 $('#qCallQ').addEventListener('click',function(e){var b=e.target.closest('[data-cd]');if(!b)return;var v='';if(b.dataset.cd){var d=new Date(Date.now()+b.dataset.cd*86400000);v=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}$('#qCall').value=v;});
 if(EMP&&!CUST)setTimeout(boxRefresh,1500);
 
