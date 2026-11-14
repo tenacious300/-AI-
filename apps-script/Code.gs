@@ -1,6 +1,7 @@
 // 관리자 비밀번호: 공개 저장소라 코드에 적지 않고 Apps Script '스크립트 속성'(ADMIN_PW)에만 저장
 var ADMIN_PW = PropertiesService.getScriptProperties().getProperty('ADMIN_PW') || ('\u0000' + Utilities.getUuid());
-var ONLINE_SEC = 180;              // 마지막 신호 후 이 시간(초) 안이면 '접속 중'으로 계산 (신호 간격 75초)
+var ONLINE_SEC = 180;
+var LONG_IDLE_MIN = 30;             // 이 시간(분) 넘게 조작이 없으면 접속자 수에서 제외 (목록에는 💤로 표시)              // 마지막 신호 후 이 시간(초) 안이면 '접속 중'으로 계산 (신호 간격 75초)
 var TZ = 'Asia/Seoul';
 var CARE_FOLDER_NAME = '삼성AI구독_케어가이드';   // 구글 드라이브에 올린 케어 가이드 이미지 폴더 이름
 
@@ -30,7 +31,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminSetMinVer: adminSetMinVer,
-  adminBlock: adminBlock, adminUnblock: adminUnblock,
+  adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminClearNotice: adminClearNotice
 };
 function doPost(e) {
@@ -89,6 +90,31 @@ function readPresence_(cache) {
   return out;
 }
 
+function idleOf_(s) { var m = /^idle:(\d+)/.exec(s && s.act || ''); return m ? Number(m[1]) : 0; }
+function activeCount_(map) { return Object.keys(map).filter(function (k) { return idleOf_(map[k]) < LONG_IDLE_MIN; }).length; }
+
+/** 직원별 오늘 활동 (실사용 초 · 조회 · 담기 · 캡처) - 캐시에 누적 */
+function uaAdd_(cache, emp, sec, ev, fu) {
+  if (!emp) return;
+  var k = 'ua_' + today_(), ua = JSON.parse(cache.get(k) || '{}'), a = ua[emp] || [0, 0, 0, 0];
+  a[0] += Math.max(0, Math.round(sec));
+  (ev || []).forEach(function (e) { if (e && e[1] === 'view') a[1]++; else if (e && e[1] === 'add') a[2]++; });
+  if (fu && fu.capture) a[3] += Math.min(50, Number(fu.capture) || 0);
+  ua[emp] = a;
+  cache.put(k, JSON.stringify(ua), 21600);
+}
+
+/** 관리자 → 직원 개별 메시지 (다음 접속 신호 때 화면에 뜸) */
+function adminSendMsg(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var emp = cleanEmp_(arg.emp), text = cleanStr_(arg.text, 300);
+  if (!emp || !text) return { ok: false };
+  var m = { id: Utilities.getUuid().slice(0, 8), text: text, at: Utilities.formatDate(new Date(), TZ, 'HH:mm') };
+  CacheService.getScriptCache().put('msg_' + emp, JSON.stringify(m), 21600);
+  return { ok: true, id: m.id };
+}
+
 /** 사용자 화면에서 75초마다 호출: 접속 상태 기록 + 현재 접속자 수 반환 (동시 접속 대비 경량화) */
 function heartbeat(info) {
   info = info || {};
@@ -107,6 +133,7 @@ function heartbeat(info) {
     var map = readPresence_(cache);
     var now = Date.now();
     var prev = map[sid] || { start: now };
+    try { uaAdd_(cache, cleanEmp_(info.emp), (prev.last && !info.away) ? Math.min(now - prev.last, 90000) / 1000 : 0, info.ev, info.fu); } catch (e) {}
     map[sid] = {
       start: prev.start,
       last: now,
@@ -120,7 +147,7 @@ function heartbeat(info) {
       away: !!info.away
     };
     cache.put('presence', JSON.stringify(map), 21600);
-    online = Object.keys(map).length;
+    online = activeCount_(map);
     cache.put('onlineN', String(online), 600);
     if (info.ev && info.ev.length) mvBuffer_(cache, info.ev);
     if (info.fu && typeof info.fu === 'object') fuBuffer_(cache, info.fu, cleanEmp_(info.emp));
@@ -159,6 +186,10 @@ function heartbeat(info) {
   }
   try { mvMaybeFlush_(); } catch (e) {}
   var res = { online: online, nid: noticeId_(), mv: minVer_() };
+  try {
+    var memp = cleanEmp_(info.emp), mraw = memp && CacheService.getScriptCache().get('msg_' + memp);
+    if (mraw) { var mm = JSON.parse(mraw); if (mm.id !== String(info.msgAck || '')) res.msg = mm; }
+  } catch (e) {}
   if (isFirst) { try { res.dv = dataVersion_(); } catch (e) {} }
   return res;
 }
@@ -197,7 +228,7 @@ function adminStats(pw) {
     var s = map[k];
     return {
       id: k.slice(-4).toUpperCase(),
-      emp: s.emp || '', did: s.did || '', act: s.act || '', away: !!s.away, dev: s.dev, cart: s.cart, models: s.models, ver: s.ver,
+      emp: s.emp || '', did: s.did || '', act: s.act || '', away: !!s.away, idle: idleOf_(s), dev: s.dev, cart: s.cart, models: s.models, ver: s.ver,
       startMin: Math.round((now - s.start) / 60000),
       lastSec: Math.round((now - s.last) / 1000)
     };
@@ -217,13 +248,16 @@ function adminStats(pw) {
     });
   }
   var em = JSON.parse(getP_(all,'emps_' + today_()) || '{}');
+  var ua = JSON.parse(cache.get('ua_' + today_()) || '{}');
   var todayEmps = Object.keys(em).map(function (k) {
-    return { emp: k, n: em[k].n, first: em[k].first, last: em[k].last, dev: em[k].dev || '', p: em[k].p || 0, s: em[k].s || 0 };
+    var u = ua[k] || [0, 0, 0, 0];
+    return { emp: k, n: em[k].n, first: em[k].first, last: em[k].last, dev: em[k].dev || '', p: em[k].p || 0, s: em[k].s || 0,
+      am: Math.round(u[0] / 60), v: u[1], ad: u[2], c: u[3] };
   }).sort(function (a, b) { return a.first < b.first ? -1 : 1; });
   return {
     ok: true,
     todayEmps: todayEmps,
-    online: sessions.length,
+    online: activeCount_(map),
     sessions: sessions,
     days: days,
     blocks: blockList_(),
