@@ -866,9 +866,12 @@ function mvRank_(agg) {
 /** 직원: 베스트 모델 TOP 20 (5분 캐시) */
 function getBest(arg) {
   var days = [1, 7, 30].indexOf(Number(arg && arg.days)) >= 0 ? Number(arg.days) : 7;
-  var cache = CacheService.getScriptCache(), ck = 'best_' + days, c = cache.get(ck);
+  // brand 'lg' → LG 계산기에서 보낸 모델('LG--' 접두어)만, 그 외에는 삼성 모델만
+  var lg = String(arg && arg.brand) === 'lg';
+  var cache = CacheService.getScriptCache(), ck = 'best_' + (lg ? 'lg_' : '') + days, c = cache.get(ck);
   if (c) return JSON.parse(c);
-  var cur = mvRank_(mvAgg_(mvDay_(days - 1), mvDay_(0))), prev = mvRank_(mvAgg_(mvDay_(days * 2 - 1), mvDay_(days)));
+  var pick = function (rows) { return rows.filter(function (r) { return (String(r[0]).indexOf('LG--') === 0) === lg; }); };
+  var cur = pick(mvRank_(mvAgg_(mvDay_(days - 1), mvDay_(0)))), prev = pick(mvRank_(mvAgg_(mvDay_(days * 2 - 1), mvDay_(days))));
   var pr = {}; prev.forEach(function (r, i) { pr[r[0]] = i + 1; });
   var res = { days: days, at: Utilities.formatDate(new Date(), TZ, 'HH:mm'),
     list: cur.slice(0, 20).map(function (r) { return { code: r[0], view: r[1], add: r[2], print: r[3], save: r[4], prev: pr[r[0]] || 0 }; }) };
