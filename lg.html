@@ -601,7 +601,7 @@ body.preview{background:#e5e7eb;padding:0}
   </section>
 
   <section class="card" id="secCart">
-    <h2><span class="num">3</span>담은 모델 <span class="cnt" id="cartCnt"></span></h2>
+    <h2><span class="num">3</span>담은 모델 <span class="cnt" id="cartCnt"></span><button class="btn line sm" id="cmpOpen2" style="margin-left:8px;color:#0f766e;border-color:#99f6e4">⚖️ 비교하기</button></h2>
     <div id="cart"></div>
   </section>
 
@@ -683,6 +683,21 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="btn pri" id="barBtn">결과 보기</button>
 </div>
 <div class="toast" id="toast"></div>
+<div class="side-tabs">
+  <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
+  <button class="care-tab c3" id="winTab">🔥 활성화 모델</button>
+</div>
+<div class="drawer-bg" id="careBg"></div>
+<aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
+  <div class="drawer-h"><b>⚖️ 월 구독료 비교</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="drawer-b" id="cmpBody"></div>
+</aside>
+<aside class="drawer" id="winDrawer" aria-label="이번 주 활성화 모델">
+  <div class="drawer-h"><b>🔥 이번 주 활성화 모델</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div style="padding:10px 16px 0"><div class="search"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="winQ" placeholder="모델코드로 활성화 대상 확인" autocomplete="off" spellcheck="false"></div></div>
+  <div class="drawer-c" id="winChips"></div>
+  <div class="drawer-b" id="winBody"></div>
+</aside>
 <div id="printArea"></div>
 
 <div class="modal" id="pmModal"><div class="modal-box" style="max-width:460px">
@@ -732,7 +747,7 @@ function load(x){D=x;BY={};D.m.forEach(function(m){BY[m[0]]=m;});
   var meta=D.meta||{};
   $('#perTag').textContent='단가 '+String(meta.price||'').replace('전자랜드_','')+(meta.act?' · '+String(meta.act).replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1'):'');
   var fs=$('#footSrc');if(fs)fs.textContent='기준: '+(meta.price||'-')+(meta.act?' · '+meta.act:'')+' · 모델 '+D.m.length.toLocaleString()+'개';}
-function grp(c){return String(c).replace(/\s*\(.*$/,'').trim();}
+function grp(c){c=String(c);if(/\(김치냉장고\)/.test(c))return '김치냉장고';return c.replace(/\s*\(.*$/,'').trim();}
 function syncData(){if(!window.API_URL||window.TEST_MODE)return;
   api('getDataVer',null,function(v){if(!v)return;var sv=v.lg||'',o=lsGet('ovr_lg'),lv=o?o.ver:'';if(sv===lv)return;
     if(!sv){lsPut('ovr_lg',null);load(REPO);refresh();return;}
@@ -815,7 +830,7 @@ $('#channel').addEventListener('click',function(e){var b=e.target.closest('.chip
 
 /* ====== 모델 찾기 ====== */
 var CAT=null,SUB=null;
-function subOf(c){var m=/\((.*)\)/.exec(c);return m?m[1]:'';}
+function subOf(c){if(/\(김치냉장고\)/.test(c))return '';var m=/\((.*)\)/.exec(c);return m?m[1]:'';}
 function renderCats(){$('#catChips').innerHTML=GROUPS.map(function(g){return '<button class="chip sm '+(g===CAT?'on':'')+'" data-v="'+esc(g)+'">'+esc(g)+'</button>';}).join('');
   var subs=[];if(CAT)D.m.forEach(function(m){var c=D.cats[m[1]];if(grp(c)===CAT){var s=subOf(c);if(s&&subs.indexOf(s)<0)subs.push(s);}});
   $('#subChips').innerHTML=subs.length>1?['<button class="chip sm '+(!SUB?'on':'')+'" data-v="">전체</button>'].concat(subs.map(function(s){return '<button class="chip sm '+(s===SUB?'on':'')+'" data-v="'+esc(s)+'">'+esc(s)+'</button>';})).join(''):'';}
@@ -839,13 +854,13 @@ $('#list').addEventListener('click',function(e){var it=e.target.closest('.it');i
 /* 최근 본 모델 · 즐겨찾기 · 이번 주 활성화 */
 function favList(){return (lsGet('lgFav')||[]).filter(function(c){return BY[c];});}
 function recentList(){return (lsGet('lgRecent')||[]).filter(function(c){return BY[c];});}
-function renderRecent(){var F=favList(),Rc=recentList().filter(function(c){return F.indexOf(c)<0;}).slice(0,10),h='';
-  var A=Object.keys(D.act||{}).filter(function(c){if(!BY[c])return false;var a=actInfo(c);return a.type&&(a.mid+(a.live?a.add:0))>0;});
-  if(F.length)h+='<div class="rl"><span>⭐ 즐겨찾기</span>'+F.map(function(c){return '<button class="rc f" data-c="'+esc(c)+'">'+esc(c.replace(/\..*$/,''))+'</button>';}).join('')+'</div>';
-  if(Rc.length)h+='<div class="rl"><span>🕘 최근</span>'+Rc.map(function(c){return '<button class="rc" data-c="'+esc(c)+'">'+esc(c.replace(/\..*$/,''))+'</button>';}).join('')+'</div>';
-  if(A.length)h+='<div class="rl"><span>🔥 활성화 '+A.length+'</span>'+A.map(function(c){return '<button class="rc" data-c="'+esc(c)+'">'+esc(c.replace(/\..*$/,''))+'</button>';}).join('')+'</div>';
-  $('#recentRow').innerHTML=h;}
-$('#recentRow').addEventListener('click',function(e){var b=e.target.closest('.rc');if(b)pickModel(b.dataset.c);});
+function renderRecent(){var F=favList(),Rc=recentList().filter(function(c){return F.indexOf(c)<0;}).slice(0,10);
+  var chip=function(c,f){return '<button class="rc'+(f?' f':'')+'" data-rv="'+esc(c)+'">'+(f?'⭐ ':'')+esc(c)+(f?'':'<i class="rx" data-rd="'+esc(c)+'" title="삭제">✕</i>')+'</button>';};
+  $('#recentRow').innerHTML=(F.length?'<div class="rl"><span>즐겨찾기</span>'+F.map(function(c){return chip(c,1);}).join('')+'</div>':'')+(Rc.length?'<div class="rl"><span>최근 본</span><button class="rclr" data-rdall="1">전체 삭제</button>'+Rc.map(function(c){return chip(c,0);}).join('')+'</div>':'');}
+$('#recentRow').addEventListener('click',function(e){
+  var d=e.target.closest('[data-rd]');if(d){e.stopPropagation();lsPut('lgRecent',recentList().filter(function(c){return c!==d.dataset.rd;}));renderRecent();return;}
+  if(e.target.closest('[data-rdall]')){lsPut('lgRecent',[]);renderRecent();toast('최근 본 모델을 모두 지웠어요');return;}
+  var b2=e.target.closest('[data-rv]');if(b2)pickModel(b2.dataset.rv);});
 function favSync(){var b=$('#pkFav');if(!S.sel)return;var on=favList().indexOf(S.sel.code)>=0;b.classList.toggle('on',on);b.textContent=on?'⭐ 즐겨찾기':'☆ 즐겨찾기';}
 $('#pkFav').onclick=function(){if(!S.sel)return;var F=favList(),i=F.indexOf(S.sel.code);if(i>=0)F.splice(i,1);else F.unshift(S.sel.code);lsPut('lgFav',F.slice(0,20));favSync();renderRecent();};
 
@@ -908,7 +923,7 @@ function calcItems(){var out=[];S.cart=S.cart.filter(function(it){var m=BY[it.co
     var promo=(isSb(r)?0:r[R.act])+c.extra;if(promo)parts.push(['활성화 −'+won(promo),'o']);
     if(c.pre)parts.push(['선납 '+o[1]+' −'+won(c.preCut),'o']);
     if(!it.lumpManual)it.lump=m[3]||0;
-    out.push({it:it,code:it.code,cat:D.cats[m[1]],y:r[R.term]/12,N:r[R.term],type:typeName(r),bd:isSb(r)?'소상공인 '+D.sb[r[R.sb]]:(bdn==='결합없음'?'기본요금':bdn),
+    out.push({it:it,cmp:it.cmp,code:it.code,cat:D.cats[m[1]],y:r[R.term]/12,N:r[R.term],type:typeName(r),bd:isSb(r)?'소상공인 '+D.sb[r[R.sb]]:(bdn==='결합없음'?'기본요금':bdn),
       mon:r[R.base],mon1:c.mon,mon2:c.monP,P:c.pre,preK:o[0],preLab:o[1],po:po,hm:c.hm,halfP:c.halfP,parts:parts,rate:r[R.base]?1-c.monP/r[R.base]:0,
       T:r[R.base]*r[R.term],pay:c.total,disc:r[R.base]*r[R.term]-c.total,gift:giftOf(it.code),lump:it.lump||0,lp:m[3]||0});
     return true;});
@@ -976,7 +991,7 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
       +'<div class="item-row"><span class="k">선납</span><select data-pre="'+i+'">'+it.po.map(function(o){return '<option value="'+o[0]+'" '+(it.preK===o[0]?'selected':'')+'>'+o[1]+(o[2]&&o[0][0]!=='f'?' ('+won(o[2])+')':'')+'</option>';}).join('')+'</select></div>'
       +'<div class="item-row"><span class="k">구독혜택</span>'
       +(it.hm?'<span class="tag g">🎁 처음 '+it.hm+'개월 반값 '+won(it.halfP)+'</span>':'')+(it.gift?'<span class="tag g">🎁 '+esc(it.gift.note)+'</span>':'')+(!it.hm&&!it.gift?'<span class="tag gr">대상 아님</span>':'')+'</div>'
-      +'<div class="item-row"><a class="link" style="margin-left:auto" target="_blank" rel="noopener" href="'+lgUrl(it.code)+'">LG전자에서 보기 ↗</a></div>'
+      +'<div class="item-row"><label class="cmpchk"><input type="checkbox" data-cmp="'+i+'" '+(it.cmp!==false?'checked':'')+'>비교</label><a class="link" style="margin-left:auto" target="_blank" rel="noopener" href="'+lgUrl(it.code)+'">LG전자에서 보기 ↗</a></div>'
       +'</div>';}).join('');
 
   var sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,net=t.net,feelM=t.feelM,feelN=t.feelN,feelT=t.feelT,h='';
@@ -1061,10 +1076,12 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
     return r?'<tr data-card="'+c.id+'" class="'+(r.total===best&&best>0?'best ':'')+(S.card===c.id?'sel':'')+'"><td>'+c.name+(r.total===best&&best>0?' 👍':'')+'</td><td>'+won(r.mon)+'</td><td>'+won(r.base)+'</td><td>'+won(r.pr+r.extra)+'</td><td>'+won(r.total)+'</td></tr>'
     :'<tr data-card="'+c.id+'"><td>'+c.name+'</td><td colspan="4" style="color:var(--sub);text-align:center">'+c.tiers[0][0]+'만원↑ 이용 시</td></tr>';}).join('');
   $('#cmpNote').innerHTML=(n?'담은 모델 월 납부액 '+won(sumMon2)+' 기준 (월 납부액 한도 내 할인). ':'월 납부액이 충분하다고 가정. ')+'표의 카드를 누르면 바로 선택돼요. 프로모션 칸에는 신규 발급 추가 할인과 선납 캐시백이 들어 있어요. 현대·하나·NH·광주/전북은 유효기간 5년(60개월)까지 계산해요.';
+  var cn=items.filter(function(i){return i.cmp!==false;}).length,bd=$('#cmpBd');bd.textContent=cn;bd.style.display=cn>=2?'':'none';
+  cmpRender();
   if(S.sel)renderPicked();
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
-$('#cart').addEventListener('change',function(e){var s=e.target.closest('[data-pre]');if(!s)return;S.cart[+s.dataset.pre].preK=s.value;render();});
+$('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();return;}var s=e.target.closest('[data-pre]');if(!s)return;S.cart[+s.dataset.pre].preK=s.value;render();});
 $('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;render();});
 $('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
@@ -1153,6 +1170,60 @@ Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.
   if(lm&&!S.cart.every(function(i){return i.lump>0;})){var lb=$('#lTog');if(lb)lb.scrollIntoView({behavior:'smooth',block:'start'});toast('⚖️ 모델별 일시불 구매가를 먼저 입력해 주세요');return;}
   printQuote(b.dataset.pm);};});
 window.__previewQuote=function(mode){buildPrint(mode||'basic');document.body.classList.add('preview');};
+
+/* ====== 서랍: 비교하기 · 활성화 모델 ====== */
+function careClose(){['#cmpDrawer','#winDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
+function drawerOpen(id){careClose();$(id).classList.add('on');$('#careBg').classList.add('on');}
+Array.prototype.forEach.call(document.querySelectorAll('.dclose'),function(b){b.onclick=careClose;});$('#careBg').onclick=careClose;
+function cmpRender(){
+  var all=calcItems(),its=all.filter(function(i){return i.cmp!==false;}),b=$('#cmpBody');
+  if(!$('#cmpDrawer').classList.contains('on'))return;
+  if(its.length<2){b.innerHTML='<div class="empty" style="background:#fff">'+(all.length<2?'비교하려면 모델을 <b>2개 이상</b> 담아주세요.<br>같은 모델을 계약기간·케어 유형만 바꿔 담아도 비교할 수 있어요.':'담은 모델 카드에서 <b>비교</b>를 2개 이상 체크해 주세요.')+'</div>';return;}
+  var minMon=Math.min.apply(null,its.map(function(i){return i.mon2;}));
+  var tot=function(i){return i.pay;},minTot=Math.min.apply(null,its.map(tot)),minPerY=Math.min.apply(null,its.map(function(i){return tot(i)/i.y;}));
+  var fcard=CARDS.filter(function(c){return c.id===S.card;})[0];
+  var fc=function(i){if(!fcard)return 0;var r=cardSchedule(fcard,[i],S.usage,S.promo);return r.baseSum+r.promoSum+r.extra;};
+  var net=function(i){return tot(i)-fc(i)-(i.gift?i.gift.won:0);},minNet=Math.min.apply(null,its.map(net));
+  var head='<tr><th></th>'+its.map(function(i){var o=infoOf(i.code);
+    return '<th>'+(o?'<img class="ci" src="'+esc(o.img)+'" alt="">':'')+'<div class="cn">'+esc(i.code)+'</div><div style="font-size:12px;color:var(--sub);font-weight:500">'+esc(o&&o.name?o.name:i.cat)+'</div></th>';}).join('')+'</tr>';
+  var row=function(label,fn){return '<tr><td>'+label+'</td>'+its.map(fn).join('')+'</tr>';};
+  b.innerHTML='<div class="hint" style="margin-bottom:10px">선택한 '+its.length+'개 모델 · 초록색이 가장 저렴해요 · <b>실부담 총액</b> = 총 납부액 − 카드 할인 − 상품권 · 담은 모델 카드의 <b>비교</b> 체크로 대상을 바꿀 수 있어요</div>'
+   +'<div class="scroll" style="border-radius:12px"><table class="cmp-tbl">'+head
+   +row('품목',function(i){return '<td>'+esc(i.cat)+'</td>';})
+   +row('계약 · 케어',function(i){return '<td><b>'+i.y+'년</b> ('+i.N+'개월)<br><span style="font-size:12px">'+esc(i.type)+'</span></td>';})
+   +row('정상 월',function(i){return '<td>'+won(i.mon)+'</td>';})
+   +row('할인',function(i){return '<td><b>'+pct(i.rate)+'</b><br><span style="font-size:11.5px;color:var(--sub)">'+i.parts.map(function(p){return esc(p[0]);}).join(' · ')+'</span></td>';})
+   +row('선납금',function(i){return '<td>'+(i.P?won(i.P)+' <span style="font-size:11.5px;color:var(--sub)">('+esc(i.preLab)+')</span>':'-')+'</td>';})
+   +row('월 납부액',function(i){var best=i.mon2===minMon;return '<td class="'+(best?'best-cell':'')+'"><span class="big2 '+(best?'best':'')+'">'+won(i.mon2)+'</span>'+(best?'<span class="diff" style="color:var(--ok)">최저</span>':'<span class="diff">+'+won(i.mon2-minMon)+'</span>')+(i.hm?'<div style="font-size:11.5px;color:var(--sub)">처음 '+i.hm+'개월 '+won(i.halfP)+'</div>':'')+'</td>';})
+   +row('총 납부액<br><span style="font-weight:500">(선납 포함)</span>',function(i){var t=tot(i),best=t===minTot;return '<td class="'+(best?'best-cell':'')+'"><span class="'+(best?'best':'')+'">'+won(t)+'</span></td>';})
+   +row('1년 환산',function(i){var best=Math.abs(tot(i)/i.y-minPerY)<1;return '<td class="'+(best?'best-cell':'')+'"><span class="'+(best?'best':'')+'">'+won(Math.round(tot(i)/i.y))+'</span></td>';})
+   +row('💳 카드 할인 총액<br><span style="font-weight:500">'+(fcard?esc(fcard.name):'카드 미선택')+'</span>',function(i){var v=fc(i);return '<td>'+(v?'<span style="color:#ea580c">−'+won(v)+'</span>':'-')+'</td>';})
+   +row('🎁 구독 혜택',function(i){return '<td>'+(i.gift?'<span style="color:#059669">'+esc(i.gift.note)+'</span>':(i.hm?'<span style="color:#059669">처음 '+i.hm+'개월 반값</span>':'-'))+'</td>';})
+   +row('<b>실부담 총액</b>',function(i){var v=net(i),best=v===minNet;return '<td class="'+(best?'best-cell':'')+'"><span class="big2 '+(best?'best':'')+'">'+won(v)+'</span>'+(best?'<span class="diff" style="color:var(--ok)">최저</span>':'<span class="diff">+'+won(v-minNet)+'</span>')+'</td>';})
+   +row('일시불 기준가',function(i){return '<td>'+(i.lp?won(i.lp):'-')+'</td>';})
+   +row('',function(i){return '<td><a class="link" target="_blank" rel="noopener" href="'+lgUrl(i.code)+'">LG전자 ↗</a></td>';})
+   +'</table></div>';}
+function cmpOpen(){drawerOpen('#cmpDrawer');cmpRender();}
+$('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
+var winCat=null;
+function winList(){var o={};Object.keys(D.act||{}).forEach(function(c){var m=BY[c];if(!m)return;var a=actInfo(c),k=a.mid+(a.live?a.add:0);if(!a.type||!k)return;var g=grp(D.cats[m[1]]);(o[g]=o[g]||[]).push([m,a,k]);});return o;}
+function winRender(){var W=winList(),cats=GROUPS.filter(function(g){return W[g];});
+  if(!cats.length){$('#winChips').innerHTML='';$('#winBody').innerHTML='<div class="empty" style="background:#fff">이번 주 활성화 모델이 없어요.</div>';return;}
+  if(!winCat||!W[winCat])winCat=cats[0];var q=$('#winQ').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+  $('#winChips').innerHTML=cats.map(function(c){return '<button class="chip sm '+(c===winCat&&!q?'on':'')+'" data-v="'+esc(c)+'">'+esc(c)+' <small>'+W[c].length+'</small></button>';}).join('');
+  var list=q?[].concat.apply([],cats.map(function(c){return W[c];})).filter(function(x){return x[0][0].replace(/[^A-Z0-9]/g,'').indexOf(q)>=0;}):W[winCat];
+  var meta=D.meta||{};
+  $('#winBody').innerHTML='<div class="hint">'+(q?'검색 결과 '+list.length+'개':esc(winCat)+' · '+list.length+'개 모델')+' · '+esc(String(meta.act||'').replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1'))+' 기준</div>'+(list.length?list.map(function(x){var m=x[0],a=x[1],k=x[2],mn=minMon(m),o=infoOf(m[0]);
+    var t=a.type==='모상'?'<span class="tag g">🎁 상품권 '+(k/10)+'만</span>':'<span class="tag" style="background:#fef3c7;color:#92400e">월 −'+(Math.ceil(k*1000/72/100)*100).toLocaleString()+'원</span>';
+    if(a.add&&a.live)t+=' <span class="tag o">추가 '+md(a.s)+'~'+md(a.e)+'</span>';else if(a.add&&!a.live)t+=' <span class="tag gr">추가분 종료</span>';
+    return '<div class="wl-it"><div><b>'+esc(m[0])+'</b><div class="m">'+esc(o&&o.name?o.name:D.cats[m[1]])+(a.note?' · '+esc(a.note):'')+'</div><div style="margin-top:3px">'+t+'</div></div>'
+      +'<div class="r"><span class="m">할인 후 월</span><span class="mo">'+(mn!==null?won(mn)+'~':'-')+'</span></div><button class="btn pri" data-pick="'+esc(m[0])+'">선택</button></div>';}).join('')
+    :'<div class="empty" style="background:#fff">'+(q?'\''+esc(q)+'\' 모델은 이번 주 활성화 대상이 아니에요.':'해당 모델이 없어요.')+'</div>');}
+$('#winTab').onclick=function(){drawerOpen('#winDrawer');winRender();};
+$('#winChips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;winCat=b.dataset.v;$('#winQ').value='';winRender();$('#winBody').scrollTop=0;});
+$('#winQ').addEventListener('input',winRender);
+$('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;careClose();pickModel(b.dataset.pick);
+  setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 function renderAll(){renderCats();renderList();renderRecent();render();}
 
