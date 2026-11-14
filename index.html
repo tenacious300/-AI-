@@ -725,8 +725,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v7.9',VER_DATE='2026.11.14';
+var VERSION='v8.0',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.0','11.14',['접속 현황 ⚠️ 명부 외 탭: 명부에 없는 사번의 지금 접속 · 오늘 입장 거부(시도 횟수) · 접속 중 돌려보낸 기록을 따로 표시, 바로 허용 · 차단 · 기한 연장','입장 방식(명부 사번만 / 누구나 입장)은 그대로 전환 가능']],
   ['v7.9','11.14',['👥 직원 명부: 관리자가 명부 엑셀을 올리면 바로 반영 (신규 · 제외 · 변경 비교 후 적용, 드라이브에만 저장)','🔐 입장 방식: 명부 사번만 입장 / 누구나 입장(표시만) 전환, ✅ 예외 허용(기한 설정) 목록','접속 현황에 이름 · 소속 · 직책 · 구분 표시, 명부에 없는 사번 표시 · 바로 허용, 🏬 지점별 접속 현황, 오늘 기록 이름 검색 · 소속 필터']],
   ['v7.8','11.14',['\'예상 결과\' → \'맞춤 구독 견적\'으로 이름 변경','📸 견적 캡처: 견적을 카드 이미지(PNG)로 저장 · 휴대폰은 카톡 등으로 바로 공유, PC는 저장 + 클립보드 복사']],
   ['v7.7','11.14',['관리자 📈 기능 사용 탭: 기능별 사용 횟수 · 사번 수 · 변화, 견적 완성률, 고객 유형 · 견적서 · 카드 · 선납 · 기기 · 계약기간 비율, 시간대별 사용, CSV']],
@@ -1516,7 +1517,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   if(!empOk(v)){$('#empErr').textContent='사번은 숫자 6자리로 입력해 주세요';$('#empIn').style.borderColor='#dc2626';$('#empIn').focus();return;}
   $('#empIn').style.borderColor='';
   if(HAS_GS&&!enter._ok){var bt=$('#empGo');bt.disabled=true;$('#empErr').textContent='확인 중…';
-    gsr('checkEmp',v,function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
+    gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   $('#gate').classList.remove('on');showMe();
@@ -1540,15 +1541,17 @@ function admLogin(){
   setTimeout(function(){$('#admPw').focus();},50);
 }
 function admRefresh(){if(!ADM.pw||!$('#admModal').classList.contains('on')||(ADM.tab&&ADM.tab!=='stat'))return;gsr('adminStats',ADM.pw,function(r){if(r&&r.ok)admShow(r);});}
-function admShow(r){ADM.stat=r;var qf=document.activeElement&&document.activeElement.id==='admQ';if((ADM.tab||'stat')==='stat'){if(qf)admTodayList();else admRender();}if(!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}}
+function admShow(r){ADM.stat=r;if(r.rex){RS.ex=r.rex;if(RS.data)RS.data.ex=r.rex;}var qf=document.activeElement&&document.activeElement.id==='admQ';if((ADM.tab||'stat')==='stat'){if(qf)admTodayList();else admRender();}if(!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}}
 function admStatHtml(r){
   var t=r.days[0]||{},te=r.todayEmps||[],bl=r.blocks||[],seg=ADM.seg||'now';
   var groups={};(r.sessions||[]).forEach(function(x){var k=x.emp||('#'+x.id);var g=groups[k];if(!g)g=groups[k]={k:k,list:[]};g.list.push(x);});
   var G=Object.keys(groups).map(function(k){var g=groups[k],act=g.list.filter(function(x){return !x.away;});g.main=(act.length?act:g.list).sort(function(a,b){return a.lastSec-b.lastSec;})[0];g.away=!act.length;return g;});
   G.sort(function(a,b){return (a.away-b.away)||(b.main.startMin-a.main.startMin);});ADM.groups=G;
   var nowN=FB.on?FB.n:r.online;
-  var h='<div class="adm-kpi"><div><span>지금 접속'+(FB.on?' ⚡':'')+'</span><b style="color:var(--ok)">'+nowN+'</b></div><div><span>오늘 사번</span><b>'+te.length+'</b></div>'+(rHasMap()?(function(){var M=r.rmap,tot=Object.keys(M).length,inR=te.filter(function(x){return M[x.emp];}).length,out=te.length-inR;return '<div><span>명부 대비 접속</span><b>'+Math.round(inR/tot*100)+'%</b><small style="font-size:11px;color:var(--sub)">'+inR+' / '+tot+'명</small></div><div><span>명부에 없는 사번</span><b style="color:'+(out?'#dc2626':'var(--ok)')+'">'+out+'</b></div>';})():'<div><span>오늘 방문</span><b>'+(t.visits||0)+'</b></div><div><span>오늘 최대 동시</span><b>'+(t.peak||0)+'</b></div>')+'<div><span>오늘 인쇄 · 보관</span><b>'+(t.prints||0)+' · '+(t.saves||0)+'</b></div></div>';
-  h+='<div class="seg" id="admSeg">'+[['now','🟢 지금 접속',G.length],['today','📅 오늘 기록',te.length]].concat(rHasMap()?[['branch','🏬 지점별',null]]:[]).concat([['week','📈 7일 추이',null],['block','🚫 차단',bl.length]]).map(function(x){return '<button data-seg="'+x[0]+'" class="'+(seg===x[0]?'on':'')+'">'+x[1]+(x[2]!=null?'<small>'+x[2]+'</small>':'')+'</button>';}).join('')+'</div>';
+  var NL=r.nrlog||{},nrNow=rHasMap()?G.filter(function(g){return g.main.emp&&!rInfo(g.main.emp);}):[],onE={};nrNow.forEach(function(g){onE[g.main.emp]=1;});var nrRej=Object.keys(NL).filter(function(k){return NL[k].r&&!rInfo(k)&&!onE[k];}),nrB=Object.keys(NL).filter(function(k){return NL[k].b&&!NL[k].r&&!rInfo(k)&&!onE[k];});
+  var nrN={now:nrNow.length,rej:nrRej.length,b:nrB.length,all:nrNow.length+nrRej.length+nrB.length};
+  var h='<div class="adm-kpi"><div><span>지금 접속'+(FB.on?' ⚡':'')+'</span><b style="color:var(--ok)">'+nowN+'</b></div><div><span>오늘 사번</span><b>'+te.length+'</b></div>'+(rHasMap()?(function(){var M=r.rmap,tot=Object.keys(M).length,inR=te.filter(function(x){return M[x.emp];}).length,out=te.length-inR;return '<div><span>명부 대비 접속</span><b>'+Math.round(inR/tot*100)+'%</b><small style="font-size:11px;color:var(--sub)">'+inR+' / '+tot+'명</small></div><div style="'+(out||nrN.rej?'background:#fef2f2;outline:2px solid #fecaca':'')+'"><span>명부 외</span><b style="color:'+(out?'#dc2626':'var(--ok)')+'">'+out+'</b>'+(nrN.rej?'<small style="font-size:11px;color:#b91c1c">거부 '+nrN.rej+'건</small>':'')+'</div>';})():'<div><span>오늘 방문</span><b>'+(t.visits||0)+'</b></div><div><span>오늘 최대 동시</span><b>'+(t.peak||0)+'</b></div>')+'<div><span>오늘 인쇄 · 보관</span><b>'+(t.prints||0)+' · '+(t.saves||0)+'</b></div></div>';
+  h+='<div class="seg" id="admSeg">'+[['now','🟢 지금 접속',G.length]].concat(rHasMap()?[['nr','⚠️ 명부 외',nrN.all]]:[]).concat([['today','📅 오늘 기록',te.length]]).concat(rHasMap()?[['branch','🏬 지점별',null]]:[]).concat([['week','📈 7일 추이',null],['block','🚫 차단',bl.length]]).map(function(x){var red=x[0]==='nr'&&x[2];return '<button data-seg="'+x[0]+'" class="'+(seg===x[0]?'on':'')+'"'+(red?' style="color:#b91c1c"':'')+'>'+x[1]+(x[2]!=null?'<small'+(red?' style="background:#fee2e2;color:#b91c1c"':'')+'>'+x[2]+'</small>':'')+'</button>';}).join('')+'</div>';
   if(seg==='now'){
     var oldN=G.filter(function(g){return g.main.ver&&verLt(g.main.ver,VERSION);}).length,mvNow=r.mv||'';
     h+='<div class="adm-card" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:0"><div style="flex:1;min-width:200px">구버전 사용 중 <b style="color:'+(oldN?'#dc2626':'var(--ok)')+'">'+oldN+'명</b> · 최신 '+VERSION+(mvNow?'<br><small style="color:var(--sub)">강제 업데이트 기준: '+esc(mvNow)+' 미만</small>':'')+'</div><button class="btn pri sm" id="admForce">⚡ 전원 '+VERSION+'으로 강제 업데이트</button></div>';
@@ -1562,6 +1565,24 @@ function admStatHtml(r){
         +'<div style="display:flex;gap:6px">'+(nr?'<button class="btn line sm" style="color:#16a34a;border-color:#86efac" data-rxok="'+esc(x.emp)+'">✅ 허용</button>':'')+'<button class="btn del sm" data-blkg="'+k+'" title="차단">🚫</button></div></div>';}).join('')
       :'<div class="empty" style="margin-top:8px">지금 접속한 사람이 없어요.</div>';
     h+='<div class="note">● 보는 중(하는 일) · ○ 자리 비움(다른 창이나 앱으로 이동) · 구버전은 빨간색 · 같은 사번이 창을 여러 개 열면 한 줄로 묶어요. 하는 일은 75초마다 갱신돼요.</div>';
+  }else if(seg==='nr'){
+    var EX=r.rex||{},mode=r.rmode||'strict',ago=function(m){return m<1?'방금':m>=60?Math.floor(m/60)+'시간 '+(m%60)+'분':m+'분';};
+    var card=function(o){return '<div class="uc" style="'+(o.c==='r'?'background:#fef2f2;border-color:#fecaca':o.c==='y'?'background:#fffbeb;border-color:#fde68a':'background:#f8fafc')+'"><div class="av">'+(/모바일/.test(o.dev||'')?'📱':'💻')+'</div><div><div class="e"><b style="font-size:15px">'+esc(o.emp)+'</b> '+o.badge+(empSus(o.emp)?' <span class="ack-chip" style="margin:0">의심</span>':'')+' <small>'+esc(o.dev||'')+(o.did?' · 기기 '+didTag(o.did):'')+'</small></div><div class="m">'+o.line+'</div>'+(o.models?'<div>'+o.models.split(', ').filter(function(v){return v;}).map(function(c){return '<span class="c2">🛒 '+esc(c)+'</span>';}).join('')+'</div>':'')+'</div><div style="display:flex;gap:6px">'+o.btns+'</div></div>';};
+    var bl=function(o){return '<button class="btn del sm" data-nrblk="'+esc(o.emp)+'|'+esc(o.did||'')+'|'+esc(o.dev||'')+'">🚫</button>';},al=function(e){return '<button class="btn line sm" style="color:#16a34a;border-color:#86efac" data-rxok="'+esc(e)+'">✅ 허용</button>';};
+    h+='<div class="hint" style="margin:0 0 8px">'+(mode==='open'?'🔓 지금 입장 방식: <b>누구나 입장</b> · 명부에 없는데 접속한 사람이 여기에 모여요.':'🔒 지금 입장 방식: <b>명부 사번만 입장</b> · 명부에 없는 사번이 접속하거나 입장을 시도하면 여기에 모여요.')+'</div>';
+    if(!nrN.all)h+='<div class="empty">오늘은 명부 외 접속 · 입장 시도가 없어요.</div>';
+    if(nrNow.length){h+='<div class="adm-sec">🟢 지금 접속 중 <small>'+(mode==='open'?'명부에 없는 사번':'예외 허용으로 들어온 사번')+'</small></div>';
+      h+=nrNow.map(function(g){var x=g.main,ex=EX[x.emp];return card({emp:x.emp,c:ex?'y':'r',dev:x.dev,did:x.did,models:x.models,
+        badge:ex?'<span class="tp w">예외 허용</span>':'<span class="nr">명부에 없음</span>',
+        line:(g.away?'<b style="color:#94a3b8">○ 자리 비움</b>':'<b style="color:#16a34a">● '+esc(x.act||'접속 중')+'</b>')+' · 접속 '+ago(x.startMin)+(ex?' · 메모: '+esc(ex.memo||'-')+' · <b>'+(ex.until?esc(ex.until.slice(5).replace('-','.'))+'까지':'기한 없음')+'</b>':''),
+        btns:(ex?(ex.until?'<button class="btn line sm" data-rxext="'+esc(x.emp)+'">기한 연장</button>':''):al(x.emp))+bl(x)});}).join('');}
+    if(nrRej.length){h+='<div class="adm-sec" style="margin-top:16px">⛔ 오늘 입장 거부 <small>명부에 없어 들어오지 못한 사번 · 실제 직원이면 허용</small></div>';
+      h+=nrRej.sort(function(a,b){return NL[a].last<NL[b].last?1:-1;}).map(function(k){var e=NL[k];return card({emp:k,c:'r',dev:e.dev,did:e.did,badge:'<span class="nr">명부에 없음</span>',
+        line:'<b style="color:#b91c1c">입장 시도 '+e.r+'회</b> · '+(e.first!==e.last?'처음 '+esc(e.first)+' → 마지막 '+esc(e.last):esc(e.last||e.first))+(EX[k]?' · <b style="color:#16a34a">이후 예외 허용됨</b>':''),btns:(EX[k]?'':al(k))+bl({emp:k,did:e.did,dev:e.dev})});}).join('');}
+    if(nrB.length){h+='<div class="adm-sec" style="margin-top:16px">↩️ 접속 중 입장 화면으로 돌려보낸 사번 <small>명부 적용 · 예외 해제 전부터 쓰던 사람</small></div>';
+      h+=nrB.map(function(k){var e=NL[k];return card({emp:k,c:'g',dev:e.dev,did:e.did,models:e.m,badge:'<span class="nr">명부에 없음</span>',
+        line:'<b style="color:#64748b">↩️ '+esc(e.b)+' 돌려보냄</b>'+(e.n?' · 그 전 오늘 접속 '+e.n+'회':'')+(e.p?' · 견적 인쇄 '+e.p:'')+(EX[k]?' · <b style="color:#16a34a">이후 예외 허용됨</b>':''),btns:(EX[k]?'':al(k))+bl({emp:k,did:e.did,dev:e.dev})});}).join('');}
+    h+='<div class="note">✅ 허용 = 예외 목록에 추가 → 다음 입장부터 바로 들어올 수 있어요. 🚫 = 사번 · 기기 차단. 이 목록은 매일 새로 시작하고, 기록은 시트 \'명부외접속\' 탭에 남아요.</div>';
   }else if(seg==='branch'){
     var M=r.rmap,B={},tm={};te.forEach(function(x){tm[x.emp]=x;});Object.keys(M).forEach(function(k){var b=M[k][1]||'기타',o=B[b]||(B[b]={n:0,on:0,hq:/본부|지부/.test(b)});o.n++;if(tm[k])o.on++;});
     var exOn=te.filter(function(x){return !M[x.emp];}).length;
@@ -1802,6 +1823,8 @@ function admRender(){
     var fz=$('#admForce');if(fz)fz.onclick=function(){if(!confirm('열려 있는 모든 화면을 '+VERSION+'으로 업데이트할까요?\n(v7.6 이상 화면은 75초 안에 자동 새로고침, 담은 모델은 유지돼요)'))return;
       gsr('adminSetMinVer',{pw:ADM.pw,ver:VERSION},function(x){toast(x&&x.ok?'강제 업데이트를 걸었어요 · 75초 안에 반영돼요':'설정하지 못했어요');admRefresh();});};
     Array.prototype.forEach.call(document.querySelectorAll('#admSeg [data-seg]'),function(b){b.onclick=function(){ADM.seg=b.dataset.seg;ADM.more=false;admRender();};});
+    Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-nrblk]'),function(b){b.onclick=function(){var v=b.dataset.nrblk.split('|');blkOpen({emp:v[0],did:v[1],dev:v[2]});};});
+    Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-rxext]'),function(b){b.onclick=function(){var e=b.dataset.rxext,x=(RS.ex||{})[e]||{};if(!confirm(e+' 예외 허용 기한을 오늘부터 30일로 늘릴까요?'))return;rsExAdd(e,x.memo||'',30);setTimeout(admRefresh,600);};});
     Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-rxok]'),function(b){b.onclick=function(){var e=b.dataset.rxok,m=prompt(e+' 사번을 예외 허용할까요? 이름이나 메모를 적어주세요 (선택)','');if(m===null)return;rsExAdd(e,m,0);setTimeout(admRefresh,600);};});
     Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-blkg]'),function(b){b.onclick=function(){var g=ADM.groups[+b.dataset.blkg];blkOpen(g&&g.main);};});
     var aq=$('#admQ');if(aq){aq.oninput=function(){ADM.q=this.value.trim();ADM.more=false;admTodayList();};$('#admSort').onchange=function(){ADM.sort=this.value;admTodayList();};var abr=$('#admBr');if(abr)abr.onchange=function(){ADM.tbr=this.value;ADM.more=false;admTodayList();};$('#admCsv').onclick=admCsv;admTodayList();}
