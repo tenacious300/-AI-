@@ -501,8 +501,9 @@ function safeJson_(o) {
 /** 관리자: 현재 적용 데이터 정보 */
 function adminDataInfo(pw) {
   if (String(pw) !== ADMIN_PW) return { ok: false };
-  var info = { ok: true, price: null, promo: null, history: [] };
+  var info = { ok: true, price: null, promo: null, lg: null, history: [] };
   try { var p = readDataFile_('price'); if (p) info.price = JSON.parse(p).meta; } catch (e) {}
+  try { var l = readDataFile_('lg'); if (l) info.lg = JSON.parse(l).meta; } catch (e) {}
   try { var q = readDataFile_('promo'); if (q) { var qq = JSON.parse(q); info.promo = qq.cleared ? { cleared: true } : qq.meta; } } catch (e) {}
   var it = dataFolder_().getFiles();
   while (it.hasNext()) {

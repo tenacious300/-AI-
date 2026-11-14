@@ -676,7 +676,7 @@ body.preview{background:#e5e7eb;padding:0}
   <div class="note" style="padding:0 4px">금액은 전자랜드 LG 구독 단가표와 주간 활성화 요약 기준으로 계산했어요. 최종 금액과 구독 가능 여부는 계약 전 꼭 확인하세요.</div>
 </aside>
 </div>
-<div class="foot"><div class="credit2">ⓒ AI 구독 계산기 · LG · Made by <b>여수본점 김동욱</b></div><span id="footSrc"></span> · <a href="#" id="admLink" style="color:var(--sub)">⚙ LG 단가 관리</a></div>
+<div class="foot"><div class="credit2">ⓒ AI 구독 계산기 · LG · Made by <b>여수본점 김동욱</b></div><span id="footSrc"></span> · <a href="#" id="admLink" style="color:var(--sub)">⚙ 관리자</a></div>
 
 <div class="bar" id="bar">
   <div class="l"><small id="barCap">모델을 담아주세요</small><b id="barVal">0원</b></div>
@@ -692,10 +692,7 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="pm-opt lump" data-pm="lump"><b>⚖️ 일시불 비교 견적서</b><span>기본 견적서 + 모델별 일시불 구매가와 구독 총 실부담 비교</span></button>
 </div></div>
 
-<div class="modal" id="admModal"><div class="modal-box" style="max-width:600px">
-  <h3><span>⚙ LG 단가 관리</span><button id="admClose" aria-label="닫기">✕</button></h3>
-  <div id="admBody"></div>
-</div></div>
+
 
 <script>
 (function(){var d=new Date(),day=''+d.getFullYear()+(d.getMonth()+1)+d.getDate();
@@ -1159,41 +1156,8 @@ window.__previewQuote=function(mode){buildPrint(mode||'basic');document.body.cla
 
 function renderAll(){renderCats();renderList();renderRecent();render();}
 
-/* ---------- 관리자: 엑셀 올리기 ---------- */
-var ADM={pw:null,wb:null,file:'',data:null};
-var XLSX_URL='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
-function loadXLSX(cb){if(window.XLSX){cb();return;}var s=document.createElement('script');s.src=XLSX_URL;s.onload=cb;s.onerror=function(){toast('엑셀 읽기 도구를 불러오지 못했어요');};document.head.appendChild(s);}
-function admOpen(){$('#admModal').classList.add('on');if(ADM.pw)admMain();else admLogin();}
-function admLogin(){$('#admBody').innerHTML='<div class="hint" style="margin-top:0">삼성 계산기와 같은 관리자 비밀번호를 입력해 주세요.</div><div style="display:flex;gap:8px;margin-top:10px"><input type="password" id="admPw" placeholder="관리자 비밀번호" autocomplete="off"><button class="btn pri" id="admGo">확인</button></div><div class="hint" id="admMsg"></div>';
-  var go=function(){var pw=$('#admPw').value.trim();if(!pw)return;$('#admMsg').textContent='확인 중…';
-    api('adminDataInfo',pw,function(r){if(!r||!r.ok){$('#admMsg').textContent='비밀번호가 맞지 않아요.';return;}ADM.pw=pw;ADM.info=r;admMain();},function(){$('#admMsg').textContent='서버에 연결하지 못했어요. (이 기기 미리보기는 아래에서 가능)';ADM.pw='';admMain();});};
-  $('#admGo').onclick=go;$('#admPw').onkeydown=function(e){if(e.key==='Enter')go();};setTimeout(function(){$('#admPw').focus();},50);}
-function admMain(){var meta=D.meta||{},h='<div class="note" style="margin-top:0">지금 적용: <b>'+esc(meta.price||'-')+'</b><br>활성화: <b>'+esc(meta.act||'-')+'</b>'+(meta.at?'<br>올린 날: '+esc(meta.at):'')+'</div>';
-  h+='<label class="file-drop">📂 LG 단가 엑셀(.xlsx) 선택<br><small>\'전자랜드_MMDD\' 단가표 시트와 \'구독 활성화 요약\' 시트가 들어 있는 파일</small><input type="file" id="admFile" accept=".xlsx,.xls" style="display:none"></label><div id="admPrev"></div>';
-  if(ADM.pw&&!window.TEST_MODE)h+='<div style="margin-top:14px;text-align:right"><button class="btn line sm" id="admReset">기본 단가(저장소)로 되돌리기</button></div>';
-  $('#admBody').innerHTML=h;
-  $('#admFile').onchange=function(){var f=this.files[0];if(!f)return;ADM.file=f.name;$('#admPrev').innerHTML='<div class="hint">엑셀을 읽는 중… (파일이 커서 10초쯤 걸려요)</div>';
-    loadXLSX(function(){var fr=new FileReader();fr.onload=function(){setTimeout(function(){try{ADM.wb=XLSX.read(new Uint8Array(fr.result),{type:'array'});admSheets();}catch(e){$('#admPrev').innerHTML='<div class="warn">엑셀 파일을 읽지 못했어요</div>';}},30);};fr.readAsArrayBuffer(f);});};
-  var rs=$('#admReset');if(rs)rs.onclick=function(){if(!confirm('업로드한 LG 단가를 해제하고 저장소 기본 단가로 되돌릴까요?'))return;api('adminResetData',{pw:ADM.pw,kind:'lg'},function(r){if(r&&r.ok){lsPut('ovr_lg',null);load(REPO);refresh();toast('기본 단가로 되돌렸어요');admMain();}else toast('되돌리지 못했어요');});};}
-function admSheets(){var ch=LGParse.sheetChoices(ADM.wb.SheetNames);
-  if(!ch.price.length){$('#admPrev').innerHTML='<div class="warn">\'전자랜드_MMDD\' 이름의 단가표 시트를 찾지 못했어요</div>';return;}
-  var sel=function(id,list,def,none){return '<select id="'+id+'">'+(none?'<option value="">(활성화 없음)</option>':'')+list.map(function(n){return '<option'+(n===def?' selected':'')+'>'+esc(n)+'</option>';}).join('')+'</select>';};
-  $('#admPrev').innerHTML='<div class="lbl">단가표 시트</div>'+sel('admPs',ch.price,ch.priceDef)+'<div class="lbl">활성화 요약 시트</div>'+sel('admAs',ch.act,ch.actDef,true)+'<button class="btn line wide" id="admParse" style="margin-top:12px">읽어서 미리보기</button><div id="admRes"></div>';
-  $('#admParse').onclick=admParse;admParse();}
-function admParse(){var ps=$('#admPs').value,as=$('#admAs').value;$('#admRes').innerHTML='<div class="hint">변환 중…</div>';
-  setTimeout(function(){try{ADM.data=LGParse.build(XLSX,ADM.wb,ps,as);}catch(e){$('#admRes').innerHTML='<div class="warn">'+esc(e.message||e)+'</div>';return;}
-    var d=ADM.data,old=D,add=0,del=0,ch=0,ob={};old.m.forEach(function(m){ob[m[0]]=m;});
-    d.m.forEach(function(m){var o=ob[m[0]];if(!o)add++;else if(minMonOf(d,m)!==minMonOf(old,o))ch++;});var nb={};d.m.forEach(function(m){nb[m[0]]=1;});old.m.forEach(function(m){if(!nb[m[0]])del++;});
-    var h='<div class="note" style="margin-top:12px">모델 <b>'+d.m.length.toLocaleString()+'</b>개 · 요금 줄 '+d.rows.toLocaleString()+'개 · 활성화 '+Object.keys(d.act).length+'개<br>지금 대비: 새 모델 '+add+' · 빠진 모델 '+del+' · 최저요금 바뀐 모델 '+ch+'</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button class="btn line" id="admLocal">이 기기에서만 보기</button><button class="btn pri" id="admSave"'+(ADM.pw&&!window.TEST_MODE?'':' disabled')+'>모든 직원에게 적용</button></div><div class="hint" id="admSaveMsg">'+(window.TEST_MODE?'테스트 버전에서는 \'이 기기에서만 보기\'만 할 수 있어요':'')+'</div>';
-    $('#admRes').innerHTML=h;
-    $('#admLocal').onclick=function(){load(ADM.data);refresh();toast('이 기기에서만 새 단가로 보여요 (새로고침하면 원래대로)');$('#admModal').classList.remove('on');};
-    $('#admSave').onclick=function(){var b=this;b.disabled=true;$('#admSaveMsg').textContent='저장 중… (용량이 커서 20초쯤 걸릴 수 있어요)';
-      api('adminSaveData',{pw:ADM.pw,kind:'lg',payload:JSON.stringify(ADM.data)},function(r){b.disabled=false;if(r&&r.ok){$('#admSaveMsg').textContent='저장했어요. 직원 화면에는 새로 열 때 적용돼요.';lsPut('ovr_lg',null);load(ADM.data);refresh();syncData();toast('모든 직원에게 적용했어요');}else $('#admSaveMsg').textContent=(r&&r.msg)||'저장하지 못했어요 (Code.gs 업데이트 확인)';},function(){b.disabled=false;$('#admSaveMsg').textContent='서버에 연결하지 못했어요';});};},30);}
-function minMonOf(d,m){var s=D;D=d;var v=minMon(m);D=s;return v;}
-$('#admLink').onclick=function(e){e.preventDefault();admOpen();};
-$('#admClose').onclick=function(){$('#admModal').classList.remove('on');};
-
+/* ---------- 관리자: 삼성 계산기의 관리자 모드(LG 단가표 탭)로 이동 ---------- */
+$('#admLink').onclick=function(e){e.preventDefault();location.href='./?admin=lg';};
 function refresh(){if(S.sel&&!BY[S.sel.code]){S.sel=null;$('#picked').style.display='none';}renderAll();}
 renderAll();syncData();
 })();
