@@ -951,19 +951,38 @@ function fuAgg_(from, to) {
   Object.keys(buf).forEach(function (k) { var p = k.split('|'); addRow(p[0], p[1], buf[k][0], buf[k][1]); });
   return out;
 }
+/** 최근 n일 날짜별 기능 사용 합계 · 사번 수 */
+function fuDaily_(nDays) {
+  var from = mvDay_(nDays - 1), to = mvDay_(0), out = {};
+  for (var i = 0; i < nDays; i++) out[mvDay_(i)] = { n: 0, e: {} };
+  var add = function (d, k, c, emps) {
+    if (d < from || d > to || String(k).indexOf(':') >= 0 || !out[d]) return;
+    out[d].n += Number(c || 0);
+    String(emps || '').split(',').forEach(function (e) { if (e) out[d].e[e] = 1; });
+  };
+  var sh = fuSheet_(), n = sh.getLastRow();
+  if (n >= 2) sh.getRange(2, 1, n - 1, 4).getValues().forEach(function (r) { add(String(r[0]), String(r[1]), r[2], r[3]); });
+  var buf = JSON.parse(CacheService.getScriptCache().get('fubuf') || '{}');
+  Object.keys(buf).forEach(function (k) { var p = k.split('|'); add(p[0], p[1], buf[k][0], buf[k][1]); });
+  return Object.keys(out).sort().map(function (d) { return { d: d, n: out[d].n, u: Object.keys(out[d].e).length }; });
+}
 /** 관리자: 기능 사용 통계 */
 function adminFeatures(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false };
-  var days = [1, 7, 30].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7;
-  var cur = fuAgg_(mvDay_(days - 1), mvDay_(0)), prev = fuAgg_(mvDay_(days * 2 - 1), mvDay_(days));
+  var days = [1, 7, 30].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7, cur, prev, date = String(arg.date || '').replace(/[^0-9]/g, '');
+  if (date.length === 8) {   // 특정 날짜 하루 (이전 날과 비교)
+    var dt = new Date(Number(date.slice(0, 4)), Number(date.slice(4, 6)) - 1, Number(date.slice(6, 8)));
+    var pd = Utilities.formatDate(new Date(dt.getTime() - 86400000), TZ, 'yyyyMMdd');
+    cur = fuAgg_(date, date); prev = fuAgg_(pd, pd); days = 1;
+  } else { cur = fuAgg_(mvDay_(days - 1), mvDay_(0)); prev = fuAgg_(mvDay_(days * 2 - 1), mvDay_(days)); }
   var users = {}, list = Object.keys(cur).map(function (k) {
     if (k.indexOf(':') < 0) Object.keys(cur[k].e).forEach(function (e) { users[e] = 1; });
     return { k: k, n: cur[k].n, u: Object.keys(cur[k].e).length, prev: prev[k] ? prev[k].n : 0 };
   }).sort(function (a, b) { return b.n - a.n; });
   var addE = cur.add ? cur.add.e : {}, done = 0;
   Object.keys(addE).forEach(function (e) { if ((cur.print && cur.print.e[e]) || (cur.save && cur.save.e[e]) || (cur.copy && cur.copy.e[e])) done++; });
-  return { ok: true, days: days, list: list, users: Object.keys(users).length, addUsers: Object.keys(addE).length, done: done };
+  return { ok: true, days: days, date: date.length === 8 ? date : '', list: list, users: Object.keys(users).length, addUsers: Object.keys(addE).length, done: done, daily: fuDaily_(14) };
 }
 
 
