@@ -1,0 +1,58 @@
+name: Apps Script 자동 배포
+
+# apps-script 폴더(Code.gs 등)가 main에 올라오면 Apps Script에 반영하고
+# 기존 웹앱 주소(/exec)를 그대로 유지한 채 새 버전으로 배포해요.
+on:
+  push:
+    branches: [main]
+    paths: ['apps-script/**']
+  workflow_dispatch:
+
+concurrency:
+  group: apps-script-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+      # config.js의 API_URL에 들어 있는 배포 ID (주소가 바뀌지 않게 같은 배포를 갱신)
+      DEPLOYMENT_ID: ${{ vars.DEPLOYMENT_ID || 'AKfycbxmG2sVrm-A433WA5NT1trOr4ueQCPpzrV-Xqo12R0v1g8lFY_XKyuN9HTKBH2vaj7G' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: clasp 설치
+        run: npm install -g @google/clasp@2.4.2
+
+      - name: 로그인 정보 · 프로젝트 연결
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ] || [ -z "$SCRIPT_ID" ]; then
+            echo "::error::저장소 Settings > Secrets 에 CLASPRC_JSON 과 SCRIPT_ID 를 먼저 등록해 주세요."
+            exit 1
+          fi
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '{"scriptId":"%s","rootDir":"."}' "$SCRIPT_ID" > apps-script/.clasp.json
+
+      - name: appsscript.json 없으면 현재 프로젝트에서 가져오기
+        working-directory: apps-script
+        run: |
+          if [ ! -f appsscript.json ]; then
+            mkdir -p /tmp/pull && cp .clasp.json /tmp/pull/
+            (cd /tmp/pull && clasp pull)
+            cp /tmp/pull/appsscript.json ./appsscript.json
+          fi
+
+      - name: 코드 올리기 (clasp push)
+        working-directory: apps-script
+        run: clasp push -f
+
+      - name: 웹앱 새 버전 배포 (주소 유지)
+        working-directory: apps-script
+        run: clasp deploy -i "$DEPLOYMENT_ID" -d "GitHub 자동 배포 ${GITHUB_SHA::7}"
