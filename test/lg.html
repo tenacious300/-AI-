@@ -750,7 +750,9 @@ function load(x){D=x;BY={};D.m.forEach(function(m){BY[m[0]]=m;});
   var meta=D.meta||{};
   $('#perTag').textContent='단가 '+String(meta.price||'').replace('전자랜드_','')+(meta.act?' · '+String(meta.act).replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1'):'');
   var fs=$('#footSrc');if(fs)fs.textContent='기준: '+(meta.price||'-')+(meta.act?' · '+meta.act:'')+' · 모델 '+D.m.length.toLocaleString()+'개';}
-function grp(c){c=String(c);if(/\(김치냉장고\)/.test(c))return '김치냉장고';return c.replace(/\s*\(.*$/,'').trim();}
+/* 품목 버튼 묶음: 단가표에서 따로 나뉜 제품군을 찾기 쉬운 품목 아래로 모음 */
+function catAlias(b){return {'얼음정수기':'정수기','에어로부스터':'공기청정기','에어로시리즈':'공기청정기','에어로타워':'공기청정기'}[b];}
+function grp(c){c=String(c);if(/\(김치냉장고\)/.test(c))return '김치냉장고';var b=c.replace(/\s*\(.*$/,'').trim();return catAlias(b)||b;}
 function syncData(){if(!window.API_URL||window.TEST_MODE)return;
   api('getDataVer',null,function(v){if(!v)return;var sv=v.lg||'',o=lsGet('ovr_lg'),lv=o?o.ver:'';if(sv===lv)return;
     if(!sv){lsPut('ovr_lg',null);load(REPO);refresh();return;}
@@ -833,7 +835,7 @@ $('#channel').addEventListener('click',function(e){var b=e.target.closest('.chip
 
 /* ====== 모델 찾기 ====== */
 var CAT=null,SUB=null;
-function subOf(c){if(/\(김치냉장고\)/.test(c))return '';var m=/\((.*)\)/.exec(c);return m?m[1]:'';}
+function subOf(c){if(/\(김치냉장고\)/.test(c))return '';var m=/\((.*)\)/.exec(c);if(m)return m[1];c=String(c).trim();if(catAlias(c))return c;return c==='정수기'||c==='공기청정기'?'일반':'';}
 function renderCats(){$('#catChips').innerHTML=GROUPS.map(function(g){return '<button class="chip sm '+(g===CAT?'on':'')+'" data-v="'+esc(g)+'">'+esc(g)+'</button>';}).join('');
   var subs=[];if(CAT)D.m.forEach(function(m){var c=D.cats[m[1]];if(grp(c)===CAT){var s=subOf(c);if(s&&subs.indexOf(s)<0)subs.push(s);}});
   $('#subChips').innerHTML=subs.length>1?['<button class="chip sm '+(!SUB?'on':'')+'" data-v="">전체</button>'].concat(subs.map(function(s){return '<button class="chip sm '+(s===SUB?'on':'')+'" data-v="'+esc(s)+'">'+esc(s)+'</button>';})).join(''):'';}
