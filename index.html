@@ -842,8 +842,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.16',VER_DATE='2026.11.14';
+var VERSION='v8.17',VER_DATE='2026.11.14';
 var CHANGELOG=[
+  ['v8.17','11.14',['🔄 관리자가 ⚡ 강제 업데이트를 누르면 자동 로그아웃 → 사번 다시 입력 (명부 · 차단 여부 새로 확인, 담은 모델은 유지)']],
   ['v8.16','11.14',['삼성닷컴 기준가 오류 수정: 구독 총액이 기준가로 잡히던 문제 → 상품 페이지 \'기준가\'와 같은 금액으로 표시']],
   ['v8.15','11.14',['관리자 📈 기능 사용: 📅 날짜별 보기 추가 (날짜 선택 · 전날/다음날 · 최근 14일 막대 그래프, 전날 대비 변화)']],
   ['v8.14','11.14',['관리자 📢 공지 수정: 올린 공지의 제목 · 내용 · 첨부 항목 수정, 다시 알리기 선택 가능']],
@@ -1677,7 +1678,7 @@ function beat(){
   var evs=EVQ.splice(0,60),fus=FU;FU={};if(firstBeat)fus['dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;
   var idl=idleMin(),info={fu:fus,act:idl>=IDLE_MIN?'idle:'+idl:curAct(),away:!!document.hidden||idl>=IDLE_MIN,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
-  gsr('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);Object.keys(fus).forEach(function(k){FU[k]=(FU[k]||0)+fus[k];});}if(r&&r.blocked){if(r.reason==='roster'){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}showMe();openGate();rosterReject();return;}showBlocked();return;}if(r&&lsGet('calcBlocked')){lsPut('calcBlocked',null);$('#blockedScr').classList.remove('on');}if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.me!==undefined)meSave(r.me);if(r&&r.msg)msgShow(r.msg);if(r&&r.nid)ntCheck(r.nid);if(r&&r.mv&&verLt(VERSION,r.mv))doUpdate();},function(){$('#liveBtn').classList.add('off');});
+  gsr('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);Object.keys(fus).forEach(function(k){FU[k]=(FU[k]||0)+fus[k];});}if(r&&r.blocked){if(r.reason==='roster'){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}showMe();openGate();rosterReject();return;}showBlocked();return;}if(r&&lsGet('calcBlocked')){lsPut('calcBlocked',null);$('#blockedScr').classList.remove('on');}if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.me!==undefined)meSave(r.me);if(r&&r.msg)msgShow(r.msg);if(r&&r.nid)ntCheck(r.nid);if(r&&r.mv&&verLt(VERSION,r.mv)){doUpdate();return;}if(r&&r.mva&&r.mva>(lsGet('calcLoginAt')||0))forceRelog();},function(){$('#liveBtn').classList.add('off');});
 }
 var EMP=null,beatStarted=false,EVQ=[],LASTACT={t:0,a:''};
 var FU={};function fuLog(k){FU[k]=(FU[k]||0)+1;if(k.indexOf(':')<0){var h='h:'+('0'+new Date().getHours()).slice(-2);FU[h]=(FU[h]||0)+1;}}
@@ -1727,6 +1728,9 @@ function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStart
 var EMP_TMP=null;
 function meSave(me,emp){lsPut('calcMe',me?{emp:emp||EMP,name:me.name,br:me.br,rank:me.rank}:null);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
+/* 관리자가 ⚡ 강제 업데이트를 누르면, 그 전에 로그인한 화면은 로그아웃 → 사번 다시 입력 (담은 모델은 유지) */
+function forceRelog(){if(!EMP)return;EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}lsPut('calcMe',null);lsPut('calcLoginAt',null);showMe();openGate();
+  $('#empErr').innerHTML='<span style="color:#1d4ed8">🔄 새 버전 '+VERSION+'으로 업데이트되어 로그아웃됐어요.<br>사번을 다시 입력해 주세요.</span>';}
 function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';}
 function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function rosterReject(){$('#empErr').innerHTML='등록되지 않은 사번이에요.<br><small style="font-weight:500">명부에 없는 사번은 입장할 수 없어요. 소속 관리자에게 등록을 요청해 주세요.</small>';$('#empIn').style.borderColor='#dc2626';}
@@ -1737,6 +1741,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
     gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
+  lsPut('calcLoginAt',Date.now());
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
   toast(v+' 님, 환영해요');BOX=[];boxLoaded=false;boxBadge();}
@@ -2087,7 +2092,7 @@ function admRender(){
   if(t==='best'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-abd]'),function(b){b.onclick=function(){ABEST.days=+b.dataset.abd;admBestLoad();admRender();};});
     var ac=$('#abCsv');if(ac)ac.onclick=function(){var R=ABEST.data;if(!R||!R.ok)return;csvDown([['순위','모델','품목','조회','담기','인쇄','보관']].concat(R.list.map(function(x,i){var m=byCode[x[0]];return [i+1,x[0],m?catOf(m)+' '+subOf(m):'',x[1],x[2],x[3],x[4]];})),'베스트모델_'+ABEST.days+'일_'+todayStr()+'.csv');};}
   if(t==='stat'){
-    var fz=$('#admForce');if(fz)fz.onclick=function(){if(!confirm('열려 있는 모든 화면을 '+VERSION+'으로 업데이트할까요?\n(v7.6 이상 화면은 75초 안에 자동 새로고침, 담은 모델은 유지돼요)'))return;
+    var fz=$('#admForce');if(fz)fz.onclick=function(){if(!confirm('열려 있는 모든 화면을 '+VERSION+'으로 업데이트할까요?\n(v7.6 이상 화면은 75초 안에 자동 새로고침, 담은 모델은 유지돼요)\n직원들은 자동 로그아웃되어 사번을 다시 입력해야 해요.'))return;
       gsr('adminSetMinVer',{pw:ADM.pw,ver:VERSION},function(x){toast(x&&x.ok?'강제 업데이트를 걸었어요 · 75초 안에 반영돼요':'설정하지 못했어요');admRefresh();});};
     Array.prototype.forEach.call(document.querySelectorAll('#admSeg [data-seg]'),function(b){b.onclick=function(){ADM.seg=b.dataset.seg;ADM.more=false;admRender();};});
     Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-nrblk]'),function(b){b.onclick=function(){var v=b.dataset.nrblk.split('|');blkOpen({emp:v[0],did:v[1],dev:v[2]});};});
