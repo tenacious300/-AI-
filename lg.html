@@ -1306,7 +1306,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.29',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.30',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
@@ -1395,18 +1395,18 @@ document.getElementById('iaModal').onclick=function(ev){if(ev.target===this)this
 window.addEventListener('appinstalled',function(){INST=null;document.getElementById('iaModal').classList.remove('on');toast('앱을 설치했어요. 홈 화면에서 열어 보세요');setTimeout(iaShow,500);});
 iaShow();
 
-/* ---------- 💳 제휴카드 정책 이미지 (관리자가 올린 그림) ---------- */
-var CP=lsGet('lgCardPol');
-function cpImg(id,w){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;}
+/* ---------- 💳 제휴카드 정책 이미지 (관리자가 깃허브 cardpol/ 폴더에 올린 그림) ---------- */
+var CP=lsGet('lgCardPol2'),CP_BASE=window.TEST_MODE?'../cardpol/':'cardpol/';
 function cpRender(){var b=$('#cpBody'),o=CP;
   $('#cpTitle').textContent='💳 '+(o&&o.title?o.title:'LG 제휴카드 정책');
   if(!o){b.innerHTML='<div class="empty" style="background:#fff">불러오는 중…</div>';return;}
-  if(!o.imgs||!o.imgs.length){b.innerHTML='<div class="empty" style="background:#fff">아직 올라온 카드 정책 이미지가 없어요.<br><small>관리자 → 🅻 LG 단가표 → 제휴카드 정책에서 올릴 수 있어요.</small></div>';return;}
+  if(!o.imgs||!o.imgs.length){b.innerHTML='<div class="empty" style="background:#fff">아직 올라온 카드 정책 이미지가 없어요.<br><small>관리자 → 🅻 LG 단가 · 카드정책에서 올릴 수 있어요.</small></div>';return;}
   b.innerHTML='<div class="hint" style="margin:0">'+(o.at?esc(o.at)+' 업데이트 · ':'')+'그림을 누르면 크게 볼 수 있어요</div>'
-    +o.imgs.map(function(x){return '<a class="cp-a" href="'+cpImg(x.id,3000)+'" target="_blank" rel="noopener"><img class="cp-img" loading="lazy" src="'+cpImg(x.id,1600)+'" alt="'+esc(x.name||'카드 정책')+'"></a>';}).join('')
+    +o.imgs.map(function(x){var u=CP_BASE+encodeURIComponent(x.f);return '<a class="cp-a" href="'+u+'" target="_blank" rel="noopener"><img class="cp-img" loading="lazy" src="'+u+'" alt="'+esc(x.name||'카드 정책')+'"'+(x.w?' width="'+x.w+'" height="'+x.h+'" style="height:auto"':'')+'></a>';}).join('')
     +'<div class="note" style="margin-top:10px">카드사 정책은 바뀔 수 있어요. 계산기 금액과 다르면 이 안내를 기준으로 확인해 주세요.</div>';}
 function cpOpen(){fuLog('cardpol');drawerOpen('#cpDrawer');cpRender();
-  api('getCardPolicy',{},function(r){if(r&&r.imgs){CP=r;lsPut('lgCardPol',r);if($('#cpDrawer').classList.contains('on'))cpRender();}},function(){if(!CP){CP={imgs:[]};cpRender();}});}
+  fetch(CP_BASE+'list.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{imgs:[]};}).then(function(o){if(o&&o.imgs){CP=o;lsPut('lgCardPol2',o);if($('#cpDrawer').classList.contains('on'))cpRender();}})
+    .catch(function(){if(!CP){CP={imgs:[]};cpRender();}});}
 $('#cpTab').onclick=cpOpen;$('#cpOpen2').onclick=cpOpen;
 function startBeat(){if(!EMP||$('#gate').classList.contains('on'))return;fbInit();bestRender();bestLoad();beat();setInterval(beat,75000);setInterval(bestLoad,300000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden){LASTIN=Date.now();if(FB.gone)fbPresence(true);}if(Date.now()-(window.__lastBeat||0)>5000)beat();});}
