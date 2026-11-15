@@ -754,6 +754,20 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 @media(max-width:760px){.top .per{display:none}}
 @media(max-width:600px){.acct-btn{min-height:34px;padding:4px 9px}.acct-btn .nm{max-width:64px;overflow:hidden;text-overflow:ellipsis}}
 /* ===== 상단 메뉴 정리 끝 ===== */
+/* ===== 상단 배너 (관리자 설정) ===== */
+.bn-ovr #promoBn{display:none!important}
+#brandBn .pb-ic{font-size:15px}
+.promo-bn.bn-c-red{background:linear-gradient(100deg,#B4232C,#F04452)}
+.promo-bn.bn-c-dark{background:#191F28}
+.promo-bn.bn-c-gold{background:linear-gradient(100deg,#A86A12,#E8A33A)}
+.promo-bn.bn-c-gold .pb-d,.promo-bn.bn-c-red .pb-d{background:rgba(255,255,255,.22)}
+@media print{#brandBn{display:none!important}}
+/* ===== 상단 배너 끝 ===== */
+/* 닫힌 서랍의 그림자가 화면 오른쪽에 세로줄처럼 비치지 않게 */
+.drawer{box-shadow:none!important;visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+.drawer.on{visibility:visible;transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,23,51,.15)!important}
+
+
 
 
 
@@ -819,6 +833,11 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .cap-foot{display:flex;flex-direction:column;gap:2px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.6}
 
 .afb-ed{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.afb-ed .chips{margin-bottom:8px}
+.bn-form{display:grid;grid-template-columns:120px 1fr 1fr;gap:8px 10px;margin-top:12px}
+.bn-f{display:block;min-width:0}.bn-f span{display:block;font-size:12px;font-weight:700;color:var(--sub);margin-bottom:4px}.bn-f input{min-height:42px;font-size:14.5px;width:100%}
+.bn-f.l{grid-column:span 2}.bn-f.f{grid-column:1/-1}
+@media(max-width:560px){.bn-form{grid-template-columns:96px 1fr}.bn-f.l,.bn-f.f{grid-column:span 1}.bn-f.f{grid-column:1/-1}}
+.bn-pv-off{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--sub)}
 /* 관리자 · 인쇄 기록 */
 .pl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}.pl-bar input{flex:1;min-width:160px;min-height:38px;font-size:14px}
 .pl-it{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:8px}
@@ -1172,8 +1191,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.39',VER_DATE='2026.11.15';
+var VERSION='v8.40',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.40','11.15',['📣 상단 배너를 관리자 모드에서 브랜드별(삼성 · LG · 쿠쿠)로 직접 입력하거나 끌 수 있어요','📱 모바일 오른쪽 끝에 보이던 세로줄 제거','🧰 \'도구\' 버튼이 제자리에서 펼치고 접혀요 (LG · 쿠쿠도 같은 방식)']],
   ['v8.39','11.15',['🖨 인쇄 견적서의 일시불 비교에 색깔 막대 비교 추가','💡 상단 \'개선요청\' 메뉴: 불편한 점 · 오류 · 원하는 기능을 보내고 관리자 답변 확인 (답변 오면 빨간 점)','👤 상단 메뉴 정리: 사번 변경 · 앱 설치 · 초기화 · 로그아웃을 \'👤 사번 ▾\' 하나로','🅻🅲 LG · 쿠쿠 계산기에도 버전 표시와 자동 업데이트','🛠 관리자: \'인쇄 기록\'(누가 · 언제 · 어떤 모델로 인쇄했는지), \'개선 요청\'(상태 · 답변) 탭 추가']],
   ['v8.38','11.15',['⚖️ 일시불 구매 vs 구독 비교를 새 디자인으로: 깔끔한 입력칸, 막대로 한눈에 비교, 결과를 색깔 배지로 강조']],
   ['v8.37','11.15',['📸 견적 캡처: 화면의 견적 카드를 그대로 이미지로 저장 (대표 모델 사진 · 조건 · 금액 · 포인트, 입력한 일시불 비교 포함)']],
@@ -2326,6 +2346,38 @@ function admFbBind(){
     if(st==='접수'&&rp)st='검토중';x.disabled=true;x.textContent='저장 중…';
     gsr('adminFeedbackSet',{pw:ADM.pw,id:id,status:st,reply:rp},function(r){if(r&&r.ok){toast('저장했어요');AFB.open=null;admFbLoad();}else{toast('저장하지 못했어요');x.disabled=false;x.textContent='저장';}},function(){toast('저장하지 못했어요');x.disabled=false;x.textContent='저장';});};});
 }
+/* 관리자: 브랜드별 상단 배너 (자동 · 직접 입력 · 끄기) */
+var ABN={br:'ss',cfg:{},loaded:{}},ABN_N={ss:'삼성',lg:'LG',ck:'쿠쿠'};
+function admBnLoad(){['ss','lg','ck'].forEach(function(b){gsr('getBanner',{brand:b,test:!!window.TEST_MODE},function(r){var c=r&&r.b;ABN.cfg[b]=(c&&c.mode!=='auto')?c:{mode:'off'};ABN.loaded[b]=1;if(ADM.tab==='bn')admRender();},function(){ABN.loaded[b]=-1;if(ADM.tab==='bn')admRender();});});}
+function bnPrevHtml(c){var e=esc;if(c.mode==='off')return '<div class="bn-pv-off">상단 배너가 보이지 않아요</div>';
+  return '<div class="promo-bn bn-c-'+(c.color||'brand')+'" id="bnPrevBox" style="border-radius:14px"><div class="promo-in"><span class="pb-t">'+(c.icon?e(c.icon)+' ':'')+'<b>'+e(c.title||'배너 제목')+'</b></span>'+(c.date?'<span class="pb-d">'+e(c.date)+'</span>':'')+(c.desc?'<span class="pb-s">'+e(c.desc)+'</span>':'')+(c.btn?'<button type="button">'+e(c.btn)+'</button>':'')+'</div></div>';}
+function admBnHtml(){
+  var b=ABN.br,c=ABN.cfg[b],chip=function(k,v,l,cur){return '<button class="chip sm '+(cur===v?'on':'')+'" data-'+k+'="'+v+'">'+l+'</button>';};
+  var h='<div class="pl-bar">'+['ss','lg','ck'].map(function(x){var m=ABN.cfg[x]?ABN.cfg[x].mode:'';return chip('bnb',x,ABN_N[x]+(m?' · '+(m==='on'?'켜짐':'꺼짐'):''),b);}).join('')+'</div>'
+    +(window.TEST_MODE?'<div class="hint" style="margin-top:8px">🧪 테스트 화면에서 저장한 배너는 <b>테스트 화면에만</b> 보여요. 직원 화면은 정식 관리자 모드에서 바꿔 주세요.</div>':'');
+  if(!ABN.loaded[b])return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  if(ABN.loaded[b]<0)return h+'<div class="empty" style="margin-top:12px">설정을 불러오지 못했어요.</div>';
+  h+='<div class="adm-sec">'+ABN_N[b]+' 계산기 상단 배너</div><div class="chips" style="margin-top:8px">'+chip('bnm','on','✏️ 직접 입력',c.mode)+chip('bnm','off','🚫 끄기',c.mode)+'</div>';
+  if(c.mode==='on'){var f=function(id,lb,v,ph,mx,w){return '<label class="bn-f'+(w?' '+w:'')+'"><span>'+lb+'</span><input type="text" id="'+id+'" value="'+esc(v||'')+'" placeholder="'+ph+'" maxlength="'+mx+'"></label>';};
+    h+='<div class="bn-form">'+f('bnIc','아이콘',c.icon,'🎉',4,'s')+f('bnTi','제목 *',c.title,'예) 연말 감사 페스타',40,'l')+f('bnDt','기간',c.date,'예) 12/1(월) ~ 12/31(수)',30,'f')+f('bnDs','설명',c.desc,'예) 대상 모델 구독료 최대 3개월 지원',80,'f')+f('bnBt','버튼 문구',c.btn,'예) 자세히 보기 →',16)+f('bnUr','버튼 링크 (선택)',c.url,'https://…',300,'l')+'</div>'
+      +'<div class="lbl" style="margin-top:12px">색상</div><div class="chips">'+[['brand','브랜드색'],['red','레드'],['gold','골드'],['dark','블랙']].map(function(x){return chip('bnc',x[0],x[1],c.color||'brand');}).join('')+'</div>';}
+  h+='<div class="lbl" style="margin-top:14px">미리보기</div><div id="bnPrev">'+bnPrevHtml(c)+'</div>'
+    +'<div style="display:flex;gap:8px;align-items:center;margin-top:14px"><small style="color:var(--sub);flex:1">'+(c.at?'마지막 저장 '+esc(c.at):'아직 저장한 적 없어요 (기본값)')+'</small><button class="btn pri" id="bnSave">'+ABN_N[b]+' 배너 저장</button></div>';
+  return h;}
+function admBnBind(){
+  var B=$('#admBody');if(!B)return;var b=ABN.br,c=ABN.cfg[b];
+  [].forEach.call(B.querySelectorAll('[data-bnb]'),function(x){x.onclick=function(){ABN.br=x.dataset.bnb;admRender();};});
+  [].forEach.call(B.querySelectorAll('[data-bnm]'),function(x){x.onclick=function(){c.mode=x.dataset.bnm;if(c.mode==='on'&&!c.title&&b==='ss'){var t=function(id){var e=document.getElementById(id);return e?e.textContent.trim():'';};c.icon=c.icon||'🏆';c.title=t('pbName');c.date=t('pbDate');c.desc=t('pbDesc');c.btn=c.btn||'';}admRender();};});
+  [].forEach.call(B.querySelectorAll('[data-bnc]'),function(x){x.onclick=function(){c.color=x.dataset.bnc;admRender();};});
+  var map={bnIc:'icon',bnTi:'title',bnDt:'date',bnDs:'desc',bnBt:'btn',bnUr:'url'};
+  Object.keys(map).forEach(function(id){var i=$('#'+id);if(i)i.oninput=function(){c[map[id]]=i.value;$('#bnPrev').innerHTML=bnPrevHtml(c);};});
+  var s=$('#bnSave');if(s)s.onclick=function(){if(c.mode==='on'&&!(c.title||'').trim()){toast('배너 제목을 적어 주세요');var t=$('#bnTi');if(t)t.focus();return;}
+    if(c.url&&!/^https:\/\//i.test(c.url)){toast('링크는 https:// 로 시작해야 해요');return;}
+    s.disabled=true;s.textContent='저장 중…';
+    gsr('adminBannerSet',{pw:ADM.pw,brand:b,cfg:c,test:!!window.TEST_MODE},function(r){s.disabled=false;
+      if(r&&r.ok){ABN.cfg[b]=r.b;toast(ABN_N[b]+' 배너를 저장했어요'+(window.TEST_MODE?' (테스트 화면)':''));if(b==='ss'&&window.__bnApply)window.__bnApply(r.b);admRender();}
+      else{toast((r&&r.msg)||'저장하지 못했어요');s.textContent=ABN_N[b]+' 배너 저장';}},function(){s.disabled=false;s.textContent=ABN_N[b]+' 배너 저장';toast('저장하지 못했어요');});};
+}
 function admEmpLoad(){AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
 function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4,8],a:[1,5,9],q:[2,6,10]}[AEMP.basis];
   var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0,k=(r[bi[2]]||0)>0;if(r.length<12)r=r.concat([0,0,0,'']);
@@ -2501,7 +2553,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['plog','🖨 인쇄 기록'],['fb','💡 개선 요청'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['plog','🖨 인쇄 기록'],['fb','💡 개선 요청'],['bn','📣 상단 배너'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
@@ -2602,11 +2654,12 @@ function admRender(){
   else if(t==='emp')h+=admEmpHtml();
   else if(t==='plog')h+=admPlogHtml();
   else if(t==='fb')h+=admFbHtml();
+  else if(t==='bn')h+=admBnHtml();
   else if(t==='notice')h+=admNoticeHtml();
   else if(t==='quote')h+=admQuoteHtml();
   else h+=admVerHtml();
   $('#admBody').innerHTML=h;
-  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();if(v==='best')admBestLoad();if(v==='feat')admFeatLoad();if(v==='emp')admEmpLoad();if(v==='plog')admPlogLoad();if(v==='fb')admFbLoad();if(v==='roster'){RS.data=null;rsLoad();}admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
+  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();if(v==='best')admBestLoad();if(v==='feat')admFeatLoad();if(v==='emp')admEmpLoad();if(v==='plog')admPlogLoad();if(v==='fb')admFbLoad();if(v==='bn')admBnLoad();if(v==='roster'){RS.data=null;rsLoad();}admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
@@ -2615,6 +2668,7 @@ function admRender(){
   if(t==='emp')admEmpBind();
   if(t==='plog')admPlogBind();
   if(t==='fb')admFbBind();
+  if(t==='bn')admBnBind();
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
   if(t==='roster'&&RS.data&&RS.data.ok)admRosterBind();
@@ -3340,7 +3394,7 @@ iaShow();
   var st=$('.side-tabs');
   if(st){
     var tog=document.createElement('button');tog.className='side-tog';tog.type='button';tog.setAttribute('aria-expanded','false');tog.innerHTML='도구 ▴<span class="bd"></span>';
-    st.insertBefore(tog,st.firstChild);
+    st.appendChild(tog);
     var bg=document.createElement('div');bg.className='side-bg';document.body.appendChild(bg);
     var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
     tog.onclick=function(){set(!st.classList.contains('open'));};
@@ -3479,6 +3533,30 @@ iaShow();
   [per,live,fb].forEach(function(x){if(x)top.appendChild(x);});top.appendChild(wrap);
 })();
 /* ===== 상단 메뉴 정리 끝 ===== */
+</script>
+<script>
+/* ===== 상단 배너: 관리자 모드에서 브랜드별로 켜고 끄기 ===== */
+(function(){
+  var BRAND='ss',T=!!window.TEST_MODE,CK='bnCache_'+BRAND+(T?'_t':'');
+  var E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  function apply(c){
+    var old=document.getElementById('brandBn');if(old)old.remove();
+    document.body.classList.add('bn-ovr');
+    if(!c||c.mode!=='on'||!c.title)return;
+    var d=document.createElement('div');d.className='promo-bn bn-c-'+(c.color||'brand');d.id='brandBn';
+    d.innerHTML='<div class="promo-in"><span class="pb-t">'+(c.icon?'<span class="pb-ic">'+E(c.icon)+'</span> ':'')+'<b>'+E(c.title)+'</b></span>'
+      +(c.date?'<span class="pb-d">'+E(c.date)+'</span>':'')+(c.desc?'<span class="pb-s">'+E(c.desc)+'</span>':'')
+      +(c.btn?'<button type="button">'+E(c.btn)+'</button>':'')+'</div>';
+    var b=d.querySelector('button');if(b){b.onclick=function(){if(c.url)window.open(c.url,'_blank','noopener');};if(!c.url)b.style.cursor='default';}
+    var top=document.querySelector('header.top');if(top)top.parentNode.insertBefore(d,top);else document.body.insertBefore(d,document.body.firstChild);
+  }
+  window.__bnApply=function(c){try{localStorage.setItem(CK,JSON.stringify(c||null));}catch(e){}apply(c);};
+  document.body.classList.add('bn-ovr');try{var cc=JSON.parse(localStorage.getItem(CK)||'null');if(cc)apply(cc);}catch(e){}
+  function load(){if(!window.API_URL)return;fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'getBanner',arg:{brand:BRAND,test:T}})})
+    .then(function(r){return r.json();}).then(function(j){var c=j&&j.r&&j.r.b||null;try{localStorage.setItem(CK,JSON.stringify(c));}catch(e){}apply(c);}).catch(function(){});}
+  load();setInterval(load,10*60000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(load.t||0)>60000){load.t=Date.now();load();}});
+})();
+/* ===== 상단 배너 끝 ===== */
 </script>
 </body>
 </html>

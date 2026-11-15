@@ -760,6 +760,32 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 @media(max-width:760px){.top .per{display:none}}
 @media(max-width:600px){.acct-btn{min-height:34px;padding:4px 9px}.acct-btn .nm{max-width:64px;overflow:hidden;text-overflow:ellipsis}}
 /* ===== 상단 메뉴 정리 끝 ===== */
+/* ===== 상단 배너 (관리자 설정) ===== */
+.bn-ovr #promoBn{display:none!important}
+#brandBn .pb-ic{font-size:15px}
+.promo-bn.bn-c-red{background:linear-gradient(100deg,#B4232C,#F04452)}
+.promo-bn.bn-c-dark{background:#191F28}
+.promo-bn.bn-c-gold{background:linear-gradient(100deg,#A86A12,#E8A33A)}
+.promo-bn.bn-c-gold .pb-d,.promo-bn.bn-c-red .pb-d{background:rgba(255,255,255,.22)}
+@media print{#brandBn{display:none!important}}
+/* ===== 상단 배너 끝 ===== */
+/* 닫힌 서랍의 그림자가 화면 오른쪽에 세로줄처럼 비치지 않게 */
+.drawer{box-shadow:none!important;visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+.drawer.on{visibility:visible;transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,23,51,.15)!important}
+
+/* 모바일 옆 탭: '도구' 하나로 접기 (자리 고정, 위로 펼침) */
+.side-tog{display:none}
+@media(max-width:600px){
+  .side-tabs{top:auto!important;bottom:150px;gap:6px}
+  .side-tabs .care-tab{display:none}
+  .side-tabs.open .care-tab{display:block}
+  .side-tog{display:block;position:relative;border:0;background:#191F28;color:#fff;border-radius:14px 0 0 14px;padding:12px 8px;writing-mode:vertical-rl;font-size:13px;font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:-4px 4px 14px rgba(0,23,51,.18)}
+  .side-tog .bd{position:absolute;top:-5px;left:-5px;writing-mode:horizontal-tb;background:#F04452;width:12px;height:12px;border-radius:50%;display:none}
+  .side-tog.has .bd{display:block}
+  .side-bg{position:fixed;inset:0;z-index:44;background:rgba(0,23,51,.25);display:none}.side-bg.on{display:block}
+}
+
+
 
 
 </style>
@@ -1612,7 +1638,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.39';
+var VERSION='v8.40';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
@@ -1657,6 +1683,43 @@ var VERSION='v8.39';
   [per,live,fb].forEach(function(x){if(x)top.appendChild(x);});top.appendChild(wrap);
 })();
 /* ===== 상단 메뉴 정리 끝 ===== */
+</script>
+<script>
+/* ===== 상단 배너: 관리자 모드에서 브랜드별로 켜고 끄기 ===== */
+(function(){
+  var BRAND='ck',T=!!window.TEST_MODE,CK='bnCache_'+BRAND+(T?'_t':'');
+  var E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  function apply(c){
+    var old=document.getElementById('brandBn');if(old)old.remove();
+    document.body.classList.add('bn-ovr');
+    if(!c||c.mode!=='on'||!c.title)return;
+    var d=document.createElement('div');d.className='promo-bn bn-c-'+(c.color||'brand');d.id='brandBn';
+    d.innerHTML='<div class="promo-in"><span class="pb-t">'+(c.icon?'<span class="pb-ic">'+E(c.icon)+'</span> ':'')+'<b>'+E(c.title)+'</b></span>'
+      +(c.date?'<span class="pb-d">'+E(c.date)+'</span>':'')+(c.desc?'<span class="pb-s">'+E(c.desc)+'</span>':'')
+      +(c.btn?'<button type="button">'+E(c.btn)+'</button>':'')+'</div>';
+    var b=d.querySelector('button');if(b){b.onclick=function(){if(c.url)window.open(c.url,'_blank','noopener');};if(!c.url)b.style.cursor='default';}
+    var top=document.querySelector('header.top');if(top)top.parentNode.insertBefore(d,top);else document.body.insertBefore(d,document.body.firstChild);
+  }
+  window.__bnApply=function(c){try{localStorage.setItem(CK,JSON.stringify(c||null));}catch(e){}apply(c);};
+  document.body.classList.add('bn-ovr');try{var cc=JSON.parse(localStorage.getItem(CK)||'null');if(cc)apply(cc);}catch(e){}
+  function load(){if(!window.API_URL)return;fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'getBanner',arg:{brand:BRAND,test:T}})})
+    .then(function(r){return r.json();}).then(function(j){var c=j&&j.r&&j.r.b||null;try{localStorage.setItem(CK,JSON.stringify(c));}catch(e){}apply(c);}).catch(function(){});}
+  load();setInterval(load,10*60000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(load.t||0)>60000){load.t=Date.now();load();}});
+})();
+/* ===== 상단 배너 끝 ===== */
+</script>
+<script>
+/* 모바일 옆 탭: '도구' 버튼 자리에서 펼치고 접기 */
+(function(){
+  var st=document.querySelector('.side-tabs');if(!st||st.querySelector('.side-tog'))return;
+  var tog=document.createElement('button');tog.className='side-tog';tog.type='button';tog.setAttribute('aria-expanded','false');
+  st.appendChild(tog);var bg=document.createElement('div');bg.className='side-bg';document.body.appendChild(bg);
+  var syncBd=function(){var any=[].some.call(st.querySelectorAll('.care-tab .bd'),function(b){return b.style.display!=='none'&&b.textContent;});tog.classList.toggle('has',any);};
+  var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
+  tog.onclick=function(){set(!st.classList.contains('open'));};bg.onclick=function(){set(false);};
+  st.addEventListener('click',function(e){if(e.target.closest('.care-tab'))set(false);});
+  new MutationObserver(syncBd).observe(st,{subtree:true,attributes:true,attributeFilter:['style'],childList:true,characterData:true});set(false);
+})();
 </script>
 </body>
 </html>
