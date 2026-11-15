@@ -860,8 +860,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.21',VER_DATE='2026.11.15';
+var VERSION='v8.22',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.22','11.15',['🆕 오른쪽 \'삼성 vs LG\' 탭 추가 · 같은 품목에서 삼성 · LG 모델을 골라 월 납부액 · 총 납부액 · 혜택을 나란히 비교 (LG 계산기에서도 열려요)']],
   ['v8.21','11.15',['🆕 AI 구독 계산기로 이름 변경 · 사번 입력 화면에서 삼성 / LG 계산기 선택','🆕 LG 가전구독 계산기 추가 (전자랜드 단가표 + 주간 활성화 반영) · 위쪽 브랜드 표시를 누르면 다시 고를 수 있어요','⚙ 관리자 모드에 🅻 LG 단가표 탭 추가 (LG 계산기 아래 ⚙ 관리자에서도 바로 열림)']],
   ['v8.20','11.14',['상단에 ⏻ 로그아웃 버튼 추가 (이 기기에 저장된 사번 삭제 → 입장 화면)','휴대폰 상단 접속자 표시를 \'● 4명\'으로 줄임']],
   ['v8.19','11.14',['🖨 인쇄 오류 수정: 인쇄 설정에서 \'배경 그래픽\'을 꺼도 체감가 · 일시불 비교의 색 칸과 글자가 흐려지지 않게']],
