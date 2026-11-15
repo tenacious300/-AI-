@@ -820,6 +820,7 @@ body.preview{background:#e5e7eb;padding:0}
   <label><input type="checkbox" id="empKeep" checked> 이 기기에서 사번 기억하기</label>
   <div class="ft">사번은 접속 현황 확인용으로만 사용돼요.</div>
   <div class="credit">Made by <b>여수본점 김동욱</b></div>
+  <a href="#" id="gateAdm" style="display:inline-block;margin-top:10px;font-size:11.5px;color:#94a3b8;text-decoration:none">⚙ 관리자</a>
 </div></div>
 <div class="modal" id="admModal"><div class="modal-box" style="max-width:640px">
   <h3><span>⚙ 관리자 모드</span><button id="admClose" aria-label="닫기">✕</button></h3>
@@ -2394,7 +2395,9 @@ $('#blkGo').onclick=function(){var x=BLK.x,m=BLK.mode,bt=this;bt.disabled=true;
     if(r&&r.ok){$('#blkModal').classList.remove('on');toast('차단했어요 · 75초 안에 해당 화면이 잠겨요');admRefresh();}else toast('차단하지 못했어요');},function(){bt.disabled=false;toast('서버에 연결하지 못했어요');});};
 $('#liveBtn').onclick=function(){$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 $('#admLink').onclick=function(e){e.preventDefault();$('#liveBtn').onclick();};
-$('#admClose').onclick=function(){$('#admModal').classList.remove('on');if(ADMIN_LG)location.href='lg.html';if(ADMIN_CK)location.href='cuckoo.html';};
+/* 사번 입력 화면 맨 아래 '⚙ 관리자': 사번 없이 바로 관리자 모드 (입장 화면 위에 띄움) */
+$('#gateAdm').onclick=function(e){e.preventDefault();$('#admModal').style.zIndex='90';$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
+$('#admClose').onclick=function(){$('#admModal').classList.remove('on');$('#admModal').style.zIndex='';if(ADMIN_LG)location.href='lg.html';if(ADMIN_CK)location.href='cuckoo.html';};
 /* LG 계산기에서 ⚙ 관리자로 들어온 경우: 관리자 모드를 LG 단가표 탭으로 바로 열기 */
 if(ADMIN_CK){ADM.tab='ck';setTimeout(function(){$('#admModal').classList.add('on');if(ADM.pw){admRender();admInfo();}else admLogin();},300);}
 if(ADMIN_LG){ADM.tab='lg';setTimeout(function(){$('#admModal').classList.add('on');if(ADM.pw){admRender();admInfo();}else admLogin();},300);}
