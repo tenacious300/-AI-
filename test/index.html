@@ -1910,7 +1910,8 @@ if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}
 var BRAND=(function(){var m=/[?&]brand=(ss|lg|ck)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':b==='ck'?'쿠쿠 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
-$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=k==='lg'?'lg.html':'cuckoo.html';};
+function cxU(u){return window.TEST_MODE?u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now():u;}
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=cxU(k==='lg'?'lg.html':'cuckoo.html');};
 var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),ADMIN_CK=/[?&]admin=ck/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||ADMIN_CK||XCMP;
 if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
