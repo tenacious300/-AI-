@@ -36,6 +36,7 @@ button{-webkit-tap-highlight-color:transparent}
 .top{background:var(--navy);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:30}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .top h1{margin:0;font-size:18px;letter-spacing:-.3px;flex:1}
+.afb{display:inline-flex;background:#eef2ff;border-radius:12px;padding:4px;gap:4px;margin-top:12px}.afb button{border:0;background:transparent;font-weight:800;font-size:14px;color:#64748b;border-radius:9px;padding:8px 18px;cursor:pointer}.afb button.on{background:#fff;color:#1e293b;box-shadow:0 1px 3px rgba(0,0,0,.12)}.afb button.on[data-afb="ss"]{color:#1428a0}.afb button.on[data-afb="lg"]{color:#a50034}
 .bsw{display:inline-flex;flex:none;background:rgba(255,255,255,.16);border-radius:99px;padding:3px;gap:2px}
 .bsw button{border:0;background:transparent;color:rgba(255,255,255,.8);font-size:12.5px;font-weight:800;border-radius:99px;padding:5px 13px;min-height:30px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
 .bsw button:hover{color:#fff}
@@ -1891,13 +1892,16 @@ function admCsv(){var L=(ADM.stat&&ADM.stat.todayEmps)||[];var rows=[['사번','
   csvDown(rows,'접속기록_'+todayStr()+'.csv');}
 function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
-var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기']};
-var AFEAT={days:7,data:null};
-function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,days:AFEAT.days==='d'?1:AFEAT.days,date:AFEAT.days==='d'?(AFEAT.date||todayStr().replace(/-/g,'')):''},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
+var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교']};
+var AFEAT={days:7,data:null,brand:''};
+var LGCARD_N={shinhan:'신한 더구독케어',wooripl:'우리 Platinum',woori:'우리 LG전자',lotte:'롯데 구독엔로카',kb:'KB국민 LG전자',hyundai:'현대 LG전자',hana:'하나 플러스',nh:'NH 올원 BEST',best:'광주/전북 베스트케어'};
+function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기':AFEAT.brand==='ss'?'판촉 모델 보기':'판촉 · 활성화 모델 보기';return FNAME[k][1];}
+function afBrandTag(){return AFEAT.brand==='ss'?'삼성_':AFEAT.brand==='lg'?'LG_':'';}
+function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,brand:AFEAT.brand,days:AFEAT.days==='d'?1:AFEAT.days,date:AFEAT.days==='d'?(AFEAT.date||todayStr().replace(/-/g,'')):''},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
 function afDs(d){return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);}
 function afMd(d){return (+d.slice(4,6))+'/'+(+d.slice(6,8));}
 function afShift(d,k){var t=new Date(+d.slice(0,4),+d.slice(4,6)-1,+d.slice(6,8)+k);return t.getFullYear()+('0'+(t.getMonth()+1)).slice(-2)+('0'+t.getDate()).slice(-2);}
-function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().replace(/-/g,''),h='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],['d','📅 날짜별']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
+function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().replace(/-/g,''),h='<div class="afb">'+[['','전체'],['ss','삼성'],['lg','LG']].map(function(x){return '<button class="'+(AFEAT.brand===x[0]?'on':'')+'" data-afb="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+(AFEAT.brand==='lg'?'<div class="hint" style="margin:6px 0 0">LG 계산기 기능 기록은 v8.24부터 쌓여요.</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],['d','📅 날짜별']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
   if(day){var dd=AFEAT.date||td;
     h+='<div class="afd-nav"><button class="btn line sm" data-afs="-1">‹ 전날</button><input type="date" id="afDate" value="'+afDs(dd)+'" max="'+afDs(td)+'"><button class="btn line sm" data-afs="1" '+(dd>=td?'disabled':'')+'>다음날 ›</button></div>';
     if(R&&R.ok&&R.daily){var mx2=Math.max.apply(null,[1].concat(R.daily.map(function(x){return x.n;})));
@@ -1908,18 +1912,18 @@ function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().repla
   if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
   var L=R.list.filter(function(x){return FNAME[x.k];}),D={};R.list.forEach(function(x){D[x.k]=x;});
   var tot=L.reduce(function(a,x){return a+x.n;},0),mx=Math.max.apply(null,[1].concat(L.map(function(x){return x.n;})));
-  h+='<div class="adm-kpi" style="margin-top:10px"><div><span>총 사용</span><b>'+tot.toLocaleString()+'</b></div><div><span>사용 사번</span><b>'+R.users+'</b></div><div><span>1인 평균</span><b>'+(R.users?Math.round(tot/R.users):0)+'회</b></div><div><span>견적 완성률</span><b>'+(R.addUsers?Math.round(R.done/R.addUsers*100):0)+'%</b></div><div><span>가장 많이 쓴 기능</span><b style="font-size:16px">'+(L[0]?FNAME[L[0].k][1]:'-')+'</b></div></div>';
+  h+='<div class="adm-kpi" style="margin-top:10px"><div><span>총 사용</span><b>'+tot.toLocaleString()+'</b></div><div><span>사용 사번</span><b>'+R.users+'</b></div><div><span>1인 평균</span><b>'+(R.users?Math.round(tot/R.users):0)+'회</b></div><div><span>견적 완성률</span><b>'+(R.addUsers?Math.round(R.done/R.addUsers*100):0)+'%</b></div><div><span>가장 많이 쓴 기능</span><b style="font-size:16px">'+(L[0]?fnm(L[0].k):'-')+'</b></div></div>';
   h+='<div class="adm-sec">'+(day?afMd(AFEAT.date||td)+' ':'')+'기능별 사용 순위 <small>'+(day?'전날':'이전 '+(AFEAT.days===1?'날':AFEAT.days+'일'))+' 대비 · 사번 = 그 기능을 쓴 사람 수</small></div>';
   var dv=function(x){if(!x.prev)return '<span style="color:#16a34a">NEW</span>';var d=Math.round((x.n-x.prev)/x.prev*100);return d>0?'<span style="color:#dc2626">▲'+d+'%</span>':d<0?'<span style="color:#2563eb">▼'+(-d)+'%</span>':'<span style="color:#94a3b8">–</span>';};
-  h+=L.length?'<div class="fu fuh"><span></span><span>기능</span><span>사용 횟수</span><span style="text-align:right">횟수</span><span style="text-align:right">사번</span><span style="text-align:right">변화</span></div>'+L.map(function(x){var f=FNAME[x.k];return '<div class="fu"><span class="ic">'+f[0]+'</span><span class="nm">'+f[1]+'</span><span class="fbar"><i style="width:'+Math.max(2,x.n/mx*100)+'%"></i></span><span class="n">'+x.n.toLocaleString()+'</span><span class="u">'+x.u+'명</span><span class="d">'+dv(x)+'</span></div>';}).join('')
+  h+=L.length?'<div class="fu fuh"><span></span><span>기능</span><span>사용 횟수</span><span style="text-align:right">횟수</span><span style="text-align:right">사번</span><span style="text-align:right">변화</span></div>'+L.map(function(x){var f=FNAME[x.k];return '<div class="fu"><span class="ic">'+f[0]+'</span><span class="nm">'+fnm(x.k)+'</span><span class="fbar"><i style="width:'+Math.max(2,x.n/mx*100)+'%"></i></span><span class="n">'+x.n.toLocaleString()+'</span><span class="u">'+x.u+'명</span><span class="d">'+dv(x)+'</span></div>';}).join('')
     :'<div class="empty" style="margin-top:8px">아직 기록이 없어요. v7.7 이상 화면에서 쓴 기능부터 쌓여요.</div>';
   var grp=function(pre,names,cols){var a=names.map(function(n,i){var x=D[pre+n[0]];return [n[1],x?x.n:0,cols[i]];}),s=a.reduce(function(t,v){return t+v[1];},0);if(!s)return '';
     a=a.filter(function(v){return v[1];}).map(function(v){return [v[0],Math.round(v[1]/s*100),v[2]];});
     return '<div><h5>'+'</h5><div class="sb">'+a.map(function(v){return '<span style="width:'+v[1]+'%;background:'+v[2]+'"></span>';}).join('')+'</div><div class="sl">'+a.map(function(v){return '<span><i style="background:'+v[2]+'"></i>'+esc(v[0])+' '+v[1]+'%</span>';}).join('')+'</div></div>';};
-  var G=[['고객 유형',grp('cust:',[['combo','신규 결합'],['single','신규 단건'],['exist','기존 구독']],['#6366f1','#93c5fd','#f59e0b'])],
+  var G=[['고객 유형',grp('cust:',[['combo','신규 결합'],['single','신규 단건'],['exist','기존 구독'],['sb','소상공인']],['#6366f1','#93c5fd','#f59e0b','#10b981'])],
     ['견적 인쇄 종류',grp('print:',[['basic','기본'],['feel','체감가'],['lump','일시불 비교'],['feellump','체감가+일시불']],['#64748b','#e11d48','#0284c7','#7c3aed'])],
-    ['선택한 제휴카드',grp('card:',CARDS.map(function(c){return [c.id,c.name.replace('카드','').replace('은행BC','BC')];}),['#1d4ed8','#f59e0b','#ef4444','#0ea5e9','#10b981','#94a3b8'])],
-    ['선납 선택',grp('pre:',[['0','안 함'],['20','20%'],['30','30%'],['40','40%'],['50','50%']],['#cbd5e1','#a5b4fc','#818cf8','#6366f1','#4338ca'])],
+    ['선택한 제휴카드',grp('card:',CARDS.map(function(c){return [c.id,c.name.replace('카드','').replace('은행BC','BC')+(AFEAT.brand?'':' (삼성)')];}).concat(Object.keys(LGCARD_N).map(function(k){return ['lg-'+k,LGCARD_N[k]+(AFEAT.brand?'':' (LG)')];})),['#1d4ed8','#f59e0b','#ef4444','#0ea5e9','#10b981','#94a3b8','#a50034','#7c3aed','#db2777','#0d9488','#ea580c','#65a30d','#475569','#be123c','#0369a1'])],
+    ['선납 선택',grp('pre:',[['0','안 함'],['20','20%'],['30','30%'],['40','40%'],['50','50%'],['rate','비율 선납 (LG)'],['fix','정액 선납 (LG)']],['#cbd5e1','#a5b4fc','#818cf8','#6366f1','#4338ca','#f472b6','#be185d'])],
     ['사용 기기',grp('dev:',[['PC','PC'],['모바일','모바일']],['#334155','#22c55e'])],
     ['계약 기간',grp('term:',[['max','최장'],['other','그 외']],['#16a34a','#cbd5e1'])]].filter(function(g){return g[1];});
   if(G.length)h+='<div class="adm-sec" style="margin-top:16px">어떻게 쓰고 있나요</div><div class="split">'+G.map(function(g){return g[1].replace('<h5></h5>','<h5>'+g[0]+'</h5>');}).join('')+'</div>';
@@ -2127,12 +2131,13 @@ function admRender(){
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
   if(t==='roster'&&RS.data&&RS.data.ok)admRosterBind();
-  if(t==='feat'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afd]'),function(b){b.onclick=function(){AFEAT.days=b.dataset.afd==='d'?'d':+b.dataset.afd;admFeatLoad();admRender();};});
+  if(t==='feat'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afb]'),function(b){b.onclick=function(){if(AFEAT.brand===b.dataset.afb)return;AFEAT.brand=b.dataset.afb;admFeatLoad();admRender();};});
+    Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afd]'),function(b){b.onclick=function(){AFEAT.days=b.dataset.afd==='d'?'d':+b.dataset.afd;admFeatLoad();admRender();};});
     var afGo=function(d){var td=todayStr().replace(/-/g,'');if(!d||d>td)return;AFEAT.date=d;admFeatLoad();admRender();};
     Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afs]'),function(b){b.onclick=function(){afGo(afShift(AFEAT.date||todayStr().replace(/-/g,''),+b.dataset.afs));};});
     Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-afday]'),function(b){b.onclick=function(){afGo(b.dataset.afday);};});
     var adi=$('#afDate');if(adi)adi.onchange=function(){afGo(this.value.replace(/-/g,''));};
-    var fc=$('#afCsv');if(fc)fc.onclick=function(){var R=AFEAT.data;if(!R||!R.ok)return;csvDown([['기능','횟수','사번 수','이전 기간']].concat(R.list.map(function(x){return [FNAME[x.k]?FNAME[x.k][1]:x.k,x.n,x.u,x.prev];})),(AFEAT.days==='d'?'기능사용_'+(AFEAT.date||todayStr().replace(/-/g,''))+'.csv':'기능사용_'+AFEAT.days+'일_'+todayStr()+'.csv'));};}
+    var fc=$('#afCsv');if(fc)fc.onclick=function(){var R=AFEAT.data;if(!R||!R.ok)return;csvDown([['기능','횟수','사번 수','이전 기간']].concat(R.list.map(function(x){return [FNAME[x.k]?fnm(x.k):x.k,x.n,x.u,x.prev];})),(AFEAT.days==='d'?'기능사용_'+afBrandTag()+(AFEAT.date||todayStr().replace(/-/g,''))+'.csv':'기능사용_'+afBrandTag()+AFEAT.days+'일_'+todayStr()+'.csv'));};}
   if(t==='best'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-abd]'),function(b){b.onclick=function(){ABEST.days=+b.dataset.abd;admBestLoad();admRender();};});
     var ac=$('#abCsv');if(ac)ac.onclick=function(){var R=ABEST.data;if(!R||!R.ok)return;csvDown([['순위','모델','품목','조회','담기','인쇄','보관']].concat(R.list.map(function(x,i){var m=byCode[x[0]];return [i+1,x[0],m?catOf(m)+' '+subOf(m):'',x[1],x[2],x[3],x[4]];})),'베스트모델_'+ABEST.days+'일_'+todayStr()+'.csv');};}
   if(t==='stat'){
@@ -2558,7 +2563,7 @@ function xRender(){var cats=xCats();if(!XC.cat||cats.indexOf(XC.cat)<0)XC.cat=ca
      +'</table></div><div class="note">삼성은 구독료 할인·포인트(1P=1원), LG는 단가표 활성화·반값·상품권 기준이에요. 케어 내용과 제품 사양이 다르니 금액만으로 단순 비교한 참고용이에요.</div>';}
   var act=document.activeElement,fq=act&&act.dataset&&act.dataset.xq,pos=fq?act.selectionStart:0;
   $('#xBody').innerHTML=h;if(fq){var el=document.querySelector('[data-xq="'+fq+'"]');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}}}
-function xOpen(){drawerOpen('#xDrawer');$('#xBody').innerHTML='<div class="empty" style="background:#fff">LG 단가를 불러오는 중…</div>';xLoad(xRender);}
+function xOpen(){if(window.XCMP_BACK)FU['L_xcmp']=(FU['L_xcmp']||0)+1;else fuLog('xcmp');drawerOpen('#xDrawer');$('#xBody').innerHTML='<div class="empty" style="background:#fff">LG 단가를 불러오는 중…</div>';xLoad(xRender);}
 $('#xTab').onclick=xOpen;
 onChip($('#xCats'),function(v){XC.cat=v;XC.q={ss:'',lg:''};xRender();$('#xBody').scrollTop=0;});
 $('#xBody').addEventListener('input',function(e){var b=e.target.dataset&&e.target.dataset.xq;if(!b)return;XC.q[b]=e.target.value;document.querySelector('[data-xl="'+b+'"]').innerHTML=xPickList(b);});
