@@ -1377,6 +1377,7 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
     var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){return {face:cxFace(c.img?CARD_IMG+c.img+'.png':'',c.name,'#334155',80),full:c.name,months:c.baseM+'개월',
         tags:[c.rank?['추천 '+c.rank+'위','easy']:null,['연회비 '+(c.fee||'-')]].filter(Boolean),note:'발급 ARS '+esc(c.ars||'-')+(c.extra?' · '+esc(c.extra):'')};}};
+    if(CXO.auto){CXO.auto=0;var bb=cxBestAt(CXcfg,S.usage),nv=bb?bb.c.id:'none';if(S.card!==nv){S.card=nv;CXO.open=nv;toast(bb?'전월 '+S.usage+'만원↑ 추천 카드 '+(CXcfg.info(bb.c).full||bb.c.name)+' 자동 적용':'전월 '+S.usage+'만원으로는 할인되는 카드가 없어요');setTimeout(render,0);}}
     $('#cxRecBox').innerHTML=cxRec(CXcfg);$('#cardInfo').innerHTML=cxHtml(CXcfg);
     $('#cardSel').innerHTML='';$('#cardSel').style.display='none';
   }else{$('#cardSel').style.display='';$('#cxRecBox').innerHTML='';}
@@ -1444,9 +1445,9 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
 $('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();}});
-cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:ck-'+v);}render();},function(u){S.usage=u;render();});
+cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:ck-'+v);}render();},function(u){S.usage=u;CXO.auto=1;render();});
 $('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;if(S.card!=='none')fuLog('card:ck-'+S.card);var c=cardById(S.card);if(c&&!tierOf(c,S.usage))S.usage=c.tiers[0][0];render();});
-$('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
+$('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;CXO.auto=1;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
 $('#cmpTerm').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cmpY=+b.dataset.v;render();});
 $('#cmpTbl').addEventListener('click',function(e){var r=e.target.closest('[data-card]');if(r){S.card=r.dataset.card;render();toast(cardById(S.card).name+' 선택');}});
