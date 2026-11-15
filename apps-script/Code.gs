@@ -34,6 +34,7 @@ var API_FUNCS = {
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
+  logQuote: logQuote, adminQuoteLog: adminQuoteLog,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
 function doPost(e) {
@@ -1263,4 +1264,53 @@ function nrLog_(emp, type, info) {
 }
 function nrToday_() {
   try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('nr_' + today_()) || '{}'); } catch (e) { return {}; }
+}
+
+/* ===================== 인쇄 기록 (누가 · 언제 · 어떤 모델로 견적서를 인쇄했는지) ===================== */
+var QLOG_SHEET = '인쇄기록';
+var QLOG_HEAD = ['일시', '사번', '브랜드', '견적서', '모델 수', '모델 상세', '월 납부액', '조건', '구분'];
+var QLOG_BRAND = { ss: '삼성', lg: 'LG', ck: '쿠쿠' };
+function qlogSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(QLOG_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(QLOG_SHEET);
+    sh.appendRow(QLOG_HEAD);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, QLOG_HEAD.length).setFontWeight('bold').setBackground('#e8f3ff');
+    sh.setColumnWidth(6, 520);
+  }
+  return sh;
+}
+/** 직원 화면: 견적서를 인쇄할 때 한 줄 기록 */
+function logQuote(arg) {
+  arg = arg || {};
+  var items = Array.isArray(arg.items) ? arg.items.slice(0, 30) : [];
+  if (!items.length) return { ok: false };
+  var detail = items.map(function (i) {
+    i = i || {};
+    return cleanStr_(i.code, 40) + ' (' + [cleanStr_(i.name, 60), cleanStr_(i.term, 60), cleanStr_(i.mon, 20)].filter(function (x) { return x; }).join(' · ') + ')';
+  }).join(' / ');
+  var row = [Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), cleanEmp_(arg.emp) || '-', QLOG_BRAND[arg.brand] || cleanStr_(arg.brand, 10),
+             cleanStr_(arg.doc, 30), items.length, detail.slice(0, 3000), cleanStr_(arg.total, 30), cleanStr_(arg.cond, 200), arg.test ? '테스트' : '정식'];
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return { ok: false };
+  try { qlogSheet_().appendRow(row); } finally { lock.releaseLock(); }
+  return { ok: true };
+}
+/** 관리자: 최근 인쇄 기록 (기간 · 최신순) */
+function adminQuoteLog(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var days = [1, 7, 30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7;
+  var from = Utilities.formatDate(new Date(Date.now() - (days - 1) * 86400000), TZ, 'yyyy-MM-dd');
+  var sh = qlogSheet_(), n = sh.getLastRow(), out = [];
+  if (n >= 2) {
+    var start = Math.max(2, n - 4999);
+    sh.getRange(start, 1, n - start + 1, QLOG_HEAD.length).getDisplayValues().forEach(function (r) {
+      if (String(r[0]).slice(0, 10) < from) return;
+      out.push({ ts: r[0], emp: r[1], brand: r[2], doc: r[3], n: Number(r[4]) || 0, detail: r[5], total: r[6], cond: r[7], src: r[8] });
+    });
+  }
+  out.reverse();
+  return { ok: true, days: days, list: out.slice(0, 1000), total: out.length, url: sh.getParent().getUrl() + '#gid=' + sh.getSheetId() };
 }

@@ -1705,5 +1705,31 @@ function refresh(){if(S.sel&&!BY[S.sel.code]){S.sel=null;$('#picked').style.disp
 renderAll();syncData();startBeat();
 })();
 </script>
+<script>
+/* ===== 인쇄 기록: 견적서를 인쇄하면 사번 · 모델 · 계약 · 월 납부액을 서버에 한 줄 기록 ===== */
+(function(){
+  var BRAND='lg',doc='',last=0;
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-pm]');if(b){var t=b.querySelector('b');doc=(t?t.textContent:b.textContent).trim();}},true);
+  var tx=function(n){return n?String(n.textContent||'').replace(/\s+/g,' ').trim():'';};
+  function send(){
+    var pa=document.getElementById('printArea');if(!pa||!window.API_URL)return;
+    var now=Date.now();if(now-last<4000)return;last=now;
+    var tb=null;[].some.call(pa.querySelectorAll('table'),function(t){if(t.rows.length&&tx(t.rows[0].cells[0])==='No'){tb=t;return true;}return false;});if(!tb)return;
+    var items=[].slice.call(tb.rows,1).map(function(r){var c=r.cells,m=c[2];if(!m)return null;var pn=m.querySelector('.pn'),sp=m.querySelector('span'),code='';
+      [].forEach.call(m.childNodes,function(n){if(n.nodeType===3&&n.textContent.trim()&&!code)code=n.textContent.trim();});
+      return {code:code,name:tx(pn),term:tx(sp),mon:tx(c[c.length-1])};}).filter(function(x){return x&&x.code;});
+    if(!items.length)return;
+    var total='';[].forEach.call(pa.querySelectorAll('.em'),function(e){var s=e.querySelectorAll('span');if(s.length>1&&/^월 납부액/.test(tx(s[0])))total=tx(s[1]);});
+    var cond=[].map.call(pa.querySelectorAll('.cond span'),tx).filter(Boolean).join(' / ');
+    var emp='';try{emp=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS')||'';}catch(e){}
+    var body=JSON.stringify({fn:'logQuote',arg:{emp:emp,brand:BRAND,doc:doc||'견적서',items:items,total:total,cond:cond,test:!!window.TEST_MODE}});
+    try{fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,keepalive:true}).catch(function(){});}catch(e){}
+    doc='';
+  }
+  var real=window.print;
+  window.print=function(){try{send();}catch(e){}return real.apply(window,arguments);};
+})();
+/* ===== 인쇄 기록 끝 ===== */
+</script>
 </body>
 </html>

@@ -806,6 +806,16 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .cap-mode .cap-val{font-size:15px;font-weight:800;white-space:nowrap}
 .cap-mode .lp-iw .cap-val{flex:1;text-align:right;font-size:16px}
 .cap-foot{display:flex;flex-direction:column;gap:2px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.6}
+
+/* 관리자 · 인쇄 기록 */
+.pl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}.pl-bar input{flex:1;min-width:160px;min-height:38px;font-size:14px}
+.pl-it{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:8px}
+.pl-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.pl-h b{font-size:14px}.pl-ts{margin-left:auto;font-size:12px;color:var(--sub)}
+.pl-br{font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px;background:#E5E8EB;color:#333D4B}.pl-br.ss{background:#E8F3FF;color:#1B64DA}.pl-br.lg{background:#FDEAF1;color:#A50034}.pl-br.ck{background:#FFEEE8;color:#C93A16}
+.pl-t{font-size:11px;font-weight:800;background:#FEF3C7;color:#92400E;border-radius:6px;padding:2px 6px}
+.pl-doc{font-size:12.5px;color:var(--sub);margin:4px 0 6px}
+.pl-m{display:flex;gap:8px;align-items:baseline;font-size:13px;padding:5px 0;border-top:1px dashed var(--line)}.pl-m b{white-space:nowrap}.pl-m span{color:#4E5968}
+.pl-f{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)}.pl-f b{font-size:14.5px;color:var(--ink);white-space:nowrap}
 /* ===== 사용성 개선 끝 ===== */
 </style>
 </head>
@@ -2293,6 +2303,38 @@ var AEMP={days:30,data:null,basis:'d',st:'all',br:'',q:'',open:''};
 var AEXTRA={lump:['⚖️','일시불 비교'],fav:['⭐','즐겨찾기'],logout:['🚪','로그아웃']};
 function aeFn(k,lg){if(k==='win')return ['🏆',lg===2?'반값 모델 보기':lg?'활성화 모델 보기':'판촉 모델 보기'];if(k==='lumpitem')return ['🛒','일시불 품목 넣기'];return FNAME[k]||AEXTRA[k]||null;}
 function aeTop(f,lg){var k=Object.keys(f||{}).filter(function(k){return aeFn(k,lg)&&k!=='logout';}).sort(function(a,b){return f[b]-f[a];});return k;}
+/* 관리자: 인쇄 기록 (누가 · 언제 · 어떤 모델로 견적서를 인쇄했는지) */
+var PLOG={days:7,data:null,brand:'',q:'',src:'정식'};
+function admPlogLoad(){PLOG.data=null;gsr('adminQuoteLog',{pw:ADM.pw,days:PLOG.days},function(r){PLOG.data=r&&r.ok?r:{ok:false};if(ADM.tab==='plog')admRender();},function(){PLOG.data={ok:false};if(ADM.tab==='plog')admRender();});}
+function admPlogHtml(){
+  var R=PLOG.data,chip=function(k,v,l,cur){return '<button class="chip sm '+(cur===v?'on':'')+'" data-'+k+'="'+v+'">'+l+'</button>';};
+  var h='<div class="pl-bar"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],[90,'90일']].map(function(x){return chip('pld',x[0],x[1],PLOG.days);}).join('')+'</div>'
+    +'<div class="chips" style="margin:0">'+[['','전체'],['삼성','삼성'],['LG','LG'],['쿠쿠','쿠쿠']].map(function(x){return chip('plb',x[0],x[1],PLOG.brand);}).join('')+'</div>'
+    +'<div class="chips" style="margin:0">'+[['정식','정식'],['테스트','테스트'],['','모두']].map(function(x){return chip('pls',x[0],x[1],PLOG.src);}).join('')+'</div>'
+    +'<input type="text" id="plQ" placeholder="사번 · 모델코드 검색" value="'+esc(PLOG.q)+'" autocomplete="off"></div>';
+  if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  if(!R.ok)return h+'<div class="empty" style="margin-top:12px">기록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>';
+  var q=PLOG.q.trim().toUpperCase().replace(/\s/g,'');
+  var L=R.list.filter(function(x){return (!PLOG.brand||x.brand===PLOG.brand)&&(!PLOG.src||x.src===PLOG.src)&&(!q||(x.emp+x.detail).toUpperCase().replace(/\s/g,'').indexOf(q)>=0);});
+  var emps={},models=0;L.forEach(function(x){emps[x.emp]=1;models+=x.n;});
+  h+='<div class="adm-kpi" style="grid-template-columns:repeat(3,1fr)"><div><span>인쇄 건수</span><b>'+L.length+'</b></div><div><span>인쇄한 사번</span><b>'+Object.keys(emps).length+'</b></div><div><span>견적 모델 수</span><b>'+models+'</b></div></div>';
+  h+='<div class="adm-sec">최근 인쇄 <small>'+(R.url?'<a class="link" href="'+esc(R.url)+'" target="_blank" rel="noopener">구글 시트로 전체 보기 ↗</a>':'')+'</small></div>';
+  if(!L.length)return h+'<div class="empty" style="margin-top:8px">조건에 맞는 인쇄 기록이 없어요.</div>';
+  var BC={'삼성':'ss','LG':'lg','쿠쿠':'ck'};
+  h+=L.slice(0,300).map(function(x){
+    var ms=String(x.detail||'').split(' / ').map(function(d){var m=/^(\S+) \((.*)\)$/.exec(d);return m?'<div class="pl-m"><b>'+esc(m[1])+'</b><span>'+esc(m[2])+'</span></div>':'<div class="pl-m"><span>'+esc(d)+'</span></div>';}).join('');
+    return '<div class="pl-it"><div class="pl-h"><span class="pl-br '+(BC[x.brand]||'')+'">'+esc(x.brand)+'</span><b>👤 '+esc(x.emp)+'</b><span class="pl-ts">'+esc(String(x.ts).slice(5,16))+'</span>'+(x.src==='테스트'?'<span class="pl-t">테스트</span>':'')+'</div>'
+      +'<div class="pl-doc">'+esc(x.doc)+'</div>'+ms
+      +'<div class="pl-f"><span>'+esc(x.cond||'')+'</span><b>월 '+esc(String(x.total||'').replace(/^월\s*/,''))+'</b></div></div>';}).join('')
+    +(L.length>300?'<div class="hint">최근 300건만 보여요. 전체는 구글 시트에서 확인하세요.</div>':'');
+  return h;}
+function admPlogBind(){
+  var b=$('#admBody');if(!b)return;
+  [].forEach.call(b.querySelectorAll('[data-pld]'),function(x){x.onclick=function(){PLOG.days=+x.dataset.pld;admPlogLoad();admRender();};});
+  [].forEach.call(b.querySelectorAll('[data-plb]'),function(x){x.onclick=function(){PLOG.brand=x.dataset.plb;admRender();};});
+  [].forEach.call(b.querySelectorAll('[data-pls]'),function(x){x.onclick=function(){PLOG.src=x.dataset.pls;admRender();};});
+  var i=$('#plQ');if(i){i.oninput=function(){PLOG.q=i.value;clearTimeout(PLOG.t);PLOG.t=setTimeout(function(){admRender();var j=$('#plQ');if(j){j.focus();j.setSelectionRange(j.value.length,j.value.length);}},250);};}
+}
 function admEmpLoad(){AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
 function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4,8],a:[1,5,9],q:[2,6,10]}[AEMP.basis];
   var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0,k=(r[bi[2]]||0)>0;if(r.length<12)r=r.concat([0,0,0,'']);
@@ -2468,7 +2510,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['plog','🖨 인쇄 기록'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
@@ -2567,17 +2609,19 @@ function admRender(){
   else if(t==='best')h+=admBestHtml();
   else if(t==='feat')h+=admFeatHtml();
   else if(t==='emp')h+=admEmpHtml();
+  else if(t==='plog')h+=admPlogHtml();
   else if(t==='notice')h+=admNoticeHtml();
   else if(t==='quote')h+=admQuoteHtml();
   else h+=admVerHtml();
   $('#admBody').innerHTML=h;
-  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();if(v==='best')admBestLoad();if(v==='feat')admFeatLoad();if(v==='emp')admEmpLoad();if(v==='roster'){RS.data=null;rsLoad();}admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
+  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();if(v==='best')admBestLoad();if(v==='feat')admFeatLoad();if(v==='emp')admEmpLoad();if(v==='plog')admPlogLoad();if(v==='roster'){RS.data=null;rsLoad();}admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
   if(t==='lg'){admLgBind();cpaBind();}
   if(t==='ck')admCkBind();
   if(t==='emp')admEmpBind();
+  if(t==='plog')admPlogBind();
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
   if(t==='roster'&&RS.data&&RS.data.ok)admRosterBind();
@@ -3336,6 +3380,32 @@ iaShow();
   if(navigator.share&&touch){window.UX_SHARE=true;var cb=$('#copyBtn');if(cb)cb.textContent='📤 견적 공유';}
 })();
 /* ===== 사용성 개선 끝 ===== */
+</script>
+<script>
+/* ===== 인쇄 기록: 견적서를 인쇄하면 사번 · 모델 · 계약 · 월 납부액을 서버에 한 줄 기록 ===== */
+(function(){
+  var BRAND='ss',doc='',last=0;
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-pm]');if(b){var t=b.querySelector('b');doc=(t?t.textContent:b.textContent).trim();}},true);
+  var tx=function(n){return n?String(n.textContent||'').replace(/\s+/g,' ').trim():'';};
+  function send(){
+    var pa=document.getElementById('printArea');if(!pa||!window.API_URL)return;
+    var now=Date.now();if(now-last<4000)return;last=now;
+    var tb=null;[].some.call(pa.querySelectorAll('table'),function(t){if(t.rows.length&&tx(t.rows[0].cells[0])==='No'){tb=t;return true;}return false;});if(!tb)return;
+    var items=[].slice.call(tb.rows,1).map(function(r){var c=r.cells,m=c[2];if(!m)return null;var pn=m.querySelector('.pn'),sp=m.querySelector('span'),code='';
+      [].forEach.call(m.childNodes,function(n){if(n.nodeType===3&&n.textContent.trim()&&!code)code=n.textContent.trim();});
+      return {code:code,name:tx(pn),term:tx(sp),mon:tx(c[c.length-1])};}).filter(function(x){return x&&x.code;});
+    if(!items.length)return;
+    var total='';[].forEach.call(pa.querySelectorAll('.em'),function(e){var s=e.querySelectorAll('span');if(s.length>1&&/^월 납부액/.test(tx(s[0])))total=tx(s[1]);});
+    var cond=[].map.call(pa.querySelectorAll('.cond span'),tx).filter(Boolean).join(' / ');
+    var emp='';try{emp=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS')||'';}catch(e){}
+    var body=JSON.stringify({fn:'logQuote',arg:{emp:emp,brand:BRAND,doc:doc||'견적서',items:items,total:total,cond:cond,test:!!window.TEST_MODE}});
+    try{fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,keepalive:true}).catch(function(){});}catch(e){}
+    doc='';
+  }
+  var real=window.print;
+  window.print=function(){try{send();}catch(e){}return real.apply(window,arguments);};
+})();
+/* ===== 인쇄 기록 끝 ===== */
 </script>
 </body>
 </html>
