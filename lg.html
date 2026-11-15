@@ -709,7 +709,59 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sum-l .lump-g .lumpin{padding:8px 0;justify-content:flex-start}
 .sum-l .lp-vd{justify-content:flex-start;align-items:center}
 .sum-l .lp-bh{align-items:flex-end}.lp-bh small{display:block;margin-top:1px}
+/* 인쇄 견적서: 일시불 vs 구독 막대 비교 */
+.pq .pbars{display:flex;flex-direction:column;gap:6px;margin:8px 0 6px;padding:8px 12px;background:#F7F8FA;border-radius:8px;break-inside:avoid}
+.pq .pb{display:grid;grid-template-columns:96px 1fr 104px;align-items:center;gap:10px}
+.pq .pb span{font-size:12px;font-weight:700;color:#4E5968}
+.pq .pb b{font-size:13.5px;text-align:right;color:#191F28;white-space:nowrap}
+.pq .pt{height:11px;background:#E5E8EB;border-radius:99px;overflow:hidden}
+.pq .pt i{display:block;height:100%;border-radius:99px;min-width:6px}
+.pq .pt i.l{background:#8B95A1}.pq .pt i.s{background:var(--tp)}
+.pq .pdiff{font-size:12px;font-weight:800;text-align:right;margin-top:1px}
+.pq .pdiff.dn{color:#0BA360}.pq .pdiff.up{color:#E8590C}
 /* ===== 새 디자인 끝 ===== */
+/* ===== 개선 요청 ===== */
+.me.fbk{background:#FFF4D6;color:#8A5A00;border:0;position:relative}.me.fbk:hover{background:#FFEBB0}
+.me.fbk .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#F04452;display:none}.me.fbk.new .dot{display:block}
+@media(max-width:600px){.me.fbk .t{display:none}}
+.fb-box{max-width:480px}
+.fb-sub{font-size:13px;color:var(--sub);margin:2px 0 12px;line-height:1.55}
+.fb-kinds{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.fb-ta{width:100%;min-height:120px;border:0;background:#F2F4F6;border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;line-height:1.5;resize:vertical}
+.fb-ta:focus{outline:0;background:#fff;box-shadow:0 0 0 2px var(--tp)}
+.fb-cnt{text-align:right;font-size:11.5px;color:var(--sub);margin-top:4px}
+.fb-send{width:100%;margin-top:10px}
+.fb-my{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.fb-my h4{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;align-items:center}.fb-my h4 small{font-weight:500;color:var(--sub);font-size:12px}
+.fb-it{background:#F9FAFB;border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.fb-ih{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--sub)}.fb-ih .k{font-weight:800;color:#333D4B}.fb-ih time{margin-left:auto}
+.fb-st{font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px}
+.fb-st.s0{background:#F2F4F6;color:#4E5968}.fb-st.s1{background:#E8F3FF;color:#1B64DA}.fb-st.s2{background:#E5F8EF;color:#087A48}.fb-st.s3{background:#FFF4D6;color:#8A5A00}
+.fb-tx{font-size:14px;margin-top:6px;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.fb-rp{margin-top:8px;background:#fff;border-left:3px solid var(--tp);border-radius:0 10px 10px 0;padding:8px 10px;font-size:13.5px;white-space:pre-wrap;line-height:1.5}.fb-rp b{display:block;font-size:12px;color:var(--tp);margin-bottom:2px}
+.fb-empty{font-size:13px;color:var(--sub);text-align:center;padding:14px;background:#F9FAFB;border-radius:12px}
+@media(max-width:600px){.top .top-in{gap:4px}.top .me,.top .live{padding:4px 7px;min-height:34px}.top .live .lt{display:none}.top .bsw button{padding:5px 4px}.ver{padding:3px 6px}}
+@media(max-width:380px){.top .bsw button{font-size:12.5px}.top .live b{font-size:11.5px}}
+.afb-it .btn.line{background:#fff;border:1px solid var(--line)}
+/* ===== 개선 요청 끝 ===== */
+/* ===== 상단 메뉴 정리 ===== */
+.top .hm-hide{display:none!important}
+.top .top-in h1{margin-right:auto}
+.acct{position:relative;flex:none}
+.acct-btn{display:inline-flex;align-items:center;gap:4px;background:#F2F4F6;color:#333D4B;border:0;border-radius:99px;padding:4px 11px;min-height:32px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.acct-btn:hover,.acct.open .acct-btn{background:#E5E8EB}.acct-btn .cv{font-size:10px;opacity:.6;transition:transform .15s}.acct.open .acct-btn .cv{transform:rotate(180deg)}
+.acct-menu{position:absolute;right:0;top:calc(100% + 8px);min-width:200px;background:#fff;border-radius:16px;box-shadow:0 12px 36px rgba(0,23,51,.18);padding:6px;display:none;z-index:60}
+.acct.open .acct-menu{display:block}
+.acct-menu .hd{padding:8px 12px 6px;font-size:12px;color:#8B95A1}.acct-menu .hd b{display:block;font-size:15px;color:#191F28;margin-top:2px}
+.acct-menu button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;border-radius:10px;padding:11px 12px;font:inherit;font-size:14px;font-weight:600;color:#333D4B;cursor:pointer;text-align:left}
+.acct-menu button:hover{background:#F2F4F6}.acct-menu button i{font-style:normal;width:20px;text-align:center}
+.acct-menu .sep{height:1px;background:#F2F4F6;margin:4px 6px}.acct-menu .lo{color:#D22030}
+.top .per{order:0}
+@media(max-width:760px){.top .per{display:none}}
+@media(max-width:600px){.acct-btn{min-height:34px;padding:4px 9px}.acct-btn .nm{max-width:64px;overflow:hidden;text-overflow:ellipsis}}
+/* ===== 상단 메뉴 정리 끝 ===== */
+
+
 </style>
 </head>
 <body>
@@ -1425,6 +1477,10 @@ function buildPrint(mode){
       +'<tr class="lsum"><td>합계</td><td class="r sub"><b>'+won(totPay)+'</b></td><td class="r"><b>'+won(LP.L)+'</b></td></tr></table>'
       +'<div class="calc"><div>'+lr('구독 총 납부액',won(totPay))+(cardTot?lr('− 제휴카드 할인','−'+won(cardTot)):'')+(extra?lr('− 선납 캐시백','−'+won(extra)):'')+(allP?lr('− 모바일상품권','−'+won(allP)):'')
         +lr('<b>= 구독 실부담</b>','<b>'+won(fT)+'</b>')+'</div><div>'+lr('일시불 구매가',won(LP.L))+'</div></div>'
+      +(function(L,T){var mx=Math.max(L,T)||1,d=T-L,w=function(v){return Math.max(2,Math.round(v/mx*100));};
+        return '<div class="pbars"><div class="pb"><span>일시불 구매가</span><div class="pt"><i class="l" style="width:'+w(L)+'%"></i></div><b>'+won(L)+'</b></div>'
+          +'<div class="pb"><span>구독 실부담</span><div class="pt"><i class="s" style="width:'+w(T)+'%"></i></div><b>'+won(T)+'</b></div>'
+          +'</div>';})(LP.L,fT)
       +(LP.diff<=0
         ?'<div class="verdict good">✅ 구독이 일시불보다 <b>'+won(-LP.diff)+'</b> 더 저렴해요 <small>(월 '+won(-LP.diffM)+' 절약 + '+yTxt+' 케어 · 무상 A/S)</small></div>'
         :'<div class="verdict">💡 월 <b>'+won(LP.diffM)+'</b> 차이로 <b>'+yTxt+' 케어 · 무상 A/S</b>까지 <small>(총 차액 '+won(LP.diff)+' · 목돈 없이 매달 나눠서)</small></div>')
@@ -1609,6 +1665,131 @@ $('#admLink').onclick=function(e){e.preventDefault();location.href='./?admin=lg'
 function refresh(){if(S.sel&&!BY[S.sel.code]){S.sel=null;$('#picked').style.display='none';}renderAll();}
 renderAll();syncData();startBeat();
 })();
+</script>
+<script>
+/* ===== 인쇄 기록: 견적서를 인쇄하면 사번 · 모델 · 계약 · 월 납부액을 서버에 한 줄 기록 ===== */
+(function(){
+  var BRAND='lg',doc='',last=0;
+  document.addEventListener('click',function(e){var b=e.target.closest&&e.target.closest('[data-pm]');if(b){var t=b.querySelector('b');doc=(t?t.textContent:b.textContent).trim();}},true);
+  var tx=function(n){return n?String(n.textContent||'').replace(/\s+/g,' ').trim():'';};
+  function send(){
+    var pa=document.getElementById('printArea');if(!pa||!window.API_URL)return;
+    var now=Date.now();if(now-last<4000)return;last=now;
+    var tb=null;[].some.call(pa.querySelectorAll('table'),function(t){if(t.rows.length&&tx(t.rows[0].cells[0])==='No'){tb=t;return true;}return false;});if(!tb)return;
+    var items=[].slice.call(tb.rows,1).map(function(r){var c=r.cells,m=c[2];if(!m)return null;var pn=m.querySelector('.pn'),sp=m.querySelector('span'),code='';
+      [].forEach.call(m.childNodes,function(n){if(n.nodeType===3&&n.textContent.trim()&&!code)code=n.textContent.trim();});
+      return {code:code,name:tx(pn),term:tx(sp),mon:tx(c[c.length-1])};}).filter(function(x){return x&&x.code;});
+    if(!items.length)return;
+    var total='';[].forEach.call(pa.querySelectorAll('.em'),function(e){var s=e.querySelectorAll('span');if(s.length>1&&/^월 납부액/.test(tx(s[0])))total=tx(s[1]);});
+    var cond=[].map.call(pa.querySelectorAll('.cond span'),tx).filter(Boolean).join(' / ');
+    var emp='';try{emp=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS')||'';}catch(e){}
+    var body=JSON.stringify({fn:'logQuote',arg:{emp:emp,brand:BRAND,doc:doc||'견적서',items:items,total:total,cond:cond,test:!!window.TEST_MODE}});
+    try{fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:body,keepalive:true}).catch(function(){});}catch(e){}
+    doc='';
+  }
+  var real=window.print;
+  window.print=function(){try{send();}catch(e){}return real.apply(window,arguments);};
+})();
+/* ===== 인쇄 기록 끝 ===== */
+</script>
+<script>
+/* ===== 개선 요청: 상단 '💡 개선요청' → 의견 보내기 · 내 요청 답변 확인 ===== */
+(function(){
+  var BRAND='lg',KINDS=['불편한 점','오류 신고','새 기능','계산 확인','기타'],ST={'접수':'s0','검토중':'s1','반영완료':'s2','보류':'s3'};
+  var $=function(q){return document.querySelector(q);},E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var emp=function(){try{return localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS')||'';}catch(e){return '';}};
+  var call=function(fn,arg){if(!window.API_URL)return Promise.reject('no');return fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,arg:arg})}).then(function(r){return r.json();}).then(function(j){if(j.__err)throw j.__err;return j.r;});};
+  var tst=function(m){var t=$('#toast');if(!t){alert(m);return;}t.textContent=m;t.classList.add('on');clearTimeout(tst.t);tst.t=setTimeout(function(){t.classList.remove('on');},1800);};
+  var seen=function(){try{return JSON.parse(localStorage.getItem('fbSeen')||'{}');}catch(e){return {};}};
+  var me=$('#meBtn');if(!me)return;
+  var btn=document.createElement('button');btn.className='me fbk';btn.id='fbBtn';btn.type='button';btn.title='개선 요청 보내기';btn.innerHTML='<span class="ic">💡</span><span class="t"> 개선요청</span><span class="dot"></span>';
+  me.parentNode.insertBefore(btn,me);
+  var md=document.createElement('div');md.className='modal';md.id='fbModal';
+  md.innerHTML='<div class="modal-box fb-box"><h3><span>💡 개선 요청</span><button type="button" id="fbX" aria-label="닫기">✕</button></h3>'
+    +'<div class="fb-sub">계산기를 쓰면서 불편했던 점, 틀린 금액, 있었으면 하는 기능을 편하게 적어 주세요. 관리자가 확인하고 답변을 남겨 드려요.</div>'
+    +'<div class="fb-kinds" id="fbKinds">'+KINDS.map(function(k,i){return '<button type="button" class="chip sm'+(i?'':' on')+'" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+    +'<textarea class="fb-ta" id="fbTa" maxlength="1500" placeholder="예) 모바일에서 카드 비교표가 길어서 보기 어려워요. 접어 두면 좋겠어요."></textarea>'
+    +'<div class="fb-cnt"><span id="fbCnt">0</span> / 1500</div>'
+    +'<button type="button" class="btn pri fb-send" id="fbSend">보내기</button>'
+    +'<div class="fb-my"><h4>내가 보낸 요청 <small id="fbMyCap"></small></h4><div id="fbMy"><div class="fb-empty">불러오는 중…</div></div></div></div>';
+  document.body.appendChild(md);
+  var kind=KINDS[0],ta=$('#fbTa');
+  $('#fbKinds').onclick=function(e){var b=e.target.closest('[data-k]');if(!b)return;kind=b.dataset.k;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});};
+  ta.oninput=function(){$('#fbCnt').textContent=ta.value.length;};
+  var close=function(){md.classList.remove('on');};
+  $('#fbX').onclick=close;md.onclick=function(e){if(e.target===md)close();};
+  function renderMy(L){
+    var el=$('#fbMy');if(!el)return;
+    if(!L){el.innerHTML='<div class="fb-empty">목록을 불러오지 못했어요</div>';return;}
+    $('#fbMyCap').textContent=L.length?L.length+'건':'';
+    el.innerHTML=L.length?L.map(function(x){return '<div class="fb-it"><div class="fb-ih"><span class="fb-st '+(ST[x.status]||'s0')+'">'+E(x.status)+'</span><span class="k">'+E(x.kind)+'</span><span>'+E(x.brand)+'</span><time>'+E(String(x.ts).slice(5,16))+'</time></div>'
+      +'<div class="fb-tx">'+E(x.text)+'</div>'+(x.reply?'<div class="fb-rp"><b>관리자 답변'+(x.rts?' · '+E(String(x.rts).slice(5,16)):'')+'</b>'+E(x.reply)+'</div>':'')+'</div>';}).join('')
+      :'<div class="fb-empty">아직 보낸 요청이 없어요</div>';
+  }
+  function load(mark){var e=emp();if(!e){renderMy([]);return Promise.resolve([]);}
+    return call('myFeedback',{emp:e}).then(function(r){var L=(r&&r.list)||[],S=seen(),nw=L.some(function(x){return x.reply&&S[x.id]!==x.rts;});
+      if(mark){L.forEach(function(x){if(x.reply)S[x.id]=x.rts;});try{localStorage.setItem('fbSeen',JSON.stringify(S));}catch(err){}nw=false;}
+      btn.classList.toggle('new',nw);renderMy(L);return L;},function(){renderMy(null);});}
+  btn.onclick=function(){md.classList.add('on');setTimeout(function(){ta.focus();},60);load(true);};
+  $('#fbSend').onclick=function(){var t=ta.value.trim();if(t.length<2){tst('내용을 적어 주세요');ta.focus();return;}
+    var b=this;b.disabled=true;b.textContent='보내는 중…';
+    var info=[(document.querySelector('#verBtn')||{}).textContent||'',/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC',innerWidth+'px'].filter(Boolean).join(' · ');
+    call('sendFeedback',{emp:emp(),brand:BRAND,kind:kind,text:t,info:info,test:!!window.TEST_MODE}).then(function(r){
+      b.disabled=false;b.textContent='보내기';
+      if(r&&r.ok){ta.value='';$('#fbCnt').textContent='0';tst('보내 주셔서 감사해요! 확인 후 답변 드릴게요');load(true);}
+      else tst((r&&r.msg)||'보내지 못했어요. 잠시 후 다시 시도해 주세요');
+    },function(){b.disabled=false;b.textContent='보내기';tst('보내지 못했어요. 인터넷 연결을 확인해 주세요');});};
+  setTimeout(function(){load(false);},4000);
+})();
+/* ===== 개선 요청 끝 ===== */
+</script>
+<script>
+/* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
+var VERSION='v8.39';
+(function(){
+  var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
+  var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
+  var bar=document.createElement('div');bar.className='newver';bar.innerHTML='🔔 새 버전이 있어요 <small style="opacity:.7;font-weight:500"></small><button type="button">새로고침</button><button class="nx" type="button" aria-label="닫기">✕</button>';document.body.appendChild(bar);
+  var sm=bar.querySelector('small'),go=function(){sm.textContent='업데이트 중…';setTimeout(function(){location.replace(location.pathname+'?v='+Date.now()+location.hash);},400);};
+  bar.querySelector('button').onclick=go;var T=null,snooze=0;
+  bar.querySelector('.nx').onclick=function(){bar.classList.remove('on');clearInterval(T);T=null;snooze=Date.now()+10*60000;};
+  var lt=function(a,b){a=a.slice(1).split('.').map(Number);b=b.slice(1).split('.').map(Number);for(var i=0;i<Math.max(a.length,b.length);i++){if((a[i]||0)!==(b[i]||0))return (a[i]||0)<(b[i]||0);}return false;};
+  var busy=function(){var a=document.activeElement;return (a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName))||document.querySelector('.modal.on,.drawer.on');};
+  var auto=function(nv){if(T)return;var n=15;bar.classList.add('on');T=setInterval(function(){if(busy()){sm.textContent=VERSION+' → '+nv+' · 입력이 끝나면 자동 업데이트';return;}n--;sm.textContent=VERSION+' → '+nv+' · '+n+'초 뒤 자동 업데이트 (담은 모델 유지)';if(n<=0){clearInterval(T);go();}},1000);};
+  var last=0,check=function(){if(!/github\.io$/.test(location.hostname)||!window.fetch||Date.now()<snooze)return;var now=Date.now();if(now-last<60000)return;last=now;
+    fetch(location.pathname+'?vchk='+now,{cache:'no-store'}).then(function(r){return r.ok?r.text():'';}).then(function(t){var m=/var VERSION='(v[0-9.]+)'/.exec(t||'');if(m&&lt(VERSION,m[1]))auto(m[1]);}).catch(function(){});};
+  setInterval(check,60000);document.addEventListener('visibilitychange',function(){if(!document.hidden)check();});setTimeout(check,8000);
+})();
+/* ===== 버전 표시 끝 ===== */
+</script>
+<script>
+/* ===== 상단 메뉴 정리: 사번 변경 · 앱 설치 · 초기화 · 로그아웃을 '👤 사번 ▾' 하나로 ===== */
+(function(){
+  var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top)return;
+  var me=$('#meBtn'),lo=$('#logoutBtn'),ins=$('#instBtn'),rst=$('#resetTop'),live=$('#liveBtn'),fb=$('#fbBtn'),per=top.querySelector('.per');
+  if(!me)return;
+  [me,lo,ins,rst].forEach(function(b){if(b)b.classList.add('hm-hide');});
+  var wrap=document.createElement('div');wrap.className='acct';
+  wrap.innerHTML='<button type="button" class="acct-btn" aria-haspopup="true" aria-expanded="false"><span class="nm"></span><span class="cv">▼</span></button><div class="acct-menu" role="menu"></div>';
+  var btn=wrap.firstChild,menu=wrap.lastChild;
+  var vis=function(b){return b&&b.style.display!=='none';};
+  var emp=function(){var t=(me.textContent||'').replace('👤','').trim();return t&&t!=='사번'?t:'';};
+  var sync=function(){var e=emp();btn.querySelector('.nm').textContent='👤 '+(e||'사번');};
+  new MutationObserver(sync).observe(me,{childList:true,characterData:true,subtree:true});sync();
+  var item=function(ic,label,fn,cls){var b=document.createElement('button');b.type='button';b.setAttribute('role','menuitem');if(cls)b.className=cls;b.innerHTML='<i>'+ic+'</i>'+label;b.onclick=function(){close();fn();};return b;};
+  var build=function(){menu.innerHTML='';var e=emp(),hd=document.createElement('div');hd.className='hd';hd.innerHTML='로그인한 사번<b>'+(e||'입력 전')+'</b>';menu.appendChild(hd);
+    menu.appendChild(item('👤',e?'사번 변경':'사번 입력',function(){me.click();}));
+    if(vis(ins))menu.appendChild(item('📲','홈 화면에 앱으로 설치',function(){ins.click();}));
+    if(rst)menu.appendChild(item('🔄','견적 초기화',function(){rst.click();}));
+    if(lo&&vis(lo)){var s=document.createElement('div');s.className='sep';menu.appendChild(s);menu.appendChild(item('⏻','로그아웃',function(){lo.click();},'lo'));}};
+  var close=function(){wrap.classList.remove('open');btn.setAttribute('aria-expanded','false');};
+  btn.onclick=function(e){e.stopPropagation();if(wrap.classList.contains('open')){close();return;}build();wrap.classList.add('open');btn.setAttribute('aria-expanded','true');};
+  document.addEventListener('click',function(e){if(!wrap.contains(e.target))close();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+  /* 순서: 버전 · 브랜드 · 제목 · (정책 기간) · 접속자 · 개선요청 · 사번 메뉴 */
+  [per,live,fb].forEach(function(x){if(x)top.appendChild(x);});top.appendChild(wrap);
+})();
+/* ===== 상단 메뉴 정리 끝 ===== */
 </script>
 </body>
 </html>
