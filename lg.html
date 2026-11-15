@@ -298,6 +298,7 @@ body.preview{background:#e5e7eb;padding:0}
 .cx-ap{flex:none;border:0;background:var(--pri);color:#fff;font-weight:800;font-size:12.5px;border-radius:99px;padding:5px 14px;cursor:pointer;white-space:nowrap}.cx-ap:hover{filter:brightness(1.1)}
 .cx-ap.on{background:var(--ok-soft,#dcfce7);color:var(--ok,#047857);border:1px solid currentColor;display:inline-block}
 .cx-rec{border:1px dashed var(--pri);border-radius:14px;background:var(--pri-soft,#eef2ff);padding:10px 12px;margin:0 0 12px;font-size:13.5px}
+#cxRecBox:empty{display:none}
 .cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
 .cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
 .cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
@@ -671,10 +672,10 @@ body.preview{background:#e5e7eb;padding:0}
   </section>
 
   <section class="card" id="secCard">
-    <h2><span class="num">4</span>제휴카드</h2>
+    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 정책 보기</button></h2>
+    <div id="cxRecBox"></div>
     <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(담은 모델 2개 이상 · 모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
-    <button class="btn line sm" id="cpOpen2" type="button" style="margin:-2px 0 10px;color:#0f766e;border-color:#99f6e4">💳 카드 정책 보기</button>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
       <div class="chips" id="usage"></div>
@@ -1060,10 +1061,7 @@ function cxHtml(o){
   var list=o.cards.map(function(c){var r=o.sched(c,o.u),f=r.months&&r.months[0]?r.months[0].b+r.months[0].p:0;return {c:c,r:r,f:f,tot:r.baseSum+r.promoSum+(r.extra||0)};});
   var ranked=list.slice().sort(function(a,b){return b.tot-a.tot||b.f-a.f;}),best=ranked[0]&&ranked[0].tot>0?ranked[0].c.id:'';
   if(!CXO.init&&o.n){CXO.init=1;CXO.open=o.sel&&o.sel!=='none'?o.sel:best;}
-  var maxM=Math.max.apply(null,o.cards.map(function(c){var t=c.tiers[c.tiers.length-1];return t[1]+(o.promo?t[2]:0);}));
-  var h=cxRec(o)+'<div class="cx-hero"><div class="k">CARD BENEFIT</div><h3>'+(o.n?'담은 '+o.n+'개 모델 견적 기준<br>카드를 쓰면 월 최대 <span style="color:#fde68a">'+won(Math.max.apply(null,[0].concat(list.map(function(x){return x.f;}))))+'</span> 더 할인':'제휴카드로 매달 구독료 자동 할인')+'</h3>'
-    +'<p>전월 카드 이용 <b>'+o.u+'만원 이상</b> 기준 · 이용금액을 바꾸면 순위가 다시 계산돼요</p>'
-    +'<div class="cx-stats"><div><b>월 '+(maxM/10000).toFixed(1).replace('.0','')+'만원</b><span>최대 할인</span></div><div><b>'+o.cards.length+'곳</b><span>제휴 카드사</span></div><div><b>자동</b><span>청구 할인</span></div></div></div>';
+  var h='';
   h+=ranked.map(function(x){var c=x.c,I=o.info(c),tr=x.r.tier,sel=o.sel===c.id,op=CXO.open===c.id||sel,tl=c.tiers[c.tiers.length-1];
     var tags=(I.tags||[]).map(function(t){return '<span class="cx-tag '+(t[1]||'')+'">'+t[0]+'</span>';}).join('');
     var s='<div class="cx'+(sel?' sel':'')+'" data-cx="'+c.id+'"><div class="cx-h" data-cxo="'+c.id+'"><div class="im">'+I.face+'</div><div style="min-width:0;flex:1"><div class="cx-nr"><div class="cx-n">'+(c.id===best&&o.n?'<span class="cx-best">BEST</span>':'')+esc(I.full||c.name)+'</div>'
@@ -1076,7 +1074,7 @@ function cxHtml(o){
         +(I.note?'<div class="note" style="margin-top:8px">'+I.note+'</div>':'')+'</div>';}
     return s+'</div>';}).join('');
   return h+'<div class="note" style="margin-top:10px">💡 순서는 지금 담은 모델 · 계약기간 · 전월 이용금액 기준 카드 할인 합계(추가 캐시백 포함)가 큰 순이에요. 카드사 정책은 바뀔 수 있어요.</div>';}
-function cxBind(onPick,onUsage){$('#cardInfo').addEventListener('click',function(e){var s=e.target.closest('[data-cxs]');if(s){e.preventDefault();onPick(s.dataset.cxs);return;}
+function cxBind(onPick,onUsage){$('#secCard').addEventListener('click',function(e){var s=e.target.closest('[data-cxs]');if(s){e.preventDefault();onPick(s.dataset.cxs);return;}
   var u=e.target.closest('[data-cxu]');if(u){e.preventDefault();onUsage(+u.dataset.cxu);return;}
   var o=e.target.closest('[data-cxo]');if(o){CXO.open=CXO.open===o.dataset.cxo?'':o.dataset.cxo;render();}});}
 
@@ -1190,12 +1188,13 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
   }else $('#cardInfo').innerHTML='';
 
   if(window.TEST_MODE&&!MU){
-    $('#cardInfo').innerHTML=cxHtml({cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
+    var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){var X=CARD_X[c.id]||{};return {face:cxFace(X.img?LGCARD_IMG+X.img+'.png':'',c.name,X.color,80),full:X.full||c.name,months:c.baseM+'개월',
         tags:[X.apply?[X.apply,X.apply==='간편신청'?'easy':'']:null,X.sub?['LG 구독료 실적 인정','ok']:null,X.apt?['아파트 관리비 실적 인정','ok']:null,['연회비 '+(X.fee||'-')]].filter(Boolean),
-        note:esc(X.period||c.note.split(' · ')[0])+' · 발급 '+esc(X.ars||'-')+(n&&sumMon2<70000&&c.tiers.some(function(t){return t[3];})?' · 월 납부 7만원 미만이면 1만P 제외':'')};}});
+        note:esc(X.period||c.note.split(' · ')[0])+' · 발급 '+esc(X.ars||'-')+(n&&sumMon2<70000&&c.tiers.some(function(t){return t[3];})?' · 월 납부 7만원 미만이면 1만P 제외':'')};}};
+    $('#cxRecBox').innerHTML=cxRec(CXcfg);$('#cardInfo').innerHTML=cxHtml(CXcfg);
     $('#cardSel').innerHTML='';$('#cardSel').style.display='none';
-  }else $('#cardSel').style.display='';
+  }else{$('#cardSel').style.display='';$('#cxRecBox').innerHTML='';}
   /* 요약 */
   $('#sBig').classList.toggle('feel',!!(n&&S.showFeel));
   if(n&&!S.showFeel){$('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';$('#sBig').textContent=won(net);
