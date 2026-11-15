@@ -726,6 +726,14 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sh-more1{display:inline-block;margin-top:6px;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--tp) 35%,transparent);color:#fff;border-radius:8px;padding:3px 8px}
 .sum .sh-head-line{border-top:1px solid rgba(255,255,255,.12)}
 #sHead+.cap{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+
+/* 견적 캡처용: 이미지에는 버튼·펼치기 버튼을 빼고 보이는 내용만 */
+.card.sum.cap-mode{background:radial-gradient(120% 90% at 100% 0%,rgba(49,130,246,.45) 0%,rgba(49,130,246,0) 55%),#191F28!important;box-shadow:none!important;border-radius:24px}
+.cap-mode .btns,.cap-mode .stog,.cap-mode .uxd,.cap-mode .lumpin input::placeholder{display:none!important}
+.cap-mode .sh-more1{background:rgba(49,130,246,.35)}
+.cap-mode,.cap-mode *{letter-spacing:0!important;font-feature-settings:normal!important}
+.cap-mode .cap-val{font-size:15px;font-weight:800;white-space:nowrap}
+.cap-foot{display:flex;flex-direction:column;gap:2px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.6}
 /* ===== 사용성 개선 끝 ===== */
 </style>
 </head>
@@ -1070,8 +1078,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.36',VER_DATE='2026.11.15';
+var VERSION='v8.37',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.37','11.15',['📸 견적 캡처: 화면의 견적 카드를 그대로 이미지로 저장 (대표 모델 사진 · 조건 · 금액 · 포인트, 입력한 일시불 비교 포함)']],
   ['v8.36','11.15',['🎨 화면 디자인을 새롭게 (밝은 카드 · 반투명 상단바 · Pretendard 글꼴)','🔍 검색이 더 똑똑해짐: 띄어쓰기·하이픈 무시, 단어 순서 무관, 줄임말(김냉·식세기·티비·갤북 등), 없으면 비슷한 모델 표시','📈 조건을 바꾸면 월 납부액이 얼마나 바뀌었는지 바로 표시','🖼 견적 카드 위에 대표 모델 사진 · 제품명 · 계약 조건 요약','📱 모바일: 옆 탭을 \'도구\' 하나로 정리, 보관함은 하단바로, 버튼을 더 크게, 휴대폰에서 \'견적 공유\'로 바로 카톡 전송','⚖️ 일시불 비교의 닷컴 기준가 입력칸이 잘 보이게 수정']],
   ['v8.35','11.15',['🅻 LG 제휴카드를 누르면 카드 이미지와 정책 표시 (간편/개별신청 · 실적 인정 · 전월실적별 할인 · 할인 기간 · 연회비 · 발급 ARS · 최대 혜택 총액)']],
   ['v8.34','11.15',['⚙ 관리자 🅲 쿠쿠 단가 · 프로모션 탭: 쿠쿠 구독 단가 엑셀(제휴카드 포함) · 다품목 캐시백 가이드 엑셀을 올리면 쿠쿠 계산기에 자동 적용','📈 기능 사용 · 🧾 사번별 이용 · 🔥 베스트 모델에서 쿠쿠를 따로 볼 수 있어요 (쿠쿠 기록은 v8.34부터)']],
@@ -2542,7 +2551,23 @@ function capDraw(){var d=capData();if(!d)return null;var W=760,P=40,F='"Malgun G
   var FH=y+90,o=document.createElement('canvas');o.width=W;o.height=FH;var ox=o.getContext('2d');
   ox.beginPath();ox.moveTo(36,0);ox.arcTo(W,0,W,FH,36);ox.arcTo(W,FH,0,FH,36);ox.arcTo(0,FH,0,0,36);ox.arcTo(0,0,W,0,36);ox.clip();ox.drawImage(c,0,0);
   return o;}
-function capQuote(){var c=capDraw();if(!c){toast('담은 모델이 없어요');return;}fuLog('capture');markAct('견적 캡처');
+/* 화면의 '맞춤 구독 견적' 카드를 그대로 이미지로 (실패하면 예전 방식으로 그림) */
+function capLib(){if(window.html2canvas)return Promise.resolve();return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=(/\/test\//.test(location.pathname)?'../':'')+'vendor/html2canvas.min.js?v=1.4.1';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+function capShot(){
+  var el=document.querySelector('.card.sum');if(!el)return Promise.reject('no');
+  var dt=new Date(),ds=dt.getFullYear()+'.'+(dt.getMonth()+1)+'.'+dt.getDate();
+  return capLib().then(function(){var w=el.offsetWidth;
+    return html2canvas(el,{scale:Math.min(3,Math.max(2,1000/w)),backgroundColor:null,useCORS:true,logging:false,imageTimeout:4000,
+      onclone:function(doc){var c=doc.querySelector('.card.sum');if(!c)return;c.classList.add('cap-mode');c.style.position='static';
+        var f=doc.createElement('div');f.className='cap-foot';f.innerHTML='<span>전자랜드 여수본점'+(EMP?' · 담당 '+esc(EMP):'')+' · '+ds+' 견적</span><span>※ 참고용 견적 · 최종 금액은 계약 시 확인</span>';c.appendChild(f);
+        [].forEach.call(c.querySelectorAll('.lumpin input'),function(ip){var sp=doc.createElement('b');sp.className='cap-val';sp.textContent=ip.value?ip.value+'원':'미입력';ip.replaceWith(sp);});
+        [].forEach.call(c.querySelectorAll('.sgrp'),function(g){if(g.querySelector('.lumpin')&&!g.querySelector('.lumpin .cap-val:not(:empty)')){}if(g.querySelector('.lumpin')&&![].some.call(g.querySelectorAll('.cap-val'),function(v){return v.textContent!=='미입력';}))g.style.display='none';});
+        [].forEach.call(c.querySelectorAll('img'),function(im){if(!im.complete||!im.naturalWidth){var sp=doc.createElement('span');sp.textContent='📦';im.replaceWith(sp);}});}});});}
+function capQuote(){var items=calcItems();if(!items.length){toast('담은 모델이 없어요');return;}
+  var b=$('#capBtn');if(b){b.disabled=true;b.dataset.t=b.innerHTML;b.innerHTML='📸 견적 이미지 만드는 중…';}
+  var done=function(c){if(b){b.disabled=false;b.innerHTML=b.dataset.t;}capSave(c);};
+  capShot().then(done,function(){done(capDraw());});}
+function capSave(c){if(!c){toast('담은 모델이 없어요');return;}fuLog('capture');markAct('견적 캡처');
   var dt=new Date(),name='구독견적_'+dt.getFullYear()+('0'+(dt.getMonth()+1)).slice(-2)+('0'+dt.getDate()).slice(-2)+'_'+('0'+dt.getHours()).slice(-2)+('0'+dt.getMinutes()).slice(-2)+'.png';
   c.toBlob(function(b){if(!b){toast('이미지를 만들지 못했어요');return;}
     var file=null;try{file=new File([b],name,{type:'image/png'});}catch(e){}
