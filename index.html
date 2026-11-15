@@ -254,6 +254,18 @@ body.preview{background:#e5e7eb;padding:0}
 .gate-box label{display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--sub);margin-top:12px;cursor:pointer}
 .gate-box .ft{margin-top:16px;font-size:11.5px;color:#94a3b8}
 .me{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.me.ib{border-color:rgba(134,239,172,.6);color:#dcfce7}.me.ib:hover{background:rgba(34,197,94,.18)}
+.ia-bg{position:fixed;inset:0;z-index:120;background:rgba(15,23,42,.5);display:none;align-items:flex-end;justify-content:center;padding:12px}.ia-bg.on{display:flex}
+.ia{background:#fff;color:#0f172a;border-radius:18px;max-width:420px;width:100%;padding:22px 20px 18px;position:relative;box-shadow:0 20px 50px rgba(15,23,42,.35)}
+.ia h3{margin:0 0 8px;font-size:18px;padding-right:30px}.ia p{margin:6px 0;font-size:14px;color:#475569;line-height:1.6}
+.ia ol{margin:12px 0 6px;padding-left:22px;font-size:15px;line-height:1.9}.ia ol b{color:#0f1d45}
+.ia-k{display:inline-block;min-width:24px;text-align:center;background:#eef2ff;border-radius:6px;padding:0 5px;font-weight:800}
+.ia-n{font-size:12.5px!important;color:#64748b!important}
+.ia-go{display:block;text-align:center;background:#0f1d45;color:#fff;border-radius:12px;padding:13px;font-weight:800;text-decoration:none;margin-top:12px}
+.ia-x{position:absolute;top:12px;right:12px;border:0;background:#f1f5f9;border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer}
+@media(min-width:601px){.ia-bg{align-items:center}}
+@media(max-width:480px){.me.ib .t{display:none}}
+@media print{.ia-bg,.me.ib{display:none!important}}
 .me.lo{border-color:rgba(252,165,165,.55);color:#fecaca}.me.lo:hover{background:rgba(239,68,68,.18)}
 .top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}
@@ -543,6 +555,7 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="ver" id="verBtn" tabindex="-1"></button>
   <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" class="on" aria-pressed="true">삼성</button><button data-b="lg" title="LG 계산기로 바로 전환">LG</button></div>
   <h1>AI 구독 계산기</h1>
+  <button class="me ib" id="instBtn" title="홈 화면에 앱으로 설치"><span class="ic">📲</span><span class="t"> 앱 설치</span></button>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="me lo" id="logoutBtn" title="로그아웃" style="display:none"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
   <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
@@ -721,6 +734,7 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="btn pri" id="barBtn">결과 보기</button>
 </div>
 <div class="toast" id="toast"></div>
+<div class="ia-bg" id="iaModal" role="dialog" aria-label="앱으로 설치"><div class="ia"><button class="ia-x" id="iaX" aria-label="닫기">✕</button><div id="iaBody"></div></div></div>
 <div class="instbar" id="instBar">📲 <span>홈 화면에 <b>구독계산기</b> 앱 설치</span><button class="ok" id="instGo">설치</button><button class="x" id="instX" aria-label="닫기">✕</button></div>
 <div class="newver" id="newVer">🔔 새 버전이 있어요 <small id="newVerNo" style="opacity:.7;font-weight:500"></small><button id="newVerGo" type="button">새로고침</button><button class="nx" id="newVerX" type="button" aria-label="닫기">✕</button></div>
 <div id="printArea"></div>
@@ -1897,7 +1911,7 @@ function admCsv(){var L=(ADM.stat&&ADM.stat.todayEmps)||[];var rows=[['사번','
   csvDown(rows,'접속기록_'+todayStr()+'.csv');}
 function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
-var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교']};
+var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교'],install:['📲','앱 설치 완료'],instguide:['📲','앱 설치 안내 보기']};
 var AFEAT={days:7,data:null,brand:''};
 var LGCARD_N={shinhan:'신한 더구독케어',wooripl:'우리 Platinum',woori:'우리 LG전자',lotte:'롯데 구독엔로카',kb:'KB국민 LG전자',hyundai:'현대 LG전자',hana:'하나 플러스',nh:'NH 올원 BEST',best:'광주/전북 베스트케어'};
 function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기':AFEAT.brand==='ss'?'판촉 모델 보기':'판촉 · 활성화 모델 보기';return FNAME[k][1];}
@@ -2700,8 +2714,35 @@ if(EMP&&!CUST)setTimeout(boxRefresh,1500);
 var INST=null;
 if('serviceWorker' in navigator&&location.protocol==='https:')window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();INST=e;if(!CUST&&!lsGet('instX'))$('#instBar').classList.add('on');});
-$('#instGo').onclick=function(){$('#instBar').classList.remove('on');if(INST){INST.prompt();INST.userChoice.then(function(r){if(r&&r.outcome==='accepted')fuLog('install');INST=null;});}};
+$('#instGo').onclick=function(){$('#instBar').classList.remove('on');if(INST){INST.prompt();INST.userChoice.then(function(r){if(r&&r.outcome==='accepted')fuLog('install');INST=null;iaShow();});}};
 $('#instX').onclick=function(){$('#instBar').classList.remove('on');lsPut('instX',1);};
+/* ---------- 📲 앱으로 설치 (설치 창이 바로 뜨면 띄우고, 안 되면 브라우저별 안내) ---------- */
+function iaStand(){try{return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){return false;}}
+function iaEnv(){var u=navigator.userAgent;return {ios:/iPhone|iPad|iPod/i.test(u)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),and:/Android/i.test(u),kakao:/KAKAOTALK/i.test(u),inapp:/KAKAOTALK|NAVER\(inapp|Instagram|FBAN|FBAV|Line\/|DaumApps|everytimeApp/i.test(u),sam:/SamsungBrowser/i.test(u),crios:/CriOS|FxiOS|EdgiOS/i.test(u),edge:/Edg\//i.test(u),whale:/Whale/i.test(u)};}
+function iaShow(){var b=document.getElementById('instBtn');if(b)b.style.display=iaStand()?'none':'';}
+function iaOpen(){
+  if(INST){var ev=INST;ev.prompt();ev.userChoice.then(function(r){if(r&&r.outcome==='accepted'){fuLog('install');toast('홈 화면에 설치하고 있어요');INST=null;iaShow();}});return;}
+  var e=iaEnv(),url=location.origin+location.pathname,h='',st=function(a){return '<ol>'+a.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ol>';};
+  if(e.inapp){
+    var ext=e.kakao?'kakaotalk://web/openExternal?url='+encodeURIComponent(url):e.and?'intent://'+url.replace(/^https?:\/\//,'')+'#Intent;scheme=https;package=com.android.chrome;end':'';
+    h='<h3>다른 브라우저에서 열어 주세요</h3><p>지금은 '+(e.kakao?'카카오톡':'앱')+' 안의 브라우저라 앱으로 설치할 수 없어요. '+(e.ios?'Safari로':'Chrome으로')+' 연 뒤 다시 <b>📲 앱 설치</b>를 눌러 주세요.</p>'
+      +(ext?'<a class="ia-go" href="'+ext+'">'+(e.ios?'Safari로':'Chrome으로')+' 열기</a>':st(['오른쪽 아래 또는 위의 <b>⋯ / ⋮</b> 메뉴','<b>다른 브라우저로 열기</b>']));
+  }else if(e.ios){
+    h='<h3>아이폰 홈 화면에 추가</h3>'+st([(e.crios?'주소창 오른쪽':'화면 아래')+' <b>공유 버튼</b> <span class="ia-k">⬆</span> 누르기','목록을 아래로 내려 <b>홈 화면에 추가</b> 누르기','오른쪽 위 <b>추가</b> 누르기'])+'<p class="ia-n">iOS 16.4 이상이면 Safari 외 브라우저에서도 돼요. 메뉴가 안 보이면 Safari로 열어 주세요.</p>';
+  }else if(e.sam){
+    h='<h3>삼성 인터넷에서 설치</h3>'+st(['화면 아래 <b>메뉴</b> <span class="ia-k">≡</span> 누르기','<b>현재 페이지 추가</b> → <b>홈 화면</b> 누르기','<b>추가</b> 누르기']);
+  }else if(e.and){
+    h='<h3>휴대폰 홈 화면에 설치</h3>'+st(['오른쪽 위 <b>메뉴</b> <span class="ia-k">⋮</span> 누르기','<b>앱 설치</b> 또는 <b>홈 화면에 추가</b> 누르기','<b>설치</b> 누르기']);
+  }else{
+    h='<h3>PC에 앱으로 설치</h3>'+st(e.edge?['오른쪽 위 <b>⋯</b> 메뉴','<b>앱</b> → <b>이 사이트를 앱으로 설치</b>','<b>설치</b> 누르기']:e.whale?['주소창 오른쪽 <b>설치 아이콘</b> 또는 오른쪽 위 <b>⋯</b> 메뉴','<b>앱으로 설치</b> 누르기']:['주소창 오른쪽 끝 <b>설치 아이콘</b> <span class="ia-k">⊕</span> 누르기','안 보이면 오른쪽 위 <b>⋮</b> → <b>전송, 저장, 공유</b> → <b>페이지를 앱으로 설치</b>'])+'<p class="ia-n">설치하면 바탕화면 · 작업표시줄에서 바로 열 수 있어요.</p>';
+  }
+  document.getElementById('iaBody').innerHTML=h;document.getElementById('iaModal').classList.add('on');fuLog('instguide');}
+document.getElementById('instBtn').onclick=iaOpen;
+document.getElementById('iaX').onclick=function(){document.getElementById('iaModal').classList.remove('on');};
+document.getElementById('iaModal').onclick=function(ev){if(ev.target===this)this.classList.remove('on');};
+window.addEventListener('appinstalled',function(){INST=null;document.getElementById('iaModal').classList.remove('on');toast('앱을 설치했어요. 홈 화면에서 열어 보세요');setTimeout(iaShow,500);});
+iaShow();
+
 (function(){var ios=/iPhone|iPad/i.test(navigator.userAgent)&&!window.navigator.standalone;if(ios&&!CUST&&!lsGet('instX'))setTimeout(function(){var b=$('#instBar');b.querySelector('span').innerHTML='📲 공유 버튼 → <b>홈 화면에 추가</b>로 앱처럼 쓸 수 있어요';$('#instGo').style.display='none';b.classList.add('on');},4000);})();
 
 })();
