@@ -1806,6 +1806,10 @@ var VERSION='v8.40';
   var syncBd=function(){var any=[].some.call(st.querySelectorAll('.care-tab .bd'),function(b){return b.style.display!=='none'&&b.textContent;});tog.classList.toggle('has',any);};
   var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
   tog.onclick=function(){set(!st.classList.contains('open'));};bg.onclick=function(){set(false);};
+  /* 화면을 움직이면(스크롤 · 메뉴 밖 드래그) 도구 메뉴 바로 닫기 */
+  var autoClose=function(e){if(!st.classList.contains('open'))return;if(e&&e.type==='touchmove'&&st.contains(e.target))return;set(false);};
+  window.addEventListener('scroll',autoClose,{passive:true});document.addEventListener('touchmove',autoClose,{passive:true});document.addEventListener('wheel',function(e){if(!st.contains(e.target))autoClose(e);},{passive:true});
+
   st.addEventListener('click',function(e){if(e.target.closest('.care-tab'))set(false);});
   new MutationObserver(syncBd).observe(st,{subtree:true,attributes:true,attributeFilter:['style'],childList:true,characterData:true});set(false);
 })();
