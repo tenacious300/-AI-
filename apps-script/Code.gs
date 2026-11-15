@@ -34,6 +34,9 @@ var API_FUNCS = {
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
+  logQuote: logQuote, adminQuoteLog: adminQuoteLog,
+  getBanner: getBanner, adminBannerSet: adminBannerSet,
+  sendFeedback: sendFeedback, myFeedback: myFeedback, adminFeedback: adminFeedback, adminFeedbackSet: adminFeedbackSet,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
 function doPost(e) {
@@ -1264,3 +1267,158 @@ function nrLog_(emp, type, info) {
 function nrToday_() {
   try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('nr_' + today_()) || '{}'); } catch (e) { return {}; }
 }
+
+/* ===================== 인쇄 기록 (누가 · 언제 · 어떤 모델로 견적서를 인쇄했는지) ===================== */
+var QLOG_SHEET = '인쇄기록';
+var QLOG_HEAD = ['일시', '사번', '브랜드', '견적서', '모델 수', '모델 상세', '월 납부액', '조건', '구분'];
+var QLOG_BRAND = { ss: '삼성', lg: 'LG', ck: '쿠쿠' };
+function qlogSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(QLOG_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(QLOG_SHEET);
+    sh.appendRow(QLOG_HEAD);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, QLOG_HEAD.length).setFontWeight('bold').setBackground('#e8f3ff');
+    sh.setColumnWidth(6, 520);
+  }
+  return sh;
+}
+/** 직원 화면: 견적서를 인쇄할 때 한 줄 기록 */
+function logQuote(arg) {
+  arg = arg || {};
+  var items = Array.isArray(arg.items) ? arg.items.slice(0, 30) : [];
+  if (!items.length) return { ok: false };
+  var detail = items.map(function (i) {
+    i = i || {};
+    return cleanStr_(i.code, 40) + ' (' + [cleanStr_(i.name, 60), cleanStr_(i.term, 60), cleanStr_(i.mon, 20)].filter(function (x) { return x; }).join(' · ') + ')';
+  }).join(' / ');
+  var row = [Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss'), cleanEmp_(arg.emp) || '-', QLOG_BRAND[arg.brand] || cleanStr_(arg.brand, 10),
+             cleanStr_(arg.doc, 30), items.length, detail.slice(0, 3000), cleanStr_(arg.total, 30), cleanStr_(arg.cond, 200), arg.test ? '테스트' : '정식'];
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return { ok: false };
+  try { qlogSheet_().appendRow(row); } finally { lock.releaseLock(); }
+  return { ok: true };
+}
+/** 관리자: 최근 인쇄 기록 (기간 · 최신순) */
+function adminQuoteLog(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var days = [1, 7, 30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7;
+  var from = Utilities.formatDate(new Date(Date.now() - (days - 1) * 86400000), TZ, 'yyyy-MM-dd');
+  var sh = qlogSheet_(), n = sh.getLastRow(), out = [];
+  if (n >= 2) {
+    var start = Math.max(2, n - 4999);
+    sh.getRange(start, 1, n - start + 1, QLOG_HEAD.length).getDisplayValues().forEach(function (r) {
+      if (String(r[0]).slice(0, 10) < from) return;
+      out.push({ ts: r[0], emp: r[1], brand: r[2], doc: r[3], n: Number(r[4]) || 0, detail: r[5], total: r[6], cond: r[7], src: r[8] });
+    });
+  }
+  out.reverse();
+  return { ok: true, days: days, list: out.slice(0, 1000), total: out.length, url: sh.getParent().getUrl() + '#gid=' + sh.getSheetId() };
+}
+
+/* ===================== 개선 요청 (직원 → 관리자, 관리자 답변 · 상태) ===================== */
+var FB_SHEET = '개선요청';
+var FB_HEAD = ['ID', '일시', '사번', '브랜드', '종류', '내용', '화면 정보', '상태', '답변', '답변일시', '구분'];
+var FB_KINDS = ['불편한 점', '오류 신고', '새 기능', '계산 확인', '기타'];
+var FB_STATUS = ['접수', '검토중', '반영완료', '보류'];
+function fbSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(FB_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(FB_SHEET);
+    sh.appendRow(FB_HEAD);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, FB_HEAD.length).setFontWeight('bold').setBackground('#fff4d6');
+    sh.setColumnWidth(6, 420); sh.setColumnWidth(9, 300);
+  }
+  return sh;
+}
+function fbText_(v, n) { return String(v == null ? '' : v).replace(/\r/g, '').replace(/\t/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, n); }
+function fbRow_(r) { return { id: String(r[0]), ts: String(r[1]), emp: String(r[2]), brand: String(r[3]), kind: String(r[4]), text: String(r[5]), info: String(r[6]), status: String(r[7] || '접수'), reply: String(r[8] || ''), rts: String(r[9] || ''), src: String(r[10] || '') }; }
+function fbAll_() {
+  var sh = fbSheet_(), n = sh.getLastRow();
+  return n < 2 ? [] : sh.getRange(2, 1, n - 1, FB_HEAD.length).getDisplayValues().filter(function (r) { return r[0]; }).map(fbRow_);
+}
+/** 직원: 개선 요청 보내기 */
+function sendFeedback(arg) {
+  arg = arg || {};
+  var text = fbText_(arg.text, 1500);
+  if (text.length < 2) return { ok: false, msg: '내용을 적어 주세요.' };
+  var kind = FB_KINDS.indexOf(arg.kind) >= 0 ? arg.kind : '기타';
+  var row = [Utilities.getUuid().slice(0, 8), Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm'), cleanEmp_(arg.emp) || '-',
+             QLOG_BRAND[arg.brand] || cleanStr_(arg.brand, 10), kind, text, cleanStr_(arg.info, 300), '접수', '', '', arg.test ? '테스트' : '정식'];
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(8000)) return { ok: false, msg: '잠시 후 다시 시도해 주세요.' };
+  try { fbSheet_().appendRow(row); } finally { lock.releaseLock(); }
+  return { ok: true, id: row[0] };
+}
+/** 직원: 내가 보낸 요청 (최신순) */
+function myFeedback(arg) {
+  var emp = cleanEmp_(arg && arg.emp);
+  if (!emp) return { ok: true, list: [] };
+  var L = fbAll_().filter(function (x) { return x.emp === emp; }).reverse().slice(0, 30);
+  L.forEach(function (x) { delete x.info; });
+  return { ok: true, list: L };
+}
+/** 관리자: 전체 요청 */
+function adminFeedback(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var sh = fbSheet_(), L = fbAll_().reverse();
+  return { ok: true, list: L.slice(0, 500), total: L.length, url: sh.getParent().getUrl() + '#gid=' + sh.getSheetId() };
+}
+/** 관리자: 상태 · 답변 저장 */
+function adminFeedbackSet(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var id = String(arg.id || ''), st = FB_STATUS.indexOf(arg.status) >= 0 ? arg.status : null;
+  if (!id) return { ok: false };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(8000)) return { ok: false };
+  try {
+    var sh = fbSheet_(), n = sh.getLastRow();
+    if (n < 2) return { ok: false };
+    var ids = sh.getRange(2, 1, n - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) {
+      if (String(ids[i][0]) !== id) continue;
+      if (st) sh.getRange(i + 2, 8).setValue(st);
+      if (arg.reply != null) { sh.getRange(i + 2, 9, 1, 2).setValues([[fbText_(arg.reply, 1000), arg.reply ? Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm') : '']]); }
+      return { ok: true };
+    }
+    return { ok: false };
+  } finally { lock.releaseLock(); }
+}
+
+/* ===================== 상단 배너 (브랜드별 · 관리자가 켜고 끔) ===================== */
+// mode: on(직접 입력한 배너) · off(숨김)
+var BN_BRANDS = ['ss', 'lg', 'ck'];
+function bnKey_(brand, test) { return 'banner_' + brand + (test ? '_test' : ''); }
+function bnClean_(c) {
+  c = c || {};
+  var mode = c.mode === 'on' ? 'on' : 'off';   // 직접 입력 · 끄기 (자동 없음)
+  var url = cleanStr_(c.url, 300);
+  if (url && !/^https:\/\//i.test(url)) url = '';
+  return { mode: mode, icon: cleanStr_(c.icon, 4), title: cleanStr_(c.title, 40), date: cleanStr_(c.date, 30), desc: cleanStr_(c.desc, 80),
+           btn: cleanStr_(c.btn, 16), url: url, color: ['brand', 'red', 'dark', 'gold'].indexOf(c.color) >= 0 ? c.color : 'brand',
+           at: Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm') };
+}
+/** 직원 화면: 이 계산기의 상단 배너 설정 (설정 전이면 null) */
+function getBanner(arg) {
+  arg = arg || {};
+  var b = BN_BRANDS.indexOf(arg.brand) >= 0 ? arg.brand : 'ss';
+  var props = PropertiesService.getScriptProperties();
+  var t = props.getProperty(bnKey_(b, !!arg.test)) || (arg.test ? props.getProperty(bnKey_(b, false)) : null);
+  return { ok: true, b: t ? JSON.parse(t) : null };
+}
+/** 관리자: 배너 저장 (테스트 화면에서 저장하면 테스트 화면에만 적용) */
+function adminBannerSet(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var b = BN_BRANDS.indexOf(arg.brand) >= 0 ? arg.brand : null;
+  if (!b) return { ok: false };
+  var c = bnClean_(arg.cfg);
+  if (c.mode === 'on' && !c.title) return { ok: false, msg: '배너 제목을 적어 주세요.' };
+  PropertiesService.getScriptProperties().setProperty(bnKey_(b, !!arg.test), JSON.stringify(c));
+  return { ok: true, b: c };
+}
+
