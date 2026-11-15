@@ -799,7 +799,8 @@ var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('ca
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
 $('#meBtn').onclick=function(){location.href='./?gate=1&brand=ck';};
-$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ck')return;lsPut('calcBrand',b.dataset.b);try{if(EMP)sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=b.dataset.b==='lg'?'lg.html':'./';};
+function cxU(u){return window.TEST_MODE?u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now():u;}
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ck')return;lsPut('calcBrand',b.dataset.b);try{if(EMP)sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=cxU(b.dataset.b==='lg'?'lg.html':'./');};
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 
 /* ---------- 서버 API (삼성 계산기와 같은 Apps Script · 접속자 표시만 사용) ---------- */

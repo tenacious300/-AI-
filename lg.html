@@ -805,7 +805,8 @@ var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('ca
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
 $('#meBtn').onclick=function(){location.href='./?gate=1&brand=lg';};
-$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='lg')return;lsPut('calcBrand',b.dataset.b);if(b.dataset.b==='ck'){try{if(EMP)sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href='cuckoo.html';return;}location.href='./';};
+function cxU(u){return window.TEST_MODE?u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now():u;}
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='lg')return;lsPut('calcBrand',b.dataset.b);if(b.dataset.b==='ck'){try{if(EMP)sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=cxU('cuckoo.html');return;}location.href=cxU('./');};
 if(window.TEST_MODE){var tb=document.createElement('div');tb.className='testbar';tb.textContent='🧪 테스트 버전 · 실제 직원 화면에는 아직 반영되지 않았어요';document.body.insertBefore(tb,document.body.firstChild);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 
