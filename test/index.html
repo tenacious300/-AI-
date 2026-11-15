@@ -44,16 +44,17 @@ button{-webkit-tap-highlight-color:transparent}
 .bsw button{border:0;background:transparent;color:rgba(255,255,255,.8);font-size:12.5px;font-weight:800;border-radius:99px;padding:5px 13px;min-height:30px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
 .bsw button:hover{color:#fff}
 .bsw button.on{background:#fff;cursor:default}
-.bsw button.on[data-b="ss"]{color:#1428a0}.bsw button.on[data-b="lg"]{color:#a50034}
+.bsw button.on[data-b="ss"]{color:#1428a0}.bsw button.on[data-b="lg"]{color:#a50034}.bsw button.on[data-b="ck"]{color:#c8102e}
 @media(max-width:600px){.top{z-index:48}.top .top-in h1{display:none}.top .top-in{gap:6px}
-.bsw{flex:1 1 0;max-width:190px;margin-right:auto}.bsw button{flex:1;min-height:34px;font-size:13.5px;padding:5px 6px}}
+.bsw{flex:1 1 0;max-width:230px;margin-right:auto}.bsw button{flex:1;min-height:34px;font-size:13.5px;padding:5px 6px}}
 @media(max-width:400px){.top #meBtn{font-size:0;padding:4px 9px}.top #meBtn::before{content:'👤';font-size:12px}}
 @media(max-width:520px){.top h1{font-size:16px;white-space:nowrap}}
-.brand-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.brand-pick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
 .brand-pick button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 6px;font-size:16px;font-weight:800;cursor:pointer;color:var(--sub)}
 .brand-pick button small{display:block;font-size:11.5px;font-weight:600;margin-top:2px}
 .brand-pick button.on[data-b="ss"]{border-color:#1428a0;background:#eef1fb;color:#1428a0}
 .brand-pick button.on[data-b="lg"]{border-color:#a50034;background:#fbe9ef;color:#a50034}
+.brand-pick button.on[data-b="ck"]{border-color:#c8102e;background:#fdecee;color:#c8102e}
 .top .per{font-size:12px;background:rgba(255,255,255,.14);padding:4px 10px;border-radius:99px;white-space:nowrap}
 .top .rst{background:none;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:99px;padding:4px 12px;font-size:12px;cursor:pointer}
 .wrap{max-width:1180px;margin:0 auto;padding:16px;display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:16px;align-items:start}
@@ -563,7 +564,7 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 <header class="top"><div class="top-in">
   <button class="ver" id="verBtn" tabindex="-1"></button>
-  <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" class="on" aria-pressed="true">삼성</button><button data-b="lg" title="LG 계산기로 바로 전환">LG</button></div>
+  <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG / 쿠쿠 계산기 전환"><button data-b="ss" class="on" aria-pressed="true">삼성</button><button data-b="lg" title="LG 계산기로 바로 전환">LG</button><button data-b="ck" title="쿠쿠 계산기로 바로 전환">쿠쿠</button></div>
   <h1>AI 구독 계산기</h1>
   <button class="me ib" id="instBtn" title="홈 화면에 앱으로 설치"><span class="ic">📲</span><span class="t"> 앱 설치</span></button>
   <button class="me" id="meBtn" title="사번 변경"></button>
@@ -814,7 +815,7 @@ body.preview{background:#e5e7eb;padding:0}
   <input type="text" id="empIn" placeholder="사번 입력" autocomplete="off" maxlength="15" inputmode="numeric" enterkeyhint="go">
   <div class="err" id="empErr"></div>
   <div class="emp-warn">⚠️ 비정상 사번 입력 시 추후 접속 불가</div>
-  <div class="brand-pick" id="brandPick"><button data-b="ss">삼성<small>AI 구독</small></button><button data-b="lg">LG<small>가전구독</small></button></div>
+  <div class="brand-pick" id="brandPick"><button data-b="ss">삼성<small>AI 구독</small></button><button data-b="lg">LG<small>가전구독</small></button><button data-b="ck">쿠쿠<small>렌탈 · 구독</small></button></div>
   <button class="btn pri block" id="empGo">입장하기</button>
   <label><input type="checkbox" id="empKeep" checked> 이 기기에서 사번 기억하기</label>
   <div class="ft">사번은 접속 현황 확인용으로만 사용돼요.</div>
@@ -1809,7 +1810,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
-  if(BRAND==='lg'&&!STAY){location.replace('lg.html');return;}
+  if((BRAND==='lg'||BRAND==='ck')&&!STAY){location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');return;}
   if(location.search)try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
@@ -1822,12 +1823,12 @@ $('#logoutBtn').onclick=function(){if(!EMP)return;var e=EMP;EMP=null;try{localSt
   BOX=[];boxLoaded=false;boxBadge();showMe();openGate();$('#empErr').innerHTML='<span style="color:#1d4ed8">'+esc(e)+' 님, 로그아웃했어요.</span>';fuLog('logout');};
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
-var BRAND=(function(){var m=/[?&]brand=(ss|lg)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
-function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':'삼성 계산기로 입장하기';}
+var BRAND=(function(){var m=/[?&]brand=(ss|lg|ck)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
+function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':b==='ck'?'쿠쿠 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
-$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b!=='lg')return;if(!EMP){brandSet('lg');openGate();return;}lsPut('calcBrand','lg');try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href='lg.html';};
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=k==='lg'?'lg.html':'cuckoo.html';};
 var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||XCMP;
-if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
+if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
 var ADM={pw:null,t:null};
 function admLogin(){

@@ -40,9 +40,9 @@ button{-webkit-tap-highlight-color:transparent}
 .bsw button{border:0;background:transparent;color:rgba(255,255,255,.8);font-size:12.5px;font-weight:800;border-radius:99px;padding:5px 13px;min-height:30px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
 .bsw button:hover{color:#fff}
 .bsw button.on{background:#fff;cursor:default}
-.bsw button.on[data-b="ss"]{color:#1428a0}.bsw button.on[data-b="lg"]{color:#a50034}
+.bsw button.on[data-b="ss"]{color:#1428a0}.bsw button.on[data-b="lg"]{color:#a50034}.bsw button.on[data-b="ck"]{color:#c8102e}
 @media(max-width:600px){.top{z-index:48}.top .top-in h1{display:none}.top .top-in{gap:6px}
-.bsw{flex:1 1 0;max-width:190px;margin-right:auto}.bsw button{flex:1;min-height:34px;font-size:13.5px;padding:5px 6px}}
+.bsw{flex:1 1 0;max-width:230px;margin-right:auto}.bsw button{flex:1;min-height:34px;font-size:13.5px;padding:5px 6px}}
 @media(max-width:400px){.top #meBtn{font-size:0;padding:4px 9px}.top #meBtn::before{content:'👤';font-size:12px}}
 @media(max-width:520px){.top h1{font-size:16px;white-space:nowrap}}
 .brand-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
@@ -562,7 +562,7 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 
 <header class="top"><div class="top-in">
-  <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" title="삼성 계산기로 바로 전환">삼성</button><button data-b="lg" class="on" aria-pressed="true">LG</button></div>
+  <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" title="삼성 계산기로 바로 전환">삼성</button><button data-b="lg" class="on" aria-pressed="true">LG</button><button data-b="ck" title="쿠쿠 계산기로 바로 전환">쿠쿠</button></div>
   <h1>AI 구독 계산기</h1>
   <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
   <button class="me ib" id="instBtn" title="홈 화면에 앱으로 설치"><span class="ic">📲</span><span class="t"> 앱 설치</span></button>
@@ -773,7 +773,7 @@ var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('ca
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
 $('#meBtn').onclick=function(){location.href='./?gate=1&brand=lg';};
-$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b!=='ss')return;lsPut('calcBrand','ss');location.href='./';};
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='lg')return;lsPut('calcBrand',b.dataset.b);if(b.dataset.b==='ck'){try{if(EMP)sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href='cuckoo.html';return;}location.href='./';};
 if(window.TEST_MODE){var tb=document.createElement('div');tb.className='testbar';tb.textContent='🧪 테스트 버전 · 실제 직원 화면에는 아직 반영되지 않았어요';document.body.insertBefore(tb,document.body.firstChild);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 
