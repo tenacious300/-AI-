@@ -799,6 +799,22 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .promo-bn.bn-c-gold .pb-d,.promo-bn.bn-c-red .pb-d{background:rgba(255,255,255,.22)}
 @media print{#brandBn{display:none!important}}
 /* ===== 상단 배너 끝 ===== */
+/* 닫힌 서랍의 그림자가 화면 오른쪽에 세로줄처럼 비치지 않게 */
+.drawer{box-shadow:none!important;visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+.drawer.on{visibility:visible;transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,23,51,.15)!important}
+
+/* 모바일 옆 탭: '도구' 하나로 접기 (자리 고정, 위로 펼침) */
+.side-tog{display:none}
+@media(max-width:600px){
+  .side-tabs{top:auto!important;bottom:150px;gap:6px}
+  .side-tabs .care-tab{display:none}
+  .side-tabs.open .care-tab{display:block}
+  .side-tog{display:block;position:relative;border:0;background:#191F28;color:#fff;border-radius:14px 0 0 14px;padding:12px 8px;writing-mode:vertical-rl;font-size:13px;font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:-4px 4px 14px rgba(0,23,51,.18)}
+  .side-tog .bd{position:absolute;top:-5px;left:-5px;writing-mode:horizontal-tb;background:#F04452;width:12px;height:12px;border-radius:50%;display:none}
+  .side-tog.has .bd{display:block}
+  .side-bg{position:fixed;inset:0;z-index:44;background:rgba(0,23,51,.25);display:none}.side-bg.on{display:block}
+}
+
 
 
 
@@ -1755,7 +1771,7 @@ var VERSION='v8.39';
   var E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   function apply(c){
     var old=document.getElementById('brandBn');if(old)old.remove();
-    var ovr=!!c&&c.mode!=='auto';document.body.classList.toggle('bn-ovr',ovr);
+    document.body.classList.add('bn-ovr');
     if(!c||c.mode!=='on'||!c.title)return;
     var d=document.createElement('div');d.className='promo-bn bn-c-'+(c.color||'brand');d.id='brandBn';
     d.innerHTML='<div class="promo-in"><span class="pb-t">'+(c.icon?'<span class="pb-ic">'+E(c.icon)+'</span> ':'')+'<b>'+E(c.title)+'</b></span>'
@@ -1765,12 +1781,25 @@ var VERSION='v8.39';
     var top=document.querySelector('header.top');if(top)top.parentNode.insertBefore(d,top);else document.body.insertBefore(d,document.body.firstChild);
   }
   window.__bnApply=function(c){try{localStorage.setItem(CK,JSON.stringify(c||null));}catch(e){}apply(c);};
-  try{var cc=JSON.parse(localStorage.getItem(CK)||'null');if(cc)apply(cc);}catch(e){}
+  document.body.classList.add('bn-ovr');try{var cc=JSON.parse(localStorage.getItem(CK)||'null');if(cc)apply(cc);}catch(e){}
   function load(){if(!window.API_URL)return;fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'getBanner',arg:{brand:BRAND,test:T}})})
     .then(function(r){return r.json();}).then(function(j){var c=j&&j.r&&j.r.b||null;try{localStorage.setItem(CK,JSON.stringify(c));}catch(e){}apply(c);}).catch(function(){});}
   load();setInterval(load,10*60000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(load.t||0)>60000){load.t=Date.now();load();}});
 })();
 /* ===== 상단 배너 끝 ===== */
+</script>
+<script>
+/* 모바일 옆 탭: '도구' 버튼 자리에서 펼치고 접기 */
+(function(){
+  var st=document.querySelector('.side-tabs');if(!st||st.querySelector('.side-tog'))return;
+  var tog=document.createElement('button');tog.className='side-tog';tog.type='button';tog.setAttribute('aria-expanded','false');
+  st.appendChild(tog);var bg=document.createElement('div');bg.className='side-bg';document.body.appendChild(bg);
+  var syncBd=function(){var any=[].some.call(st.querySelectorAll('.care-tab .bd'),function(b){return b.style.display!=='none'&&b.textContent;});tog.classList.toggle('has',any);};
+  var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
+  tog.onclick=function(){set(!st.classList.contains('open'));};bg.onclick=function(){set(false);};
+  st.addEventListener('click',function(e){if(e.target.closest('.care-tab'))set(false);});
+  new MutationObserver(syncBd).observe(st,{subtree:true,attributes:true,attributeFilter:['style'],childList:true,characterData:true});set(false);
+})();
 </script>
 </body>
 </html>

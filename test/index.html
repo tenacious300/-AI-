@@ -794,6 +794,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .promo-bn.bn-c-gold .pb-d,.promo-bn.bn-c-red .pb-d{background:rgba(255,255,255,.22)}
 @media print{#brandBn{display:none!important}}
 /* ===== 상단 배너 끝 ===== */
+/* 닫힌 서랍의 그림자가 화면 오른쪽에 세로줄처럼 비치지 않게 */
+.drawer{box-shadow:none!important;visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
+.drawer.on{visibility:visible;transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,23,51,.15)!important}
+
 
 
 
@@ -2427,17 +2431,16 @@ function admFbBind(){
 }
 /* 관리자: 브랜드별 상단 배너 (자동 · 직접 입력 · 끄기) */
 var ABN={br:'ss',cfg:{},loaded:{}},ABN_N={ss:'삼성',lg:'LG',ck:'쿠쿠'};
-function admBnLoad(){['ss','lg','ck'].forEach(function(b){gsr('getBanner',{brand:b,test:!!window.TEST_MODE},function(r){var c=r&&r.b;ABN.cfg[b]=c||{mode:b==='ss'?'auto':'off'};ABN.loaded[b]=1;if(ADM.tab==='bn')admRender();},function(){ABN.loaded[b]=-1;if(ADM.tab==='bn')admRender();});});}
+function admBnLoad(){['ss','lg','ck'].forEach(function(b){gsr('getBanner',{brand:b,test:!!window.TEST_MODE},function(r){var c=r&&r.b;ABN.cfg[b]=(c&&c.mode!=='auto')?c:{mode:'off'};ABN.loaded[b]=1;if(ADM.tab==='bn')admRender();},function(){ABN.loaded[b]=-1;if(ADM.tab==='bn')admRender();});});}
 function bnPrevHtml(c){var e=esc;if(c.mode==='off')return '<div class="bn-pv-off">상단 배너가 보이지 않아요</div>';
-  if(c.mode==='auto')return '<div class="bn-pv-off">추가 판촉 자료가 올라와 있고 행사 기간이면 판촉 배너가 자동으로 보여요 (지금의 라이온즈 배너처럼)</div>';
   return '<div class="promo-bn bn-c-'+(c.color||'brand')+'" id="bnPrevBox" style="border-radius:14px"><div class="promo-in"><span class="pb-t">'+(c.icon?e(c.icon)+' ':'')+'<b>'+e(c.title||'배너 제목')+'</b></span>'+(c.date?'<span class="pb-d">'+e(c.date)+'</span>':'')+(c.desc?'<span class="pb-s">'+e(c.desc)+'</span>':'')+(c.btn?'<button type="button">'+e(c.btn)+'</button>':'')+'</div></div>';}
 function admBnHtml(){
   var b=ABN.br,c=ABN.cfg[b],chip=function(k,v,l,cur){return '<button class="chip sm '+(cur===v?'on':'')+'" data-'+k+'="'+v+'">'+l+'</button>';};
-  var h='<div class="pl-bar">'+['ss','lg','ck'].map(function(x){var m=ABN.cfg[x]?ABN.cfg[x].mode:'';return chip('bnb',x,ABN_N[x]+(m?' · '+({auto:'자동',on:'켜짐',off:'꺼짐'}[m]):''),b);}).join('')+'</div>'
+  var h='<div class="pl-bar">'+['ss','lg','ck'].map(function(x){var m=ABN.cfg[x]?ABN.cfg[x].mode:'';return chip('bnb',x,ABN_N[x]+(m?' · '+(m==='on'?'켜짐':'꺼짐'):''),b);}).join('')+'</div>'
     +(window.TEST_MODE?'<div class="hint" style="margin-top:8px">🧪 테스트 화면에서 저장한 배너는 <b>테스트 화면에만</b> 보여요. 직원 화면은 정식 관리자 모드에서 바꿔 주세요.</div>':'');
   if(!ABN.loaded[b])return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   if(ABN.loaded[b]<0)return h+'<div class="empty" style="margin-top:12px">설정을 불러오지 못했어요.</div>';
-  h+='<div class="adm-sec">'+ABN_N[b]+' 계산기 상단 배너</div><div class="chips" style="margin-top:8px">'+(b==='ss'?chip('bnm','auto','🔁 자동 (추가 판촉 연동)',c.mode):'')+chip('bnm','on','✏️ 직접 입력',c.mode)+chip('bnm','off','🚫 끄기',c.mode)+'</div>';
+  h+='<div class="adm-sec">'+ABN_N[b]+' 계산기 상단 배너</div><div class="chips" style="margin-top:8px">'+chip('bnm','on','✏️ 직접 입력',c.mode)+chip('bnm','off','🚫 끄기',c.mode)+'</div>';
   if(c.mode==='on'){var f=function(id,lb,v,ph,mx,w){return '<label class="bn-f'+(w?' '+w:'')+'"><span>'+lb+'</span><input type="text" id="'+id+'" value="'+esc(v||'')+'" placeholder="'+ph+'" maxlength="'+mx+'"></label>';};
     h+='<div class="bn-form">'+f('bnIc','아이콘',c.icon,'🎉',4,'s')+f('bnTi','제목 *',c.title,'예) 연말 감사 페스타',40,'l')+f('bnDt','기간',c.date,'예) 12/1(월) ~ 12/31(수)',30,'f')+f('bnDs','설명',c.desc,'예) 대상 모델 구독료 최대 3개월 지원',80,'f')+f('bnBt','버튼 문구',c.btn,'예) 자세히 보기 →',16)+f('bnUr','버튼 링크 (선택)',c.url,'https://…',300,'l')+'</div>'
       +'<div class="lbl" style="margin-top:12px">색상</div><div class="chips">'+[['brand','브랜드색'],['red','레드'],['gold','골드'],['dark','블랙']].map(function(x){return chip('bnc',x[0],x[1],c.color||'brand');}).join('')+'</div>';}
@@ -2447,7 +2450,7 @@ function admBnHtml(){
 function admBnBind(){
   var B=$('#admBody');if(!B)return;var b=ABN.br,c=ABN.cfg[b];
   [].forEach.call(B.querySelectorAll('[data-bnb]'),function(x){x.onclick=function(){ABN.br=x.dataset.bnb;admRender();};});
-  [].forEach.call(B.querySelectorAll('[data-bnm]'),function(x){x.onclick=function(){c.mode=x.dataset.bnm;admRender();};});
+  [].forEach.call(B.querySelectorAll('[data-bnm]'),function(x){x.onclick=function(){c.mode=x.dataset.bnm;if(c.mode==='on'&&!c.title&&b==='ss'){var t=function(id){var e=document.getElementById(id);return e?e.textContent.trim():'';};c.icon=c.icon||'🏆';c.title=t('pbName');c.date=t('pbDate');c.desc=t('pbDesc');c.btn=c.btn||'';}admRender();};});
   [].forEach.call(B.querySelectorAll('[data-bnc]'),function(x){x.onclick=function(){c.color=x.dataset.bnc;admRender();};});
   var map={bnIc:'icon',bnTi:'title',bnDt:'date',bnDs:'desc',bnBt:'btn',bnUr:'url'};
   Object.keys(map).forEach(function(id){var i=$('#'+id);if(i)i.oninput=function(){c[map[id]]=i.value;$('#bnPrev').innerHTML=bnPrevHtml(c);};});
@@ -3474,7 +3477,7 @@ iaShow();
   var st=$('.side-tabs');
   if(st){
     var tog=document.createElement('button');tog.className='side-tog';tog.type='button';tog.setAttribute('aria-expanded','false');tog.innerHTML='도구 ▴<span class="bd"></span>';
-    st.insertBefore(tog,st.firstChild);
+    st.appendChild(tog);
     var bg=document.createElement('div');bg.className='side-bg';document.body.appendChild(bg);
     var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
     tog.onclick=function(){set(!st.classList.contains('open'));};
@@ -3621,7 +3624,7 @@ iaShow();
   var E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
   function apply(c){
     var old=document.getElementById('brandBn');if(old)old.remove();
-    var ovr=!!c&&c.mode!=='auto';document.body.classList.toggle('bn-ovr',ovr);
+    document.body.classList.add('bn-ovr');
     if(!c||c.mode!=='on'||!c.title)return;
     var d=document.createElement('div');d.className='promo-bn bn-c-'+(c.color||'brand');d.id='brandBn';
     d.innerHTML='<div class="promo-in"><span class="pb-t">'+(c.icon?'<span class="pb-ic">'+E(c.icon)+'</span> ':'')+'<b>'+E(c.title)+'</b></span>'
@@ -3631,7 +3634,7 @@ iaShow();
     var top=document.querySelector('header.top');if(top)top.parentNode.insertBefore(d,top);else document.body.insertBefore(d,document.body.firstChild);
   }
   window.__bnApply=function(c){try{localStorage.setItem(CK,JSON.stringify(c||null));}catch(e){}apply(c);};
-  try{var cc=JSON.parse(localStorage.getItem(CK)||'null');if(cc)apply(cc);}catch(e){}
+  document.body.classList.add('bn-ovr');try{var cc=JSON.parse(localStorage.getItem(CK)||'null');if(cc)apply(cc);}catch(e){}
   function load(){if(!window.API_URL)return;fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:'getBanner',arg:{brand:BRAND,test:T}})})
     .then(function(r){return r.json();}).then(function(j){var c=j&&j.r&&j.r.b||null;try{localStorage.setItem(CK,JSON.stringify(c));}catch(e){}apply(c);}).catch(function(){});}
   load();setInterval(load,10*60000);document.addEventListener('visibilitychange',function(){if(!document.hidden&&Date.now()-(load.t||0)>60000){load.t=Date.now();load();}});

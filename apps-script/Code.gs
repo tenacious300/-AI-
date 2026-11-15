@@ -1390,12 +1390,12 @@ function adminFeedbackSet(arg) {
 }
 
 /* ===================== 상단 배너 (브랜드별 · 관리자가 켜고 끔) ===================== */
-// mode: auto(삼성: 추가 판촉 자료에 따라 자동) · on(직접 입력한 배너) · off(숨김)
+// mode: on(직접 입력한 배너) · off(숨김)
 var BN_BRANDS = ['ss', 'lg', 'ck'];
 function bnKey_(brand, test) { return 'banner_' + brand + (test ? '_test' : ''); }
 function bnClean_(c) {
   c = c || {};
-  var mode = ['auto', 'on', 'off'].indexOf(c.mode) >= 0 ? c.mode : 'off';
+  var mode = c.mode === 'on' ? 'on' : 'off';   // 직접 입력 · 끄기 (자동 없음)
   var url = cleanStr_(c.url, 300);
   if (url && !/^https:\/\//i.test(url)) url = '';
   return { mode: mode, icon: cleanStr_(c.icon, 4), title: cleanStr_(c.title, 40), date: cleanStr_(c.date, 30), desc: cleanStr_(c.desc, 80),
@@ -1417,7 +1417,6 @@ function adminBannerSet(arg) {
   var b = BN_BRANDS.indexOf(arg.brand) >= 0 ? arg.brand : null;
   if (!b) return { ok: false };
   var c = bnClean_(arg.cfg);
-  if (c.mode === 'auto' && b !== 'ss') c.mode = 'off';
   if (c.mode === 'on' && !c.title) return { ok: false, msg: '배너 제목을 적어 주세요.' };
   PropertiesService.getScriptProperties().setProperty(bnKey_(b, !!arg.test), JSON.stringify(c));
   return { ok: true, b: c };
