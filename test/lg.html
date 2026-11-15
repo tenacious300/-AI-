@@ -639,6 +639,7 @@ body.preview{background:#e5e7eb;padding:0}
 
   <section class="card" id="secCard">
     <h2><span class="num">4</span>제휴카드</h2>
+    <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(모델마다 다른 카드 · 결합 고객)</small></label>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
@@ -818,8 +819,8 @@ function calc(code,r,pre){r._code=code;var extra=topUp(code,r),mon=r[R.fin]-extr
 
 /* ====== 상태 ====== */
 var S=lsGet('lgState')||{};
-S={cust:S.cust||'single',sbN:S.sbN||'1대',sel:null,cart:S.cart||[],card:S.card||'none',usage:S.usage||70,promo:S.promo!==false,cmpY:null,showTot:false,showFeel:false,lumpOn:false};
-function save(){lsPut('lgState',{cust:S.cust,sbN:S.sbN,cart:S.cart,card:S.card,usage:S.usage,promo:S.promo});}
+S={cust:S.cust||'single',sbN:S.sbN||'1대',sel:null,cart:S.cart||[],card:S.card||'none',usage:S.usage||70,promo:S.promo!==false,multi:!!S.multi,mc:S.mc||[],mu:S.mu||{},cmpY:null,showTot:false,showFeel:false,lumpOn:false};
+function save(){lsPut('lgState',{cust:S.cust,sbN:S.sbN,cart:S.cart,card:S.card,usage:S.usage,promo:S.promo,multi:S.multi,mc:S.mc,mu:S.mu});}
 function isSb(r){return D.bd[r[R.bd]]==='소상공인';}
 function pct(v){return (Math.round(v*1000)/10)+'%';}
 function uniq(arr){var o=[];arr.forEach(function(v){if(o.indexOf(v)<0)o.push(v);});return o;}
@@ -1006,14 +1007,30 @@ function cardSim(card,u,months,promo,monPay,P){var t=tierOf(card,u);if(!t)return
 function lumpCalc(items,feelT,feelN){var have=items.filter(function(i){return i.lump>0;}).length,L=items.reduce(function(a,i){return a+(i.lump||0);},0);
   var diff=feelT-L;return {ok:have===items.length&&items.length>0,have:have,L:L,diff:diff,diffM:feelN?Math.round(diff/feelN/10)*10:0};}
 
+/* 카드 여러 장 (결합 고객): 모델마다 결제 카드를 정하고, 카드별로 전월실적 · 한도 · 선납 캐시백을 따로 계산해 합침 */
+function multiOk(){return S.cust==='combo'||S.cust==='exist';}
+function multiOn(){return !!(S.multi&&multiOk());}
+function cardById(id){return CARDS.filter(function(c){return c.id===id;})[0];}
+function multiSched(items){
+  S.mc=S.mc.filter(function(id){return !!cardById(id);});if(!S.mc.length)return null;
+  items.forEach(function(i){var c=i.it;if(c.pc===undefined||(c.pc!=='none'&&S.mc.indexOf(c.pc)<0))c.pc=S.mc[0];});
+  var maxN=Math.max.apply(null,[0].concat(items.map(function(i){return i.N;}))),mm=[];
+  for(var m=1;m<=maxN;m++)mm.push({m:m,pay:items.reduce(function(a,i){return a+payAt(i,m);},0),b:0,p:0});
+  var bs=0,ps=0,ex=0,per=[];
+  S.mc.forEach(function(id){var c=cardById(id),u=S.mu[id]||70,its=items.filter(function(i){return i.it.pc===id;}),r=cardSchedule(c,its,u,S.promo);
+    r.months.forEach(function(x,k){mm[k].b+=x.b;mm[k].p+=x.p;});bs+=r.baseSum;ps+=r.promoSum;ex+=r.extra;
+    per.push({id:id,c:c,name:c.name,u:u,tier:r.tier,codes:its.map(function(i){return i.code;}),pay:its.reduce(function(a,i){return a+payAt(i,1);},0),f:r.months[0]?r.months[0].b+r.months[0].p:0,tot:r.baseSum+r.promoSum,extra:r.extra});});
+  return {card:{id:'multi',name:per.map(function(x){return x.name;}).join(' + '),note:''},cs:{tier:[0],months:mm,baseSum:bs,promoSum:ps,extra:ex},per:per,none:items.filter(function(i){return i.it.pc==='none';}).map(function(i){return i.code;})};}
+function cardLine(t){return t.per?t.per.filter(function(x){return x.codes.length;}).map(function(x){return x.name+' · 월 '+x.u+'만원↑';}).join(' / '):t.card?t.card.name+' · 월 '+S.usage+'만원↑':'미사용';}
+
 /* ====== 화면 그리기 ====== */
-function totals(items){var card=CARDS.filter(function(c){return c.id===S.card;})[0],cs=card?cardSchedule(card,items,S.usage,S.promo):null;
+function totals(items){var MC=multiOn()?multiSched(items):null,card=MC?MC.card:(multiOn()?null:CARDS.filter(function(c){return c.id===S.card;})[0]),cs=MC?MC.cs:(card?cardSchedule(card,items,S.usage,S.promo):null);
   var t={items:items,n:items.length,card:card,cs:cs,sumMon:0,sumMon1:0,sumMon2:0,sumP:0,sumDisc:0,sumT:0,totPay:0,gifts:0,half:0};
   items.forEach(function(i){t.sumMon+=i.mon;t.sumMon1+=i.mon1;t.sumMon2+=i.mon2;t.sumP+=i.P;t.sumDisc+=i.disc;t.sumT+=i.T;t.totPay+=i.pay;if(i.gift)t.gifts+=i.gift.won;if(i.hm)t.half+=(i.mon2-i.halfP)*i.hm;});
   t.firstCard=cs&&cs.months[0]?cs.months[0].b+cs.months[0].p:0;t.cardTot=cs?cs.baseSum+cs.promoSum:0;t.extra=cs?cs.extra:0;
   t.first=items.reduce(function(a,i){return a+payAt(i,1);},0);t.net=Math.max(0,t.first-t.firstCard);
   t.feelN=t.n?Math.max.apply(null,items.map(function(i){return i.N;})):0;t.sameN=items.every(function(i){return i.N===t.feelN;});
-  t.feelT=t.totPay-t.cardTot-t.extra-t.gifts;t.feelM=t.feelN?Math.round(t.feelT/t.feelN/10)*10:0;return t;}
+  t.feelT=t.totPay-t.cardTot-t.extra-t.gifts;t.feelM=t.feelN?Math.round(t.feelT/t.feelN/10)*10:0;t.per=MC?MC.per:null;t.none=MC?MC.none:[];return t;}
 function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.card;}))S.card='none';save();
   var items=calcItems(),n=items.length,t=totals(items),card=t.card,cs=t.cs;
   renderCond(n);fetchInfo(items.map(function(i){return i.code;}));
@@ -1035,10 +1052,23 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
 
   var sumMon=t.sumMon,sumMon2=t.sumMon2,sumP=t.sumP,net=t.net,feelM=t.feelM,feelN=t.feelN,feelT=t.feelT,h='';
   /* 제휴카드 */
-  $('#cardSel').innerHTML=['<button class="chip '+(S.card==='none'?'on':'')+'" data-v="none">사용 안 함</button>'].concat(CARDS.map(function(c){return '<button class="chip '+(S.card===c.id?'on':'')+'" data-v="'+c.id+'">'+c.name+'</button>';})).join('');
+  var MU=multiOn();$('#multiWrap').style.display=multiOk()?'':'none';$('#multiOn').checked=MU;
+  $('#cardBody').querySelector('.lbl').style.display=MU?'none':'';$('#usage').style.display=MU?'none':'';
+  $('#cardSel').innerHTML=MU?CARDS.map(function(c){var on=S.mc.indexOf(c.id)>=0;return '<button class="chip '+(on?'on':'')+'" data-v="'+c.id+'">'+(on?'✓ ':'')+c.name+'</button>';}).join('')
+    :['<button class="chip '+(S.card==='none'?'on':'')+'" data-v="none">사용 안 함</button>'].concat(CARDS.map(function(c){return '<button class="chip '+(S.card===c.id?'on':'')+'" data-v="'+c.id+'">'+c.name+'</button>';})).join('');
   $('#usage').innerHTML=USAGES.map(function(u){return '<button class="chip sm '+(S.usage===u?'on':'')+'" data-v="'+u+'">'+u+'만↑</button>';}).join('');
   $('#promoOn').checked=!!S.promo;var PL=S.promo&&cardPromoLive();
-  if(card){var tr=cs.tier;
+  if(MU){var PLm=S.promo&&cardPromoLive(),box='';
+    (t.per||[]).forEach(function(x){var c=x.c,tr=x.tier,tb=tr?baseOf(tr,x.pay||Infinity):0;
+      box+='<div class="info" style="margin-top:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="v" style="font-size:16px">'+c.name+'</div>'
+        +'<label style="font-size:13px">전월실적 <select data-mu="'+c.id+'">'+(tr?'':'<option value="'+x.u+'" selected>'+x.u+'만 (구간 미달)</option>')+c.tiers.map(function(q){return '<option value="'+q[0]+'" '+(tr&&tr[0]===q[0]?'selected':'')+'>'+q[0]+'만↑</option>';}).join('')+'</select></label></div>'
+        +'<div class="t" style="margin:6px 0 4px">이 카드로 결제할 모델</div>'
+        +items.map(function(it,i){return '<label style="display:inline-flex;gap:4px;align-items:center;margin:0 10px 4px 0;font-size:13px"><input type="checkbox" data-asg="'+i+'" data-card="'+c.id+'" '+(it.it.pc===c.id?'checked':'')+'>'+esc(it.code.replace(/\..*$/,''))+'</label>';}).join('')
+        +'<div class="t" style="margin-top:6px">'+(x.codes.length?(tr?'결제액 월 '+won(x.pay)+' → 카드 할인 <b style="color:#ea580c">−'+won(x.f)+'</b> (첫 달) · 실 납부 '+won(Math.max(0,x.pay-x.f))+' · 월 최대 '+won(tb+(PLm?tr[2]:0))+' · '+c.baseM+'개월'+(x.extra?' · 선납 캐시백 '+won(x.extra):''):'월 '+c.tiers[0][0]+'만원 이상 이용 시부터 할인돼요'):'담당 모델이 없어요')+'</div>'
+        +(tr&&tr[3]&&x.codes.length&&x.pay<70000?'<div class="warn" style="margin-top:6px">이 카드 결제액이 월 7만원 미만이라 1만P가 빠진 금액으로 계산했어요.</div>':'')+'</div>';});
+    if(t.none.length)box+='<div class="warn" style="margin-top:8px">카드 미지정: '+t.none.map(function(c){return esc(c.replace(/\..*$/,''));}).join(', ')+' (카드 할인 없이 계산)</div>';
+    $('#cardInfo').innerHTML=S.mc.length?box+(S.promo&&!cardPromoLive()?'<div class="warn">카드 프로모션 기간('+md(CARD_META.from)+'~'+md(CARD_META.to)+')이 지나 기본 할인만 계산했어요.</div>':''):'<div class="hint" style="margin-top:8px">사용할 카드를 눌러 선택하세요. 2장 이상 고르면 모델마다 결제 카드를 나눌 수 있어요.</div>';
+  }else if(card){var tr=cs.tier;
     var tb=baseOf(tr||[0,0,0],n?sumMon2:Infinity);
     $('#cardInfo').innerHTML=(tr?'<div class="info"><div class="t">'+card.name+' · '+tr[0]+'만원↑ 구간</div><div class="v">월 '+won(tb+(PL?tr[2]:0))+' 할인 · '+card.baseM+'개월</div><div class="t">'+(tr[2]?'기본 '+won(tb)+(PL?' + 신규 발급 프로모션 '+won(tr[2])+(card.promoM<card.baseM?' (1~'+card.promoM+'개월 · 이후 '+won(tb)+')':''):' (프로모션 미적용)'):'기본 할인')+(cs.extra?' · 선납 캐시백 '+won(cs.extra):'')+'</div></div>'
       :'<div class="warn">'+card.name+'는 월 '+card.tiers[0][0]+'만원 이상 이용 시부터 할인돼요.</div>')+'<div class="note">'+card.note+'</div>'
@@ -1070,7 +1100,7 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
       +(sumP?row('선납 차감 (월)','−'+won(t.sumMon1-sumMon2),'minus'):'')+row('<b>할인 후 월 납부액</b>','<b>'+won(sumMon2)+'</b>')
       +(t.first!==sumMon2?row('처음 반값 기간 월 납부액',won(t.first),'plus'):'')
       +(sumP?'<div class="snote">선납금 '+won(sumP)+'은 계약할 때 일시불로 내요</div>':'')+'</div>';
-    if(card&&cs.tier)h+='<div class="sgrp"><div class="sg-h">💳 제휴카드 · '+card.name+'</div>'+row('카드 월 할인 (첫 달)','−'+won(t.firstCard),'minus')+row('<b>카드 적용 월 실 납부액</b>','<b>'+won(net)+'</b>')+(t.extra?row('선납 캐시백 (\'27.1.29 지급)','+'+won(t.extra),'plus'):'')+'</div>';
+    if(card&&cs.tier)h+='<div class="sgrp"><div class="sg-h">💳 제휴카드 · '+card.name+'</div>'+(t.per?t.per.filter(function(x){return x.codes.length;}).map(function(x){return row(esc(x.name)+' <small style="opacity:.7">('+x.u+'만↑ · '+x.codes.length+'개)</small>','−'+won(x.f),'minus');}).join(''):'')+row('카드 월 할인 (첫 달)','−'+won(t.firstCard),'minus')+row('<b>카드 적용 월 실 납부액</b>','<b>'+won(net)+'</b>')+(t.extra?row('선납 캐시백 (\'27.1.29 지급)','+'+won(t.extra),'plus'):'')+'</div>';
     if(t.gifts||t.half)h+='<div class="sgrp"><div class="sg-h">🎁 구독 혜택</div>'+(t.half?row('반값 기간 절감액','+'+won(t.half),'plus'):'')
       +items.filter(function(i){return i.gift;}).map(function(i){return row(esc(i.code.replace(/\..*$/,''))+' 모바일상품권',i.gift.won?'+'+won(i.gift.won):'대상','plus');}).join('')+'</div>';
     var LP=lumpCalc(items,feelT,feelN);
@@ -1121,13 +1151,16 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
 $('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();return;}var s=e.target.closest('[data-pre]');if(!s)return;S.cart[+s.dataset.pre].preK=s.value;render();});
-$('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;if(S.card&&S.card!=='none')fuLog('card:lg-'+S.card);render();});
+$('#multiOn').onchange=function(){S.multi=this.checked;if(S.multi){fuLog('multi');if(!S.mc.length&&S.card!=='none')S.mc=[S.card];}render();};
+$('#cardInfo').addEventListener('change',function(e){var t=e.target;if(t.dataset.mu){S.mu[t.dataset.mu]=+t.value;render();}
+  if(t.dataset.asg!=null){var it=calcItems()[+t.dataset.asg];if(it){it.it.pc=t.checked?t.dataset.card:'none';render();}}});
+$('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;if(multiOn()){var v=b.dataset.v;if(v==='none')return;var k=S.mc.indexOf(v);if(k>=0)S.mc.splice(k,1);else{S.mc.push(v);fuLog('card:lg-'+v);if(!S.mu[v])S.mu[v]=S.usage;}render();return;}S.card=b.dataset.v;if(S.card&&S.card!=='none')fuLog('card:lg-'+S.card);render();});
 $('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
 $('#cmpTerm').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cmpY=+b.dataset.v;render();});
 $('#cmpTbl').addEventListener('click',function(e){var r=e.target.closest('[data-card]');if(r){S.card=r.dataset.card;render();toast(CARDS.filter(function(c){return c.id===S.card;})[0].name+' 선택');}});
 $('#barBtn').onclick=function(){$('#secSum').scrollIntoView({behavior:'smooth'});};
-function reset(){S.cart=[];S.card='none';S.sel=null;S.cmpY=null;S.lumpOn=false;S.showFeel=false;S.showTot=false;$('#picked').style.display='none';$('#q').value='';CAT=null;SUB=null;renderCats();renderList();render();window.scrollTo(0,0);}
+function reset(){S.cart=[];S.card='none';S.multi=false;S.mc=[];S.mu={};S.sel=null;S.cmpY=null;S.lumpOn=false;S.showFeel=false;S.showTot=false;$('#picked').style.display='none';$('#q').value='';CAT=null;SUB=null;renderCats();renderList();render();window.scrollTo(0,0);}
 $('#resetBtn').onclick=$('#resetTop').onclick=function(){if(S.cart.length&&!confirm('담은 모델을 모두 비우고 처음부터 할까요?'))return;reset();};
 $('#logoutBtn').onclick=function(){if(!confirm('로그아웃할까요? 이 기기에 저장된 사번을 지워요.'))return;try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(e){}lsPut('calcMe',null);lsPut('calcLoginAt',null);location.href='./';};
 
@@ -1136,7 +1169,8 @@ function quoteText(){var items=calcItems(),t=totals(items),d=new Date(),me=meGet
   items.forEach(function(i,k){o.push((k+1)+'. '+i.code.replace(/\..*$/,'')+' ('+i.cat+')');o.push('   '+i.y+'년 · '+i.type+' · '+i.bd);
     o.push('   월 '+won(i.mon2)+(i.hm?' (처음 '+i.hm+'개월 '+won(i.halfP)+')':'')+(i.P?' · 선납 '+won(i.P):'')+(i.gift?' · 🎁 '+i.gift.note:''));});
   o.push('');o.push('▶ 월 납부액 합계 '+won(t.sumMon2));
-  if(t.card&&t.cs.tier){o.push('▶ '+t.card.name+' (전월 '+S.usage+'만↑) 월 −'+won(t.firstCard));o.push('▶ 카드 적용 월 실 납부액 '+won(t.net));if(t.extra)o.push('▶ 선납 캐시백 '+won(t.extra)+' (\'27.1.29 지급)');}
+  if(t.per){t.per.filter(function(x){return x.codes.length;}).forEach(function(x){o.push('▶ '+x.name+' (전월 '+x.u+'만↑) '+x.codes.map(function(c){return c.replace(/\..*$/,'');}).join(', ')+' 월 −'+won(x.f));});o.push('▶ 카드 적용 월 실 납부액 '+won(t.net));if(t.extra)o.push('▶ 선납 캐시백 '+won(t.extra)+' (\'27.1.29 지급)');}
+  else if(t.card&&t.cs.tier){o.push('▶ '+t.card.name+' (전월 '+S.usage+'만↑) 월 −'+won(t.firstCard));o.push('▶ 카드 적용 월 실 납부액 '+won(t.net));if(t.extra)o.push('▶ 선납 캐시백 '+won(t.extra)+' (\'27.1.29 지급)');}
   if(t.sumP)o.push('▶ 선납금 '+won(t.sumP));
   o.push('※ 활성화·카드 프로모션은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
   if(me)o.push('담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' '));return o.join('\n');}
@@ -1153,15 +1187,16 @@ function buildPrint(mode){
   var d=new Date(),ds=d.getFullYear()+'.'+(d.getMonth()+1)+'.'+d.getDate(),meta=D.meta||{};
   var rows=items.map(function(i,k){
     var o=infoOf(i.code),img=o?'<img class="pimg" src="'+esc(o.img)+'" alt="">':'<div class="noimg">이미지 없음</div>';
-    return '<tr><td style="text-align:center">'+(k+1)+'</td><td style="width:96px">'+img+'</td><td><div class="pn">'+esc(o&&o.name?o.name:i.cat)+'</div>'+esc(i.code)+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span>'+(i.hm||i.gift?'<br><span style="color:#047857;font-size:11px">🎁 '+(i.hm?'처음 '+i.hm+'개월 '+won(i.halfP):'')+(i.hm&&i.gift?' · ':'')+(i.gift?esc(i.gift.note):'')+'</span>':'')+'</td>'
+    return '<tr><td style="text-align:center">'+(k+1)+'</td><td style="width:96px">'+img+'</td><td><div class="pn">'+esc(o&&o.name?o.name:i.cat)+'</div>'+esc(i.code)+'<br><span style="color:#555">'+i.y+'년('+i.N+'개월) · '+esc(i.type)+'</span>'+(t.per?'<br><span style="display:inline-block;margin-top:3px;padding:1px 6px;border:1px solid #a50034;border-radius:4px;color:#a50034;font-size:11px">💳 '+esc(i.it.pc&&i.it.pc!=='none'?cardById(i.it.pc).name:'카드 미지정')+'</span>':'')+(i.hm||i.gift?'<br><span style="color:#047857;font-size:11px">🎁 '+(i.hm?'처음 '+i.hm+'개월 '+won(i.halfP):'')+(i.hm&&i.gift?' · ':'')+(i.gift?esc(i.gift.note):'')+'</span>':'')+'</td>'
       +'<td class="r">'+won(i.mon)+'</td><td class="r">'+pct(i.rate)+'<br><span style="color:#555;font-size:11px">'+i.parts.map(function(p){return esc(p[0]);}).join('<br>')+'</span></td>'
       +'<td class="r">'+(i.P?won(i.P)+'<br><span style="color:#555;font-size:11px">('+esc(i.preLab)+')</span>':'-')+'</td><td class="r"><b>'+won(i.mon2)+'</b></td></tr>';}).join('');
   var T=[['정상 월 구독료 합계',won(sumMon)],['정책 할인 합계','−'+won(sumDisc)],['선납금 합계 (일시불)',sumP?won(sumP):'-'],['할인 후 월 납부액',won(sumMon2)]];
-  if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push(['선납 캐시백 (\'27.1.29 지급)','+'+won(extra)]);}
+  if(t.per){t.per.forEach(function(x){if(x.codes.length)T.push([x.name+' ('+x.u+'만↑) 월 할인 · '+x.codes.length+'개 모델','−'+won(x.f)]);});T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push(['선납 캐시백 (\'27.1.29 지급)','+'+won(extra)]);}
+  else if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);if(extra)T.push(['선납 캐시백 (\'27.1.29 지급)','+'+won(extra)]);}
   if(t.gifts)T.push(['모바일상품권','+'+won(t.gifts)]);
   T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(t.gifts?' + 상품권 '+won(t.gifts):'')]);
   var html='<div class="pq"><div class="hd"><div><h1>LG 가전구독 견적서</h1><small>'+esc(String(meta.price||'').replace('전자랜드_','단가표 '))+' · '+esc(String(meta.act||'').replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1 활성화'))+' 기준</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
-    +'<div class="cond"><span>고객 유형: <b>'+CUSTN[S.cust]+(S.cust==='sb'?' '+S.sbN:'')+'</b></span><span>제휴카드: <b>'+(card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
+    +'<div class="cond"><span>고객 유형: <b>'+CUSTN[S.cust]+(S.cust==='sb'?' '+S.sbN:'')+'</b></span><span>제휴카드: <b>'+esc(cardLine(t))+'</b></span></div>'
     +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')
     +'<div class="em"><span>'+(card&&cs.tier?'카드 적용 월 실 납부액 (첫 달)':'월 납부액')+'</span><span>'+won(t.net)+'</span></div></div>'
@@ -1220,8 +1255,8 @@ function cmpRender(){
   if(its.length<2){b.innerHTML='<div class="empty" style="background:#fff">'+(all.length<2?'비교하려면 모델을 <b>2개 이상</b> 담아주세요.<br>같은 모델을 계약기간·케어 유형만 바꿔 담아도 비교할 수 있어요.':'담은 모델 카드에서 <b>비교</b>를 2개 이상 체크해 주세요.')+'</div>';return;}
   var minMon=Math.min.apply(null,its.map(function(i){return i.mon2;}));
   var tot=function(i){return i.pay;},minTot=Math.min.apply(null,its.map(tot)),minPerY=Math.min.apply(null,its.map(function(i){return tot(i)/i.y;}));
-  var fcard=CARDS.filter(function(c){return c.id===S.card;})[0];
-  var fc=function(i){if(!fcard)return 0;var r=cardSchedule(fcard,[i],S.usage,S.promo);return r.baseSum+r.promoSum+r.extra;};
+  var MU=multiOn(),fcard=MU?null:CARDS.filter(function(c){return c.id===S.card;})[0];
+  var fc=function(i){var c=MU?(i.it.pc&&i.it.pc!=='none'?cardById(i.it.pc):null):fcard;if(!c)return 0;var r=cardSchedule(c,[i],MU?(S.mu[c.id]||70):S.usage,S.promo);return r.baseSum+r.promoSum+r.extra;};
   var net=function(i){return tot(i)-fc(i)-(i.gift?i.gift.won:0);},minNet=Math.min.apply(null,its.map(net));
   var head='<tr><th></th>'+its.map(function(i){var o=infoOf(i.code);
     return '<th>'+(o?'<img class="ci" src="'+esc(o.img)+'" alt="">':'')+'<div class="cn">'+esc(i.code)+'</div><div style="font-size:12px;color:var(--sub);font-weight:500">'+esc(o&&o.name?o.name:i.cat)+'</div></th>';}).join('')+'</tr>';
@@ -1266,7 +1301,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.25',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.26',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
