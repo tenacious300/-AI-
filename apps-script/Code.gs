@@ -35,6 +35,7 @@ var API_FUNCS = {
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
+  getBanner: getBanner, adminBannerSet: adminBannerSet,
   sendFeedback: sendFeedback, myFeedback: myFeedback, adminFeedback: adminFeedback, adminFeedbackSet: adminFeedbackSet,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
@@ -1386,5 +1387,39 @@ function adminFeedbackSet(arg) {
     }
     return { ok: false };
   } finally { lock.releaseLock(); }
+}
+
+/* ===================== 상단 배너 (브랜드별 · 관리자가 켜고 끔) ===================== */
+// mode: auto(삼성: 추가 판촉 자료에 따라 자동) · on(직접 입력한 배너) · off(숨김)
+var BN_BRANDS = ['ss', 'lg', 'ck'];
+function bnKey_(brand, test) { return 'banner_' + brand + (test ? '_test' : ''); }
+function bnClean_(c) {
+  c = c || {};
+  var mode = ['auto', 'on', 'off'].indexOf(c.mode) >= 0 ? c.mode : 'off';
+  var url = cleanStr_(c.url, 300);
+  if (url && !/^https:\/\//i.test(url)) url = '';
+  return { mode: mode, icon: cleanStr_(c.icon, 4), title: cleanStr_(c.title, 40), date: cleanStr_(c.date, 30), desc: cleanStr_(c.desc, 80),
+           btn: cleanStr_(c.btn, 16), url: url, color: ['brand', 'red', 'dark', 'gold'].indexOf(c.color) >= 0 ? c.color : 'brand',
+           at: Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm') };
+}
+/** 직원 화면: 이 계산기의 상단 배너 설정 (설정 전이면 null) */
+function getBanner(arg) {
+  arg = arg || {};
+  var b = BN_BRANDS.indexOf(arg.brand) >= 0 ? arg.brand : 'ss';
+  var props = PropertiesService.getScriptProperties();
+  var t = props.getProperty(bnKey_(b, !!arg.test)) || (arg.test ? props.getProperty(bnKey_(b, false)) : null);
+  return { ok: true, b: t ? JSON.parse(t) : null };
+}
+/** 관리자: 배너 저장 (테스트 화면에서 저장하면 테스트 화면에만 적용) */
+function adminBannerSet(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var b = BN_BRANDS.indexOf(arg.brand) >= 0 ? arg.brand : null;
+  if (!b) return { ok: false };
+  var c = bnClean_(arg.cfg);
+  if (c.mode === 'auto' && b !== 'ss') c.mode = 'off';
+  if (c.mode === 'on' && !c.title) return { ok: false, msg: '배너 제목을 적어 주세요.' };
+  PropertiesService.getScriptProperties().setProperty(bnKey_(b, !!arg.test), JSON.stringify(c));
+  return { ok: true, b: c };
 }
 
