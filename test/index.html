@@ -745,6 +745,31 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .pq .pdiff{font-size:12px;font-weight:800;text-align:right;margin-top:1px}
 .pq .pdiff.dn{color:#0BA360}.pq .pdiff.up{color:#E8590C}
 /* ===== 새 디자인 끝 ===== */
+/* ===== 개선 요청 ===== */
+.me.fbk{background:#FFF4D6;color:#8A5A00;border:0;position:relative}.me.fbk:hover{background:#FFEBB0}
+.me.fbk .dot{position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#F04452;display:none}.me.fbk.new .dot{display:block}
+@media(max-width:600px){.me.fbk .t{display:none}}
+.fb-box{max-width:480px}
+.fb-sub{font-size:13px;color:var(--sub);margin:2px 0 12px;line-height:1.55}
+.fb-kinds{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.fb-ta{width:100%;min-height:120px;border:0;background:#F2F4F6;border-radius:14px;padding:12px 14px;font:inherit;font-size:15px;line-height:1.5;resize:vertical}
+.fb-ta:focus{outline:0;background:#fff;box-shadow:0 0 0 2px var(--tp)}
+.fb-cnt{text-align:right;font-size:11.5px;color:var(--sub);margin-top:4px}
+.fb-send{width:100%;margin-top:10px}
+.fb-my{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.fb-my h4{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;align-items:center}.fb-my h4 small{font-weight:500;color:var(--sub);font-size:12px}
+.fb-it{background:#F9FAFB;border-radius:14px;padding:11px 13px;margin-bottom:8px}
+.fb-ih{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--sub)}.fb-ih .k{font-weight:800;color:#333D4B}.fb-ih time{margin-left:auto}
+.fb-st{font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px}
+.fb-st.s0{background:#F2F4F6;color:#4E5968}.fb-st.s1{background:#E8F3FF;color:#1B64DA}.fb-st.s2{background:#E5F8EF;color:#087A48}.fb-st.s3{background:#FFF4D6;color:#8A5A00}
+.fb-tx{font-size:14px;margin-top:6px;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.fb-rp{margin-top:8px;background:#fff;border-left:3px solid var(--tp);border-radius:0 10px 10px 0;padding:8px 10px;font-size:13.5px;white-space:pre-wrap;line-height:1.5}.fb-rp b{display:block;font-size:12px;color:var(--tp);margin-bottom:2px}
+.fb-empty{font-size:13px;color:var(--sub);text-align:center;padding:14px;background:#F9FAFB;border-radius:12px}
+@media(max-width:600px){.top .top-in{gap:4px}.top .me,.top .live{padding:4px 7px;min-height:34px}.top .live .lt{display:none}.top .bsw button{padding:5px 4px}.ver{padding:3px 6px}}
+@media(max-width:380px){.top .bsw button{font-size:12.5px}.top .live b{font-size:11.5px}}
+.afb-it .btn.line{background:#fff;border:1px solid var(--line)}
+/* ===== 개선 요청 끝 ===== */
+
 
 /* ===== 사용성 개선 (UX) ===== */
 .uxd{position:absolute;left:50%;top:-40px;transform:translateX(-50%) translateY(6px);opacity:0;pointer-events:none;white-space:nowrap;font-size:13px;font-weight:800;border-radius:99px;padding:6px 12px;transition:.25s;background:#191F28;color:#fff;box-shadow:0 6px 18px rgba(0,23,51,.2)}
@@ -807,6 +832,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .cap-mode .lp-iw .cap-val{flex:1;text-align:right;font-size:16px}
 .cap-foot{display:flex;flex-direction:column;gap:2px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.6}
 
+.afb-ed{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}.afb-ed .chips{margin-bottom:8px}
 /* 관리자 · 인쇄 기록 */
 .pl-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}.pl-bar input{flex:1;min-width:160px;min-height:38px;font-size:14px}
 .pl-it{background:var(--soft);border-radius:14px;padding:12px 14px;margin-top:8px}
@@ -2335,6 +2361,37 @@ function admPlogBind(){
   [].forEach.call(b.querySelectorAll('[data-pls]'),function(x){x.onclick=function(){PLOG.src=x.dataset.pls;admRender();};});
   var i=$('#plQ');if(i){i.oninput=function(){PLOG.q=i.value;clearTimeout(PLOG.t);PLOG.t=setTimeout(function(){admRender();var j=$('#plQ');if(j){j.focus();j.setSelectionRange(j.value.length,j.value.length);}},250);};}
 }
+/* 관리자: 개선 요청 (상태 변경 · 답변) */
+var AFB={data:null,st:'',src:'정식',open:null},AFB_ST=['접수','검토중','반영완료','보류'],AFB_C={'접수':'s0','검토중':'s1','반영완료':'s2','보류':'s3'};
+function admFbLoad(){AFB.data=null;gsr('adminFeedback',{pw:ADM.pw},function(r){AFB.data=r&&r.ok?r:{ok:false};if(ADM.tab==='fb')admRender();},function(){AFB.data={ok:false};if(ADM.tab==='fb')admRender();});}
+function admFbHtml(){
+  var R=AFB.data,chip=function(k,v,l,cur){return '<button class="chip sm '+(cur===v?'on':'')+'" data-'+k+'="'+v+'">'+l+'</button>';};
+  if(!R)return '<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  if(!R.ok)return '<div class="empty" style="margin-top:12px">요청을 불러오지 못했어요.</div>';
+  var all=R.list.filter(function(x){return !AFB.src||x.src===AFB.src;}),cnt={};all.forEach(function(x){cnt[x.status]=(cnt[x.status]||0)+1;});
+  var L=all.filter(function(x){return !AFB.st||x.status===AFB.st;});
+  var h='<div class="pl-bar"><div class="chips" style="margin:0">'+chip('fbs','','전체 '+all.length,AFB.st)+AFB_ST.map(function(s){return chip('fbs',s,s+' '+(cnt[s]||0),AFB.st);}).join('')+'</div>'
+    +'<div class="chips" style="margin:0">'+[['정식','정식'],['테스트','테스트'],['','모두']].map(function(x){return chip('fbsrc',x[0],x[1],AFB.src);}).join('')+'</div></div>'
+    +'<div class="adm-sec">직원 요청 <small>'+(R.url?'<a class="link" href="'+esc(R.url)+'" target="_blank" rel="noopener">구글 시트로 보기 ↗</a>':'')+'</small></div>';
+  if(!L.length)return h+'<div class="empty" style="margin-top:8px">해당하는 요청이 없어요.</div>';
+  return h+L.map(function(x){var op=AFB.open===x.id;
+    return '<div class="pl-it afb-it"><div class="pl-h"><span class="fb-st '+(AFB_C[x.status]||'s0')+'">'+esc(x.status)+'</span><b>'+esc(x.kind)+'</b><span class="pl-br">'+esc(x.brand)+'</span><span>👤 '+esc(x.emp)+'</span><span class="pl-ts">'+esc(String(x.ts).slice(5,16))+'</span>'+(x.src==='테스트'?'<span class="pl-t">테스트</span>':'')+'</div>'
+      +'<div class="fb-tx">'+esc(x.text)+'</div>'+(x.info?'<div class="pl-doc" style="margin:6px 0 0">'+esc(x.info)+'</div>':'')
+      +(x.reply&&!op?'<div class="fb-rp"><b>답변 · '+esc(String(x.rts).slice(5,16))+'</b>'+esc(x.reply)+'</div>':'')
+      +(op?'<div class="afb-ed"><div class="chips">'+AFB_ST.map(function(s){return '<button class="chip sm '+(x.status===s?'on':'')+'" data-fbset="'+s+'">'+s+'</button>';}).join('')+'</div>'
+          +'<textarea class="fb-ta" id="afbRp" placeholder="직원에게 보일 답변 (비워두면 답변 없음)">'+esc(x.reply)+'</textarea><div style="display:flex;gap:8px;margin-top:8px"><button class="btn line sm" data-fbcancel="1">취소</button><button class="btn pri sm" data-fbsave="'+esc(x.id)+'" style="flex:1">저장</button></div></div>'
+        :'<div style="text-align:right;margin-top:6px"><button class="btn line sm" data-fbopen="'+esc(x.id)+'">'+(x.reply?'답변 수정':'상태 변경 · 답변')+'</button></div>')+'</div>';}).join('');}
+function admFbBind(){
+  var b=$('#admBody');if(!b)return;var sel=null;
+  [].forEach.call(b.querySelectorAll('[data-fbs]'),function(x){x.onclick=function(){AFB.st=x.dataset.fbs;admRender();};});
+  [].forEach.call(b.querySelectorAll('[data-fbsrc]'),function(x){x.onclick=function(){AFB.src=x.dataset.fbsrc;admRender();};});
+  [].forEach.call(b.querySelectorAll('[data-fbopen]'),function(x){x.onclick=function(){AFB.open=x.dataset.fbopen;admRender();var t=$('#afbRp');if(t)t.focus();};});
+  [].forEach.call(b.querySelectorAll('[data-fbcancel]'),function(x){x.onclick=function(){AFB.open=null;admRender();};});
+  [].forEach.call(b.querySelectorAll('[data-fbset]'),function(x){x.onclick=function(){sel=x.dataset.fbset;[].forEach.call(x.parentNode.children,function(y){y.classList.toggle('on',y===x);});};});
+  [].forEach.call(b.querySelectorAll('[data-fbsave]'),function(x){x.onclick=function(){var id=x.dataset.fbsave,it=AFB.data.list.filter(function(y){return y.id===id;})[0],rp=$('#afbRp').value.trim(),st=sel||(it?it.status:'접수');
+    if(st==='접수'&&rp)st='검토중';x.disabled=true;x.textContent='저장 중…';
+    gsr('adminFeedbackSet',{pw:ADM.pw,id:id,status:st,reply:rp},function(r){if(r&&r.ok){toast('저장했어요');AFB.open=null;admFbLoad();}else{toast('저장하지 못했어요');x.disabled=false;x.textContent='저장';}},function(){toast('저장하지 못했어요');x.disabled=false;x.textContent='저장';});};});
+}
 function admEmpLoad(){AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
 function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4,8],a:[1,5,9],q:[2,6,10]}[AEMP.basis];
   var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0,k=(r[bi[2]]||0)>0;if(r.length<12)r=r.concat([0,0,0,'']);
@@ -2510,7 +2567,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['plog','🖨 인쇄 기록'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['plog','🖨 인쇄 기록'],['fb','💡 개선 요청'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
@@ -2610,11 +2667,12 @@ function admRender(){
   else if(t==='feat')h+=admFeatHtml();
   else if(t==='emp')h+=admEmpHtml();
   else if(t==='plog')h+=admPlogHtml();
+  else if(t==='fb')h+=admFbHtml();
   else if(t==='notice')h+=admNoticeHtml();
   else if(t==='quote')h+=admQuoteHtml();
   else h+=admVerHtml();
   $('#admBody').innerHTML=h;
-  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();if(v==='best')admBestLoad();if(v==='feat')admFeatLoad();if(v==='emp')admEmpLoad();if(v==='plog')admPlogLoad();if(v==='roster'){RS.data=null;rsLoad();}admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
+  onChip($('#admTabs'),function(v){ADM.tab=v;if(v==='quote')ADM.quotes=null;if(v==='notice')admNoticeLoad();if(v==='best')admBestLoad();if(v==='feat')admFeatLoad();if(v==='emp')admEmpLoad();if(v==='plog')admPlogLoad();if(v==='fb')admFbLoad();if(v==='roster'){RS.data=null;rsLoad();}admRender();if(v==='stat')admRefresh();else if(v!=='quote'&&v!=='ver')admInfo();});
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
@@ -2622,6 +2680,7 @@ function admRender(){
   if(t==='ck')admCkBind();
   if(t==='emp')admEmpBind();
   if(t==='plog')admPlogBind();
+  if(t==='fb')admFbBind();
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
   if(t==='roster'&&RS.data&&RS.data.ok)admRosterBind();
@@ -3406,6 +3465,57 @@ iaShow();
   window.print=function(){try{send();}catch(e){}return real.apply(window,arguments);};
 })();
 /* ===== 인쇄 기록 끝 ===== */
+</script>
+<script>
+/* ===== 개선 요청: 상단 '💡 개선요청' → 의견 보내기 · 내 요청 답변 확인 ===== */
+(function(){
+  var BRAND='ss',KINDS=['불편한 점','오류 신고','새 기능','계산 확인','기타'],ST={'접수':'s0','검토중':'s1','반영완료':'s2','보류':'s3'};
+  var $=function(q){return document.querySelector(q);},E=function(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  var emp=function(){try{return localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS')||'';}catch(e){return '';}};
+  var call=function(fn,arg){if(!window.API_URL)return Promise.reject('no');return fetch(window.API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,arg:arg})}).then(function(r){return r.json();}).then(function(j){if(j.__err)throw j.__err;return j.r;});};
+  var tst=function(m){var t=$('#toast');if(!t){alert(m);return;}t.textContent=m;t.classList.add('on');clearTimeout(tst.t);tst.t=setTimeout(function(){t.classList.remove('on');},1800);};
+  var seen=function(){try{return JSON.parse(localStorage.getItem('fbSeen')||'{}');}catch(e){return {};}};
+  var me=$('#meBtn');if(!me)return;
+  var btn=document.createElement('button');btn.className='me fbk';btn.id='fbBtn';btn.type='button';btn.title='개선 요청 보내기';btn.innerHTML='<span class="ic">💡</span><span class="t"> 개선요청</span><span class="dot"></span>';
+  me.parentNode.insertBefore(btn,me);
+  var md=document.createElement('div');md.className='modal';md.id='fbModal';
+  md.innerHTML='<div class="modal-box fb-box"><h3><span>💡 개선 요청</span><button type="button" id="fbX" aria-label="닫기">✕</button></h3>'
+    +'<div class="fb-sub">계산기를 쓰면서 불편했던 점, 틀린 금액, 있었으면 하는 기능을 편하게 적어 주세요. 관리자가 확인하고 답변을 남겨 드려요.</div>'
+    +'<div class="fb-kinds" id="fbKinds">'+KINDS.map(function(k,i){return '<button type="button" class="chip sm'+(i?'':' on')+'" data-k="'+k+'">'+k+'</button>';}).join('')+'</div>'
+    +'<textarea class="fb-ta" id="fbTa" maxlength="1500" placeholder="예) 모바일에서 카드 비교표가 길어서 보기 어려워요. 접어 두면 좋겠어요."></textarea>'
+    +'<div class="fb-cnt"><span id="fbCnt">0</span> / 1500</div>'
+    +'<button type="button" class="btn pri fb-send" id="fbSend">보내기</button>'
+    +'<div class="fb-my"><h4>내가 보낸 요청 <small id="fbMyCap"></small></h4><div id="fbMy"><div class="fb-empty">불러오는 중…</div></div></div></div>';
+  document.body.appendChild(md);
+  var kind=KINDS[0],ta=$('#fbTa');
+  $('#fbKinds').onclick=function(e){var b=e.target.closest('[data-k]');if(!b)return;kind=b.dataset.k;[].forEach.call(this.children,function(x){x.classList.toggle('on',x===b);});};
+  ta.oninput=function(){$('#fbCnt').textContent=ta.value.length;};
+  var close=function(){md.classList.remove('on');};
+  $('#fbX').onclick=close;md.onclick=function(e){if(e.target===md)close();};
+  function renderMy(L){
+    var el=$('#fbMy');if(!el)return;
+    if(!L){el.innerHTML='<div class="fb-empty">목록을 불러오지 못했어요</div>';return;}
+    $('#fbMyCap').textContent=L.length?L.length+'건':'';
+    el.innerHTML=L.length?L.map(function(x){return '<div class="fb-it"><div class="fb-ih"><span class="fb-st '+(ST[x.status]||'s0')+'">'+E(x.status)+'</span><span class="k">'+E(x.kind)+'</span><span>'+E(x.brand)+'</span><time>'+E(String(x.ts).slice(5,16))+'</time></div>'
+      +'<div class="fb-tx">'+E(x.text)+'</div>'+(x.reply?'<div class="fb-rp"><b>관리자 답변'+(x.rts?' · '+E(String(x.rts).slice(5,16)):'')+'</b>'+E(x.reply)+'</div>':'')+'</div>';}).join('')
+      :'<div class="fb-empty">아직 보낸 요청이 없어요</div>';
+  }
+  function load(mark){var e=emp();if(!e){renderMy([]);return Promise.resolve([]);}
+    return call('myFeedback',{emp:e}).then(function(r){var L=(r&&r.list)||[],S=seen(),nw=L.some(function(x){return x.reply&&S[x.id]!==x.rts;});
+      if(mark){L.forEach(function(x){if(x.reply)S[x.id]=x.rts;});try{localStorage.setItem('fbSeen',JSON.stringify(S));}catch(err){}nw=false;}
+      btn.classList.toggle('new',nw);renderMy(L);return L;},function(){renderMy(null);});}
+  btn.onclick=function(){md.classList.add('on');setTimeout(function(){ta.focus();},60);load(true);};
+  $('#fbSend').onclick=function(){var t=ta.value.trim();if(t.length<2){tst('내용을 적어 주세요');ta.focus();return;}
+    var b=this;b.disabled=true;b.textContent='보내는 중…';
+    var info=[(document.querySelector('#verBtn')||{}).textContent||'',/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC',innerWidth+'px'].filter(Boolean).join(' · ');
+    call('sendFeedback',{emp:emp(),brand:BRAND,kind:kind,text:t,info:info,test:!!window.TEST_MODE}).then(function(r){
+      b.disabled=false;b.textContent='보내기';
+      if(r&&r.ok){ta.value='';$('#fbCnt').textContent='0';tst('보내 주셔서 감사해요! 확인 후 답변 드릴게요');load(true);}
+      else tst((r&&r.msg)||'보내지 못했어요. 잠시 후 다시 시도해 주세요');
+    },function(){b.disabled=false;b.textContent='보내기';tst('보내지 못했어요. 인터넷 연결을 확인해 주세요');});};
+  setTimeout(function(){load(false);},4000);
+})();
+/* ===== 개선 요청 끝 ===== */
 </script>
 </body>
 </html>

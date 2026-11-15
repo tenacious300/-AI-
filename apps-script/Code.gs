@@ -35,6 +35,7 @@ var API_FUNCS = {
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
+  sendFeedback: sendFeedback, myFeedback: myFeedback, adminFeedback: adminFeedback, adminFeedbackSet: adminFeedbackSet,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
 function doPost(e) {
@@ -1314,3 +1315,76 @@ function adminQuoteLog(arg) {
   out.reverse();
   return { ok: true, days: days, list: out.slice(0, 1000), total: out.length, url: sh.getParent().getUrl() + '#gid=' + sh.getSheetId() };
 }
+
+/* ===================== 개선 요청 (직원 → 관리자, 관리자 답변 · 상태) ===================== */
+var FB_SHEET = '개선요청';
+var FB_HEAD = ['ID', '일시', '사번', '브랜드', '종류', '내용', '화면 정보', '상태', '답변', '답변일시', '구분'];
+var FB_KINDS = ['불편한 점', '오류 신고', '새 기능', '계산 확인', '기타'];
+var FB_STATUS = ['접수', '검토중', '반영완료', '보류'];
+function fbSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(FB_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(FB_SHEET);
+    sh.appendRow(FB_HEAD);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, FB_HEAD.length).setFontWeight('bold').setBackground('#fff4d6');
+    sh.setColumnWidth(6, 420); sh.setColumnWidth(9, 300);
+  }
+  return sh;
+}
+function fbText_(v, n) { return String(v == null ? '' : v).replace(/\r/g, '').replace(/\t/g, ' ').replace(/\n{3,}/g, '\n\n').trim().slice(0, n); }
+function fbRow_(r) { return { id: String(r[0]), ts: String(r[1]), emp: String(r[2]), brand: String(r[3]), kind: String(r[4]), text: String(r[5]), info: String(r[6]), status: String(r[7] || '접수'), reply: String(r[8] || ''), rts: String(r[9] || ''), src: String(r[10] || '') }; }
+function fbAll_() {
+  var sh = fbSheet_(), n = sh.getLastRow();
+  return n < 2 ? [] : sh.getRange(2, 1, n - 1, FB_HEAD.length).getDisplayValues().filter(function (r) { return r[0]; }).map(fbRow_);
+}
+/** 직원: 개선 요청 보내기 */
+function sendFeedback(arg) {
+  arg = arg || {};
+  var text = fbText_(arg.text, 1500);
+  if (text.length < 2) return { ok: false, msg: '내용을 적어 주세요.' };
+  var kind = FB_KINDS.indexOf(arg.kind) >= 0 ? arg.kind : '기타';
+  var row = [Utilities.getUuid().slice(0, 8), Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm'), cleanEmp_(arg.emp) || '-',
+             QLOG_BRAND[arg.brand] || cleanStr_(arg.brand, 10), kind, text, cleanStr_(arg.info, 300), '접수', '', '', arg.test ? '테스트' : '정식'];
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(8000)) return { ok: false, msg: '잠시 후 다시 시도해 주세요.' };
+  try { fbSheet_().appendRow(row); } finally { lock.releaseLock(); }
+  return { ok: true, id: row[0] };
+}
+/** 직원: 내가 보낸 요청 (최신순) */
+function myFeedback(arg) {
+  var emp = cleanEmp_(arg && arg.emp);
+  if (!emp) return { ok: true, list: [] };
+  var L = fbAll_().filter(function (x) { return x.emp === emp; }).reverse().slice(0, 30);
+  L.forEach(function (x) { delete x.info; });
+  return { ok: true, list: L };
+}
+/** 관리자: 전체 요청 */
+function adminFeedback(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var sh = fbSheet_(), L = fbAll_().reverse();
+  return { ok: true, list: L.slice(0, 500), total: L.length, url: sh.getParent().getUrl() + '#gid=' + sh.getSheetId() };
+}
+/** 관리자: 상태 · 답변 저장 */
+function adminFeedbackSet(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var id = String(arg.id || ''), st = FB_STATUS.indexOf(arg.status) >= 0 ? arg.status : null;
+  if (!id) return { ok: false };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(8000)) return { ok: false };
+  try {
+    var sh = fbSheet_(), n = sh.getLastRow();
+    if (n < 2) return { ok: false };
+    var ids = sh.getRange(2, 1, n - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) {
+      if (String(ids[i][0]) !== id) continue;
+      if (st) sh.getRange(i + 2, 8).setValue(st);
+      if (arg.reply != null) { sh.getRange(i + 2, 9, 1, 2).setValues([[fbText_(arg.reply, 1000), arg.reply ? Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm') : '']]); }
+      return { ok: true };
+    }
+    return { ok: false };
+  } finally { lock.releaseLock(); }
+}
+
