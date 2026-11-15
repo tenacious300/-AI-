@@ -769,6 +769,15 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .promo-bn.bn-c-gold .pb-d,.promo-bn.bn-c-red .pb-d{background:rgba(255,255,255,.22)}
 @media print{#brandBn{display:none!important}}
 /* ===== 상단 배너 끝 ===== */
+/* 모바일 도구 메뉴: 하단바 바로 위에 두고, 펼치면 가로 글씨 메뉴로 (위가 가려지지 않게) */
+@media(max-width:600px){
+  .side-tabs{top:auto!important;bottom:calc(96px + env(safe-area-inset-bottom))!important;gap:6px!important}
+  .side-tabs.open{max-height:calc(100vh - 210px);overflow-y:auto;padding:0 0 0 10px}
+  .side-tabs.open .care-tab{writing-mode:horizontal-tb;letter-spacing:0;border-radius:14px 0 0 14px;padding:11px 16px 11px 14px;font-size:14px;text-align:left;min-width:150px;white-space:nowrap;opacity:1}
+  .side-tabs.open .care-tab .bd{top:-6px;left:-6px}
+  .side-tog{padding:10px 7px!important}
+}
+
 /* 닫힌 서랍의 그림자가 화면 오른쪽에 세로줄처럼 비치지 않게 */
 .drawer{box-shadow:none!important;visibility:hidden;transition:transform .25s ease,visibility 0s linear .25s}
 .drawer.on{visibility:visible;transition:transform .25s ease;box-shadow:-10px 0 30px rgba(0,23,51,.15)!important}
@@ -1638,7 +1647,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.40';
+var VERSION='v8.41';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
@@ -1717,6 +1726,10 @@ var VERSION='v8.40';
   var syncBd=function(){var any=[].some.call(st.querySelectorAll('.care-tab .bd'),function(b){return b.style.display!=='none'&&b.textContent;});tog.classList.toggle('has',any);};
   var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
   tog.onclick=function(){set(!st.classList.contains('open'));};bg.onclick=function(){set(false);};
+  /* 화면을 움직이면(스크롤 · 메뉴 밖 드래그) 도구 메뉴 바로 닫기 */
+  var autoClose=function(e){if(!st.classList.contains('open'))return;if(e&&e.type==='touchmove'&&st.contains(e.target))return;set(false);};
+  window.addEventListener('scroll',autoClose,{passive:true});document.addEventListener('touchmove',autoClose,{passive:true});document.addEventListener('wheel',function(e){if(!st.contains(e.target))autoClose(e);},{passive:true});
+
   st.addEventListener('click',function(e){if(e.target.closest('.care-tab'))set(false);});
   new MutationObserver(syncBd).observe(st,{subtree:true,attributes:true,attributeFilter:['style'],childList:true,characterData:true});set(false);
 })();
