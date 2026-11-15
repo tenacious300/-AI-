@@ -1316,7 +1316,7 @@ function idleMin(){return Math.floor((Date.now()-LASTIN)/60000);}
 ['pointerdown','keydown','touchstart','wheel','scroll','input'].forEach(function(e){window.addEventListener(e,function(){LASTIN=Date.now();if(FB.gone)fbPresence(true);},{passive:true,capture:true});});
 function curAct(){if($('#cmpDrawer').classList.contains('on'))return 'LG · 비교하기';if($('#winDrawer').classList.contains('on'))return 'LG · 활성화 모델';if($('#picked').style.display==='block')return 'LG · 모델 선택 중';if($('#q').value.trim())return 'LG · 모델 검색 중';if(S.cart.length)return 'LG · 견적 작성 중';return 'LG · 대기';}
 function beat(){if(!EMP||!window.API_URL)return;window.__lastBeat=Date.now();
-  var evs=EVQ.splice(0,60),idl=idleMin(),fu=FU;FU={};if(firstBeat){fu['L_dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;}
+  var evs=EVQ.splice(0,60),idl=idleMin(),fu=FU;FU={};if(firstBeat){fu['L_dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;fu.L_open=1;}
   var info={fu:fu,act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:LG_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
   var refu=function(){Object.keys(fu).forEach(function(k){FU[k]=(FU[k]||0)+fu[k];});};

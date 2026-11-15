@@ -31,7 +31,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminSetMinVer: adminSetMinVer,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
@@ -1012,6 +1012,41 @@ function adminFeatures(arg) {
   var addE = cur.add ? cur.add.e : {}, done = 0;
   Object.keys(addE).forEach(function (e) { if ((cur.print && cur.print.e[e]) || (cur.save && cur.save.e[e]) || (cur.copy && cur.copy.e[e])) done++; });
   return { ok: true, brand: brand, days: days, date: date.length === 8 ? date : '', list: list, users: Object.keys(users).length, addUsers: Object.keys(addE).length, done: done, daily: fuDaily_(14, brand) };
+}
+
+
+/** 관리자: 사번별 삼성 · LG 이용 현황 (기능통계 시트의 사번 기록으로 계산)
+ *  삼성 = 'L_' 없는 기능 · LG = 'L_' 기능 또는 예전 'lg' 입장 표시. ':' 들어간 항목은 사번이 없어 제외
+ *  반환 rows: emp → [삼성 이용일, 삼성 담은 날, 삼성 견적 낸 날, 삼성 마지막, LG 이용일, LG 담은 날, LG 견적 낸 날, LG 마지막] */
+function adminEmpUsage(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  var days = [7, 30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 0;
+  var from = days ? mvDay_(days - 1) : '00000000', to = mvDay_(0), U = {}, first = '';
+  var QK = { print: 1, copy: 1, save: 1 };
+  var add = function (d, k, emps) {
+    k = String(k); d = String(d);
+    if (!emps || d < from || d > to || k.indexOf(':') >= 0) return;
+    var lg = k === 'lg' || k.indexOf('L_') === 0, b = lg ? 1 : 0, kk = k.indexOf('L_') === 0 ? k.slice(2) : k;
+    if (!first || d < first) first = d;
+    String(emps).split(',').forEach(function (e) {
+      e = cleanEmp_(e); if (!e) return;
+      var u = U[e] || (U[e] = [{}, {}]), o = u[b];
+      (o.d || (o.d = {}))[d] = 1;
+      if (kk === 'add') (o.a || (o.a = {}))[d] = 1;
+      if (QK[kk]) (o.q || (o.q = {}))[d] = 1;
+    });
+  };
+  var sh = fuSheet_(), n = sh.getLastRow();
+  if (n >= 2) sh.getRange(2, 1, n - 1, 4).getValues().forEach(function (r) { add(r[0], r[1], r[3]); });
+  var buf = JSON.parse(CacheService.getScriptCache().get('fubuf') || '{}');
+  Object.keys(buf).forEach(function (k) { var p = k.split('|'); add(p[0], p[1], buf[k][1]); });
+  var cnt = function (o) { return o ? Object.keys(o).length : 0; }, last = function (o) { var k = o ? Object.keys(o).sort() : []; return k.length ? k[k.length - 1] : ''; };
+  var rows = {};
+  Object.keys(U).forEach(function (e) { var s = U[e][0], l = U[e][1];
+    rows[e] = [cnt(s.d), cnt(s.a), cnt(s.q), last(s.d), cnt(l.d), cnt(l.a), cnt(l.q), last(l.d)]; });
+  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, roster: rosterMap_(),
+    at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
 }
 
 
