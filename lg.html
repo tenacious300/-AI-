@@ -1435,6 +1435,7 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
       info:function(c){var X=CARD_X[c.id]||{};return {face:cxFace(X.img?LGCARD_IMG+X.img+'.png':'',c.name,X.color,80),full:X.full||c.name,months:c.baseM+'개월',
         tags:[X.apply?[X.apply,X.apply==='간편신청'?'easy':'']:null,X.sub?['LG 구독료 실적 인정','ok']:null,X.apt?['아파트 관리비 실적 인정','ok']:null,['연회비 '+(X.fee||'-')]].filter(Boolean),
         note:esc(X.period||c.note.split(' · ')[0])+' · 발급 '+esc(X.ars||'-')+(n&&sumMon2<70000&&c.tiers.some(function(t){return t[3];})?' · 월 납부 7만원 미만이면 1만P 제외':'')};}};
+    if(CXO.auto){CXO.auto=0;var bb=cxBestAt(CXcfg,S.usage),nv=bb?bb.c.id:'none';if(S.card!==nv){S.card=nv;CXO.open=nv;toast(bb?'전월 '+S.usage+'만원↑ 추천 카드 '+(CXcfg.info(bb.c).full||bb.c.name)+' 자동 적용':'전월 '+S.usage+'만원으로는 할인되는 카드가 없어요');setTimeout(render,0);}}
     $('#cxRecBox').innerHTML=cxRec(CXcfg);$('#cardInfo').innerHTML=cxHtml(CXcfg);
     $('#cardSel').innerHTML='';$('#cardSel').style.display='none';
   }else{$('#cardSel').style.display='';$('#cxRecBox').innerHTML='';}
@@ -1513,12 +1514,12 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
 $('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();return;}var s=e.target.closest('[data-pre]');if(!s)return;S.cart[+s.dataset.pre].preK=s.value;render();});
-cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:lg-'+v);}render();},function(u){S.usage=u;render();});
+cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:lg-'+v);}render();},function(u){S.usage=u;CXO.auto=1;render();});
 $('#multiOn').onchange=function(){S.multi=this.checked;if(S.multi){fuLog('multi');if(!S.mc.length&&S.card!=='none')S.mc=[S.card];}render();};
 $('#cardInfo').addEventListener('change',function(e){var t=e.target;if(t.dataset.mu){S.mu[t.dataset.mu]=+t.value;render();}
   if(t.dataset.asg!=null){var it=calcItems()[+t.dataset.asg];if(it){it.it.pc=t.checked?t.dataset.card:'none';render();}}});
 $('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;if(multiOn()){var v=b.dataset.v;if(v==='none')return;var k=S.mc.indexOf(v);if(k>=0)S.mc.splice(k,1);else{S.mc.push(v);fuLog('card:lg-'+v);if(!S.mu[v])S.mu[v]=S.usage;}render();return;}S.card=b.dataset.v;if(S.card&&S.card!=='none')fuLog('card:lg-'+S.card);render();});
-$('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
+$('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;CXO.auto=1;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
 $('#cmpTerm').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cmpY=+b.dataset.v;render();});
 $('#cmpTbl').addEventListener('click',function(e){var r=e.target.closest('[data-card]');if(r){S.card=r.dataset.card;render();toast(CARDS.filter(function(c){return c.id===S.card;})[0].name+' 선택');}});
