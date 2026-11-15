@@ -797,6 +797,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 
 
+#liveBtn,#liveBtn:hover{cursor:default;pointer-events:none}
 </style>
 </head>
 <body>
@@ -810,7 +811,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 <header class="top"><div class="top-in">
   <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" title="삼성 계산기로 바로 전환">삼성</button><button data-b="lg" class="on" aria-pressed="true">LG</button><button data-b="ck" title="쿠쿠 계산기로 바로 전환">쿠쿠</button></div>
   <h1>AI 구독 계산기</h1>
-  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
+  <button class="live off" id="liveBtn" title="실시간 접속자"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
   <button class="me ib" id="instBtn" title="홈 화면에 앱으로 설치"><span class="ic">📲</span><span class="t"> 앱 설치</span></button>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="me lo" id="logoutBtn" title="로그아웃"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
@@ -1622,7 +1623,6 @@ function fbInit(){var c=window.FIREBASE_CONFIG;if(FB.started||!c||!c.databaseURL
       db.ref('.info/connected').on('value',function(snap){if(snap.val()!==true||FB.gone)return;me.onDisconnect().remove().then(function(){me.set(firebase.database.ServerValue.TIMESTAMP);});});
       db.ref('online').on('value',function(snap){FB.on=true;$('#liveN').textContent=snap.numChildren();$('#liveBtn').classList.remove('off');});
     }catch(e){FB.on=false;}});});}
-$('#liveBtn').onclick=function(){location.href='./?admin=lg';};
 var BEST={days:7,all:false,data:{}};
 function hScroll(w){if(!w)return;var r=w.querySelector('.row');if(!r)return;
   var upd=function(){w.classList.toggle('cl',r.scrollLeft>4);w.classList.toggle('cr',r.scrollLeft+r.clientWidth<r.scrollWidth-4);};
@@ -1780,7 +1780,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.41';
+var VERSION='v8.42';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

@@ -857,6 +857,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .pl-m{display:flex;gap:8px;align-items:baseline;font-size:13px;padding:5px 0;border-top:1px dashed var(--line)}.pl-m b{white-space:nowrap}.pl-m span{color:#4E5968}
 .pl-f{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)}.pl-f b{font-size:14.5px;color:var(--ink);white-space:nowrap}
 /* ===== 사용성 개선 끝 ===== */
+#liveBtn,#liveBtn:hover{cursor:default;pointer-events:none}
 </style>
 </head>
 <body>
@@ -873,7 +874,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <button class="me ib" id="instBtn" title="홈 화면에 앱으로 설치"><span class="ic">📲</span><span class="t"> 앱 설치</span></button>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="me lo" id="logoutBtn" title="로그아웃" style="display:none"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
-  <button class="live off" id="liveBtn" title="실시간 접속자 (관리자 상세보기)"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
+  <button class="live off" id="liveBtn" title="실시간 접속자"><span class="ld"></span><span class="lt">접속 </span><b id="liveN">-</b>명</button>
   <span class="per">11월 정책 · 11/1~11/30</span>
   <button class="rst" id="resetTop">초기화</button>
 </div></header>
@@ -1200,8 +1201,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.41',VER_DATE='2026.11.15';
+var VERSION='v8.42',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.42','11.16',['🔒 상단 접속자 표시를 눌러도 관리자 모드가 열리지 않게 (관리자는 화면 하단 · 입장 화면의 ⚙ 관리자로)']],
   ['v8.41','11.16',['🧰 모바일 \'도구\' 버튼을 하단바 바로 위로 옮기고, 펼치면 가로 메뉴로 (위가 가려지지 않게)','👆 도구 메뉴를 연 채 화면을 움직이면 바로 닫혀요']],
   ['v8.40','11.15',['📣 상단 배너를 관리자 모드에서 브랜드별(삼성 · LG · 쿠쿠)로 직접 입력하거나 끌 수 있어요','📱 모바일 오른쪽 끝에 보이던 세로줄 제거','🧰 \'도구\' 버튼이 제자리에서 펼치고 접혀요 (LG · 쿠쿠도 같은 방식)']],
   ['v8.39','11.15',['🖨 인쇄 견적서의 일시불 비교에 색깔 막대 비교 추가','💡 상단 \'개선요청\' 메뉴: 불편한 점 · 오류 · 원하는 기능을 보내고 관리자 답변 확인 (답변 오면 빨간 점)','👤 상단 메뉴 정리: 사번 변경 · 앱 설치 · 초기화 · 로그아웃을 \'👤 사번 ▾\' 하나로','🅻🅲 LG · 쿠쿠 계산기에도 버전 표시와 자동 업데이트','🛠 관리자: \'인쇄 기록\'(누가 · 언제 · 어떤 모델로 인쇄했는지), \'개선 요청\'(상태 · 답변) 탭 추가']],
@@ -2862,8 +2864,8 @@ $('#blkClose').onclick=function(){$('#blkModal').classList.remove('on');};
 $('#blkGo').onclick=function(){var x=BLK.x,m=BLK.mode,bt=this;bt.disabled=true;
   gsr('adminBlock',{pw:ADM.pw,emp:(m==='emp'||m==='both')?x.emp:'',did:(m==='did'||m==='both')?x.did:'',dev:x.dev,memo:$('#blkMemo').value.trim()},function(r){bt.disabled=false;
     if(r&&r.ok){$('#blkModal').classList.remove('on');toast('차단했어요 · 75초 안에 해당 화면이 잠겨요');admRefresh();}else toast('차단하지 못했어요');},function(){bt.disabled=false;toast('서버에 연결하지 못했어요');});};
-$('#liveBtn').onclick=function(){$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
-$('#admLink').onclick=function(e){e.preventDefault();$('#liveBtn').onclick();};
+/* 상단 접속자 표시는 숫자만 보여주고 누를 수 없음 (관리자는 하단 · 입장 화면 '⚙ 관리자'로) */
+$('#admLink').onclick=function(e){e.preventDefault();$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 /* 사번 입력 화면 맨 아래 '⚙ 관리자': 사번 없이 바로 관리자 모드 (입장 화면 위에 띄움) */
 $('#gateAdm').onclick=function(e){e.preventDefault();$('#admModal').style.zIndex='90';$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 $('#admClose').onclick=function(){$('#admModal').classList.remove('on');$('#admModal').style.zIndex='';if(ADMIN_LG)location.href='lg.html';if(ADMIN_CK)location.href='cuckoo.html';};

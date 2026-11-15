@@ -827,6 +827,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 
 
+#liveBtn,#liveBtn:hover{cursor:default;pointer-events:none}
 </style>
 </head>
 <body>
@@ -1625,7 +1626,7 @@ function fbInit(){var c=window.FIREBASE_CONFIG;if(FB.started||!c||!c.databaseURL
       db.ref('.info/connected').on('value',function(snap){if(snap.val()!==true||FB.gone)return;me.onDisconnect().remove().then(function(){me.set(firebase.database.ServerValue.TIMESTAMP);});});
       db.ref('online').on('value',function(snap){FB.on=true;$('#liveN').textContent=snap.numChildren();$('#liveBtn').classList.remove('off');});
     }catch(e){FB.on=false;}});});}
-$('#liveBtn').onclick=function(){location.href='./?admin=ck';};
+
 var INST=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();INST=e;});
 function iaStand(){try{return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){return false;}}
@@ -1727,7 +1728,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.41';
+var VERSION='v8.42';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
