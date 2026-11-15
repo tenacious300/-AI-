@@ -713,7 +713,7 @@ body.preview{background:#e5e7eb;padding:0}
   <div class="note" style="padding:0 4px">약정 할인가 · 패키지 · 캐시백은 전자랜드 쿠쿠 구독 자료, 기본 구독료(정상가) · 일시불가 · 사진은 쿠쿠 홈페이지 기준이에요. 최종 금액과 구독 가능 여부는 계약 전 꼭 확인하세요.</div>
 </aside>
 </div>
-<div class="foot"><div class="credit2">ⓒ AI 구독 계산기 · 쿠쿠 · Made by <b>여수본점 김동욱</b></div><span id="footSrc"></span></div>
+<div class="foot"><div class="credit2">ⓒ AI 구독 계산기 · 쿠쿠 · Made by <b>여수본점 김동욱</b></div><span id="footSrc"></span> · <a href="./?admin=ck" id="admLink" style="color:var(--sub)">⚙ 관리자</a></div>
 
 <div class="bar" id="bar">
   <div class="l"><small id="barCap">모델을 담아주세요</small><b id="barVal">0원</b></div>
@@ -782,6 +782,15 @@ function api(fn,arg,ok,fail){if(!window.API_URL){if(fail)fail();return;}
   .catch(function(e){if(fail)fail(e);});}
 
 /* ---------- 데이터 (data/ck.js = 전자랜드 쿠쿠 구독 엑셀 · data/ck-img.js = 쿠쿠 홈페이지 사진 · 기본 구독료 · 일시불가) ---------- */
+/* 관리자 화면에서 올린 쿠쿠 단가(ck) · 다품목 가이드(ckm)가 있으면 그걸 먼저 써요 (저장소 기본값은 data/ck.js · data/ck-multi.js) */
+(function(){if(!window.API_URL||window.TEST_MODE)return;var o=lsGet('ovr_ck'),o2=lsGet('ovr_ckm');if(o&&o.x&&o.x.m)window.CK_DATA=o.x;if(o2&&o2.x&&o2.x.lump)window.CK_MULTI=o2.x;})();
+function syncData(){if(!window.API_URL||window.TEST_MODE)return;
+  api('getDataVer',null,function(v){if(!v)return;var ch=false,left=0;
+    ['ck','ckm'].forEach(function(k){var sv=v[k]||'',o=lsGet('ovr_'+k),lv=o?o.ver:'';if(sv===lv)return;
+      if(!sv){lsPut('ovr_'+k,null);ch=true;return;}left++;
+      api('getData',k,function(x){left--;if(x&&(x.m||x.lump)){lsPut('ovr_'+k,{ver:sv,x:x});ch=true;}if(!left&&ch)reloadNew();},function(){left--;if(!left&&ch)reloadNew();});});
+    if(!left&&ch)reloadNew();});}
+function reloadNew(){toast('새 쿠쿠 단가 · 프로모션을 불러왔어요');setTimeout(function(){location.reload();},900);}
 var D=window.CK_DATA,BY={},GROUPS=[],IMG=window.CK_IMG||{p:{},m:{}};
 /* row: [관리유형, 관리상세, 계약월, 약정할인가, 반값개월, 패키지(+원/−%), 다품목캐시백, 소유권, ERP 상품명, 전자랜드 코드] */
 var R={care:0,det:1,term:2,fee:3,half:4,pkg:5,cb:6,own:7,erp:8,code:9};
@@ -819,6 +828,10 @@ function calc(r,on){var pk=pkgAmt(r,on),mon=r[R.fee]-pk,term=r[R.term],hm=Math.m
 /* ====== 다품목 캐시백 (data/ck-multi.js · 쿠쿠 다품목 캐시백 가이드) ======
    일시불 1품목 이상 필수 · 같은 품목은 1품목으로 집계(큰 금액 1개) · 2품목 이상 · 더블 기간 2배(대물 제외) */
 var MU=window.CK_MULTI||{lump:[],sub:{},dbl:[],dblEx:[]};
+/* 관리자가 올린 가이드는 전자랜드 코드(예: CP-AHS100HEW-5Y-4V.CDOK) 그대로라 모델 · 약정 · 방문주기 기준으로 바꿔 둬요 */
+if(!MU.sub&&MU.subRaw){MU.sub={};var CODES=D.m.map(function(m){return m[0];});
+  var baseOfNm=function(nm){if(CODES.indexOf(nm)>=0)return nm;var b='';CODES.forEach(function(c){if(/\d$/.test(c)&&nm.indexOf(c)===0&&c.length>b.length)b=c;});if(b)return b;var L=CODES.filter(function(c){return c.indexOf(nm)===0;});return L.length===1?L[0]:'';};
+  MU.subRaw.forEach(function(x){var m=/^(.+?)-(\d)Y(?:-(\d+)V)?(?:\.CD\w*)?$/.exec(String(x[0]).trim());if(!m)return;var b=baseOfNm(m[1]);if(!b)return;var k=b+'|'+(+m[2]*12)+'|'+(m[3]||'');MU.sub[k]=Math.max(MU.sub[k]||0,+x[1]||0);});}
 function subCB(code,r){var m=/\/(\d+)C\b/.exec(r[R.erp]),v=m?m[1]:'',k=code+'|'+r[R.term]+'|';if(MU.sub[k+v]!=null)return MU.sub[k+v];
   if(!v){var ks=Object.keys(MU.sub).filter(function(x){return x.indexOf(k)===0;});if(ks.length===1)return MU.sub[ks[0]];}return 0;}
 function catN(c){return {'인덕션레인지':'인덕션'}[c]||c;}
@@ -863,6 +876,7 @@ function renderList(){var raw=$('#q').value.trim(),q=raw.toUpperCase().replace(/
   if(CAT){var r2=D.m.filter(function(m){return D.cats[m[1]]===CAT;});l.style.display='block';l.innerHTML=r2.map(itemHtml).join('')||'<div class="msg">모델이 없어요</div>';}
   else l.style.display='none';}
 $('#q').addEventListener('input',renderList);
+var fuQT=null;$('#q').addEventListener('input',function(){clearTimeout(fuQT);if(this.value.trim().length>=2)fuQT=setTimeout(function(){fuLog('search');},1500);});
 $('#qClr').onclick=function(){$('#q').value='';renderList();$('#q').focus();};
 $('#qList').addEventListener('click',function(e){var it=e.target.closest('.it');if(it)pickModel(it.dataset.c);});
 $('#list').addEventListener('click',function(e){var it=e.target.closest('.it');if(it)pickModel(it.dataset.c);});
@@ -882,7 +896,7 @@ $('#pkFav').onclick=function(){if(!S.sel)return;var F=favList(),i=F.indexOf(S.se
 
 /* ====== 선택한 모델 ====== */
 function prefer(list,cur,pref){if(cur!=null&&list.indexOf(cur)>=0)return cur;for(var i=0;i<pref.length;i++)if(list.indexOf(pref[i])>=0)return pref[i];return list[list.length-1];}
-function pickModel(code){if(!BY[code])return;S.sel={code:code,y:null,care:null};
+function pickModel(code){if(!BY[code])return;mvLog(code,'view');S.sel={code:code,y:null,care:null};
   var Rc=(lsGet('ckRecent')||[]).filter(function(c){return c!==code;});Rc.unshift(code);lsPut('ckRecent',Rc.slice(0,15));renderRecent();
   $('#list').style.display='none';$('#qList').style.display='none';$('#picked').style.display='block';renderPicked();
   $('#picked').scrollIntoView({behavior:'smooth',block:'nearest'});}
@@ -913,7 +927,7 @@ function renderPicked(){if(!S.sel)return;var m=BY[S.sel.code];if(!m){S.sel=null;
 $('#terms').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.y=+b.dataset.v;renderPicked();});
 $('#types').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.care=+b.dataset.v;renderPicked();});
 $('#addBtn').onclick=function(){if(!S.sel)return;var m=BY[S.sel.code],p=selRow(m).p;
-  S.cart.push({code:m[0],term:p[R.term],care:p[R.care]});
+  S.cart.push({code:m[0],term:p[R.term],care:p[R.care]});mvLog(m[0],'add');fuLog('add');fuLog('cust:'+(S.cust==='off'?'single':'combo'));fuLog('term:'+(p[R.term]>=Math.max.apply(null,m[2].map(function(r){return r[R.term];}))?'max':'other'));
   S.sel=null;$('#picked').style.display='none';$('#q').value='';CAT=null;renderCats();renderList();render();toast(m[0]+' 담았어요 ('+S.cart.length+'개)');};
 
 function calcItems(){var out=[],on=pkgOn();S.cart=S.cart.filter(function(it){var m=BY[it.code];if(!m)return false;
@@ -933,7 +947,7 @@ function termTxt(N){return N%12?N+'개월':(N/12)+'년';}
 
 /* ====== 제휴카드 (전자랜드 쿠쿠 구독 제휴카드 혜택표 · 2026.11) ======
    tiers:[전월실적(만), 기본 청구할인, 신규 · 교체 발급 추가할인] · 할인은 쿠쿠 렌탈료 합계에서 한 번 */
-var CARD_META={from:'2026-11-01',to:'2026-11-30'};
+var CARD_META=(function(){var m=/^(\d{4})\.(\d{2})$/.exec((D.meta||{}).label||'');if(!m)return {from:'2026-11-01',to:'2026-11-30'};var last=new Date(+m[1],+m[2],0).getDate();return {from:m[1]+'-'+m[2]+'-01',to:m[1]+'-'+m[2]+'-'+last};})();
 var CARDS=[
   {id:'lotte',name:'쿠쿠 롯데카드',rank:1,tiers:[[40,8000,15000],[80,12000,13000],[160,24000,3000]],baseM:72,promoM:72,fee:'2만원',ars:'1577-7182',img:'lotte'},
   {id:'woori',name:'쿠쿠 우리카드',rank:2,tiers:[[30,10000,10000],[70,15000,7000],[120,20000,5000]],baseM:72,promoM:72,fee:'1.5만원',ars:'1800-4138',img:'woori'},
@@ -943,7 +957,8 @@ var CARDS=[
   {id:'kb',name:'KB국민 쿠쿠렌탈Ⅱ',tiers:[[30,12000,8000],[70,17000,3000]],baseM:36,promoM:36,fee:'1.5만원',ars:'1670-8440',img:'kb',extra:'신규발급 추가할인은 \'최대\' 금액이에요'},
   {id:'hana',name:'쿠쿠 하나카드',tiers:[[30,13000,0]],baseM:60,promoM:0,fee:'1.2만원',ars:'1800-1316',img:'hana'}
 ];
-var USAGES=[30,40,70,80,120,150,160];
+if(D.cards&&D.cards.length)CARDS=D.cards;
+var USAGES=uniq([30,40,70,80,120,150,160].concat([].concat.apply([],CARDS.map(function(c){return c.tiers.map(function(t){return t[0];});})))).sort(function(a,b){return a-b;});
 var CARD_IMG=window.TEST_MODE?'../ckcard/':'ckcard/';
 function cardPromoLive(){var t=todayStr();return t>=CARD_META.from&&t<=CARD_META.to;}
 function tierOf(card,u){var t=null;card.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
@@ -992,7 +1007,7 @@ $('#lq').addEventListener('input',function(){render();});
 $('#lqClr').onclick=function(){$('#lq').value='';render();};
 $('#lumpCats').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;LCAT=LCAT===b.dataset.v?null:b.dataset.v;render();});
 $('#lumpList').addEventListener('click',function(e){var it=e.target.closest('[data-lump]');if(!it)return;var n=it.dataset.lump,L=S.lumps||(S.lumps=[]),k=L.indexOf(n);
-  if(k>=0){L.splice(k,1);toast(n+' 뺐어요');}else{L.push(n);toast(n+' 일시불 품목으로 넣었어요');}render();});
+  if(k>=0){L.splice(k,1);toast(n+' 뺐어요');}else{L.push(n);fuLog('lumpitem');toast(n+' 일시불 품목으로 넣었어요');}render();});
 $('#lumpSel').addEventListener('click',function(e){var b=e.target.closest('[data-ldel]');if(!b)return;S.lumps.splice(+b.dataset.ldel,1);render();});
 $('#dblSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.dbl=b.dataset.v;render();});
 
@@ -1067,12 +1082,12 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
         +'<div class="tot"><span>고객 총 혜택</span><span>'+won(t.sumDisc+t.cardTot+t.cb)+'</span></div></div>';
   }
   $('#sList').innerHTML=h;
-  var lt=$('#lTog');if(lt)lt.onclick=function(){S.lumpOn=!S.lumpOn;render();};
+  var lt=$('#lTog');if(lt)lt.onclick=function(){S.lumpOn=!S.lumpOn;if(S.lumpOn)fuLog('lump');render();};
   Array.prototype.forEach.call(document.querySelectorAll('#sList [data-lump]'),function(inp){
     inp.oninput=function(){var v=this.value.replace(/[^0-9]/g,'');this.value=v?(+v).toLocaleString():'';};
     inp.onchange=function(){var c=S.cart[+this.dataset.lump];if(c){var v=+(this.value.replace(/[^0-9]/g,''))||0;c.lump=v;c.lumpManual=!!v;render();}};});
   Array.prototype.forEach.call(document.querySelectorAll('#sList [data-lreset]'),function(a){a.onclick=function(e){e.preventDefault();var c=S.cart[+a.dataset.lreset];if(c){c.lumpManual=false;render();}};});
-  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;render();};
+  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;if(S.showTot)fuLog('detail');render();};
   var ph='';
   if(n){var sched;
     if(cs&&cs.tier)sched=cs.months;else{sched=[];for(var m=1;m<=feelN;m++)sched.push({m:m,pay:items.reduce(function(a,i){return a+payAt(i,m);},0),b:0,p:0});}
@@ -1098,7 +1113,7 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
 $('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();}});
-$('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;var c=cardById(S.card);if(c&&!tierOf(c,S.usage))S.usage=c.tiers[0][0];render();});
+$('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;if(S.card!=='none')fuLog('card:ck-'+S.card);var c=cardById(S.card);if(c&&!tierOf(c,S.usage))S.usage=c.tiers[0][0];render();});
 $('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
 $('#cmpTerm').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cmpY=+b.dataset.v;render();});
@@ -1119,7 +1134,7 @@ function quoteText(){var items=calcItems(),t=totals(items),d=new Date(),me=meGet
   else if(t.n&&S.cust!=='off'&&!t.MC.hasLump)o.push('※ 다품목 캐시백은 일시불 품목이 1개 이상 들어가야 지급돼요');
   o.push('※ 반값 · 패키지 · 카드 혜택은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
   if(me)o.push('담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' '));return o.join('\n');}
-$('#copyBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}var t=quoteText(),done=function(){toast('견적을 복사했어요');};
+$('#copyBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}var t=quoteText(),done=function(){fuLog('copy');toast('견적을 복사했어요');};
   function fb(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){prompt('아래 내용을 복사해 주세요',t);}document.body.removeChild(ta);}
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done,fb);else fb();};
 
@@ -1168,7 +1183,7 @@ function buildPrint(mode){
       +'<small>※ 구독은 계약 기간 관리 서비스와 무상 A/S가 들어있습니다. 단순 금액 비교입니다. 일시불 구매가는 쿠쿠 홈페이지 일시불가(또는 상담 시 입력한 금액)입니다.'+(sameN?'':' 계약기간이 다른 모델은 최장 기간 기준입니다.')+'</small></div>';
     html=html.replace('<div class="nt">',lh+'<div class="nt">');}
   $('#printArea').innerHTML=html;}
-function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요');return;}buildPrint(mode);
+function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요');return;}S.cart.forEach(function(i){mvLog(i.code,'print');});fuLog('print');fuLog('print:'+mode);buildPrint(mode);
   var imgs=Array.prototype.slice.call($('#printArea').querySelectorAll('img'));
   Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]).then(function(){setTimeout(function(){window.print();},200);});}
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
@@ -1210,7 +1225,7 @@ function cmpRender(){
    +row('일시불가',function(i){return '<td>'+(i.lp?won(i.lp):'-')+'</td>';})
    +row('',function(i){return '<td><a class="link" target="_blank" rel="noopener" href="'+ckUrl(i.code)+'">쿠쿠 ↗</a></td>';})
    +'</table></div>';}
-function cmpOpen(){drawerOpen('#cmpDrawer');cmpRender();}
+function cmpOpen(){fuLog('cmp');drawerOpen('#cmpDrawer');cmpRender();}
 $('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
 var winCat=null;
 function winList(){var o={};D.m.forEach(function(m){var h=Math.max.apply(null,m[2].map(function(r){return r[R.half]||0;}));if(!h)return;var g=D.cats[m[1]];(o[g]=o[g]||[]).push([m,h]);});return o;}
@@ -1224,7 +1239,7 @@ function winRender(){var W=winList(),cats=GROUPS.filter(function(g){return W[g];
     var t=Object.keys(byT).sort(function(a,b){return a-b;}).map(function(k){return '<span class="tag g">'+termTxt(+k)+' → '+byT[k]+'개월 반값</span>';}).join(' ');
     return '<div class="wl-it"><div>'+(o?'<img class="thumb" style="width:44px;height:44px;float:left;margin-right:8px" src="'+esc(o.img)+'" alt="" loading="lazy">':'')+'<b>'+esc(m[0])+'</b><div class="m">'+esc(o&&o.name?o.name:D.cats[m[1]])+'</div><div style="margin-top:3px">'+t+'</div></div>'
       +'<div class="r"><span class="m">약정 월</span><span class="mo">'+won(minMon(m))+'~</span></div><button class="btn pri" data-pick="'+esc(m[0])+'">선택</button></div>';}).join('');}
-$('#winTab').onclick=function(){drawerOpen('#winDrawer');winRender();};
+$('#winTab').onclick=function(){fuLog('win');drawerOpen('#winDrawer');winRender();};
 $('#winChips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;winCat=b.dataset.v;winRender();$('#winBody').scrollTop=0;});
 $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;careClose();pickModel(b.dataset.pick);
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
@@ -1238,14 +1253,17 @@ function cpRender(){var PL=cardPromoLive(),mx=Math.max.apply(null,CARDS.map(func
   h+='<tr><td>혜택 기간</td>'+CARDS.map(function(c){return '<td>최대 '+c.baseM+'개월</td>';}).join('')+'</tr>'
     +'<tr><td>연회비</td>'+CARDS.map(function(c){return '<td>'+c.fee+'</td>';}).join('')+'</tr>'
     +'<tr><td>ARS 신청</td>'+CARDS.map(function(c){return '<td>'+c.ars+'</td>';}).join('')+'</tr></table></div>'
-    +'<div class="note" style="margin-top:10px">※ 신규발급 추가할인은 행사기간('+md(CARD_META.from)+'~'+md(CARD_META.to)+(PL?'':' · 종료')+') 내 신규 · 교체 발급 고객 한정 (해당 카드사 직전 6개월 무실적)<br>※ 기존 보유 고객(실적 있는 기존 회원)은 기본 혜택만 적용돼요<br>※ '+esc(cardById('shinhan').extra)+'<br>※ 제휴카드 정책은 매월 바뀌어요 · 자세한 내용은 카드사로 문의해 주세요</div>';
+    +'<div class="note" style="margin-top:10px">※ 신규발급 추가할인은 행사기간('+md(CARD_META.from)+'~'+md(CARD_META.to)+(PL?'':' · 종료')+') 내 신규 · 교체 발급 고객 한정 (해당 카드사 직전 6개월 무실적)<br>※ 기존 보유 고객(실적 있는 기존 회원)은 기본 혜택만 적용돼요'+CARDS.filter(function(c){return c.extra;}).map(function(c){return '<br>※ '+esc(c.name)+': '+esc(c.extra);}).join('')+'<br>※ 제휴카드 정책은 매월 바뀌어요 · 자세한 내용은 카드사로 문의해 주세요</div>';
   $('#cpBody').innerHTML=h;}
-function cpOpen(){drawerOpen('#cpDrawer');cpRender();}
+function cpOpen(){fuLog('cardpol');drawerOpen('#cpDrawer');cpRender();}
 $('#cpTab').onclick=cpOpen;$('#cpOpen2').onclick=cpOpen;
 $('#cpBody').addEventListener('click',function(e){var th=e.target.closest('[data-cpick]');if(!th)return;S.card=th.dataset.cpick;var c=cardById(S.card);if(!tierOf(c,S.usage))S.usage=c.tiers[0][0];careClose();render();toast(c.name+' 선택');$('#secCard').scrollIntoView({behavior:'smooth',block:'start'});});
 
 /* ====== 실시간 접속자 (삼성 · LG와 같은 Firebase · 기능 기록은 아직 보내지 않음) ====== */
-var CK_VER='v0.1',LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false},firstBeat=true;
+var CK_VER='v8.34',LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false},firstBeat=true,FU={},EVQ=[];
+/* 기능 사용 기록: 삼성 · LG와 나눠 보도록 'K_' 접두어 · 모델 조회는 'CK--' 접두어 */
+function fuLog(k){var key='K_'+k;FU[key]=(FU[key]||0)+1;if(k.indexOf(':')<0){var h='K_h:'+('0'+new Date().getHours()).slice(-2);FU[h]=(FU[h]||0)+1;}}
+function mvLog(code,type){if(code)EVQ.push(['CK--'+code,type]);if(EVQ.length>200)EVQ=EVQ.slice(-200);}
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();try{localStorage.setItem('calcDid',v);}catch(e){}}return v;})();
 function devName(){var u=navigator.userAgent;var m=/Mobi|Android|iPhone|iPad/i.test(u)?'모바일':'PC';
@@ -1254,12 +1272,14 @@ function idleMin(){return Math.floor((Date.now()-LASTIN)/60000);}
 ['pointerdown','keydown','touchstart','wheel','scroll','input'].forEach(function(e){window.addEventListener(e,function(){LASTIN=Date.now();if(FB.gone)fbPresence(true);},{passive:true,capture:true});});
 function curAct(){if($('#cmpDrawer').classList.contains('on'))return '쿠쿠 · 비교하기';if($('#picked').style.display==='block')return '쿠쿠 · 모델 선택 중';if($('#q').value.trim())return '쿠쿠 · 모델 검색 중';if(S.cart.length)return '쿠쿠 · 견적 작성 중';return '쿠쿠 · 대기';}
 function beat(){if(!EMP||!window.API_URL)return;window.__lastBeat=Date.now();var idl=idleMin();
-  var info={fu:{},act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:[],emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return 'CK '+i.code;}).join(', '),ver:CK_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
+  var evs=EVQ.splice(0,60),fu=FU;FU={};if(firstBeat){fu['K_dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;fu.K_open=1;}
+  var refu=function(){EVQ=evs.concat(EVQ);Object.keys(fu).forEach(function(k){FU[k]=(FU[k]||0)+fu[k];});};
+  var info={fu:fu,act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return 'CK '+i.code;}).join(', '),ver:CK_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
-  api('heartbeat',info,function(r){
+  api('heartbeat',info,function(r){if(!r||r.online===-1)refu();
     if(r&&r.blocked){if(r.reason==='roster'){try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(e){}}else lsPut('calcBlocked',1);location.href='./';return;}
     if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}
-    if(r&&r.me!==undefined&&r.me)lsPut('calcMe',{emp:EMP,name:r.me.name,br:r.me.br,rank:r.me.rank});},function(){if(!FB.on)$('#liveBtn').classList.add('off');});}
+    if(r&&r.me!==undefined&&r.me)lsPut('calcMe',{emp:EMP,name:r.me.name,br:r.me.br,rank:r.me.rank});},function(){refu();if(!FB.on)$('#liveBtn').classList.add('off');});}
 function fbPresence(on){if(!FB.me)return;try{if(on){FB.gone=false;FB.me.onDisconnect().remove();FB.me.set(firebase.database.ServerValue.TIMESTAMP);}else{FB.gone=true;FB.me.remove();}}catch(e){}}
 setInterval(function(){if(FB.me&&!FB.gone&&idleMin()>=30)fbPresence(false);},60000);
 function loadJs(u,cb){var sc=document.createElement('script');sc.src=u;sc.onload=cb;document.head.appendChild(sc);}
@@ -1270,7 +1290,7 @@ function fbInit(){var c=window.FIREBASE_CONFIG;if(FB.started||!c||!c.databaseURL
       db.ref('.info/connected').on('value',function(snap){if(snap.val()!==true||FB.gone)return;me.onDisconnect().remove().then(function(){me.set(firebase.database.ServerValue.TIMESTAMP);});});
       db.ref('online').on('value',function(snap){FB.on=true;$('#liveN').textContent=snap.numChildren();$('#liveBtn').classList.remove('off');});
     }catch(e){FB.on=false;}});});}
-$('#liveBtn').onclick=function(){};
+$('#liveBtn').onclick=function(){location.href='./?admin=ck';};
 var INST=null;
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();INST=e;});
 function iaStand(){try{return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}catch(e){return false;}}
@@ -1290,7 +1310,7 @@ function startBeat(){if(!EMP||$('#gate').classList.contains('on'))return;fbInit(
   document.addEventListener('visibilitychange',function(){if(!document.hidden){LASTIN=Date.now();if(FB.gone)fbPresence(true);}if(Date.now()-(window.__lastBeat||0)>5000)beat();});}
 
 function renderAll(){renderCats();renderList();renderRecent();render();}
-renderAll();startBeat();
+renderAll();syncData();startBeat();
 })();
 </script>
 </body>

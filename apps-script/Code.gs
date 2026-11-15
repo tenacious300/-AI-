@@ -50,7 +50,7 @@ function doPost(e) {
 }
 
 /** 업로드된 단가표/판촉 원본 (깃허브 화면이 받아감) */
-var DATA_KINDS = ['price', 'promo', 'lg'];   // lg = LG 가전구독 단가표+활성화
+var DATA_KINDS = ['price', 'promo', 'lg', 'ck', 'ckm'];   // lg = LG 가전구독 단가표+활성화 · ck = 쿠쿠 구독 단가+카드 · ckm = 쿠쿠 다품목 캐시백 가이드
 function kindOf_(k) { return DATA_KINDS.indexOf(k) >= 0 ? k : 'price'; }
 function getData(kind) {
   kind = kindOf_(kind);
@@ -66,7 +66,7 @@ function dataVersion_() {
   var cache = CacheService.getScriptCache();
   var c = cache.get('dv');
   if (c) return JSON.parse(c);
-  var dv = { price: '', promo: '', lg: '' }, folder = dataFolder_();
+  var dv = { price: '', promo: '', lg: '', ck: '', ckm: '' }, folder = dataFolder_();
   DATA_KINDS.forEach(function (k) {
     var it = folder.getFilesByName(k + '.json');
     if (it.hasNext()) dv[k] = String(it.next().getLastUpdated().getTime());
@@ -502,14 +502,16 @@ function safeJson_(o) {
 /** 관리자: 현재 적용 데이터 정보 */
 function adminDataInfo(pw) {
   if (String(pw) !== ADMIN_PW) return { ok: false };
-  var info = { ok: true, price: null, promo: null, lg: null, history: [] };
+  var info = { ok: true, price: null, promo: null, lg: null, ck: null, ckm: null, history: [] };
   try { var p = readDataFile_('price'); if (p) info.price = JSON.parse(p).meta; } catch (e) {}
   try { var l = readDataFile_('lg'); if (l) info.lg = JSON.parse(l).meta; } catch (e) {}
+  try { var c1 = readDataFile_('ck'); if (c1) info.ck = JSON.parse(c1).meta; } catch (e) {}
+  try { var c2 = readDataFile_('ckm'); if (c2) info.ckm = JSON.parse(c2).meta; } catch (e) {}
   try { var q = readDataFile_('promo'); if (q) { var qq = JSON.parse(q); info.promo = qq.cleared ? { cleared: true } : qq.meta; } } catch (e) {}
   var it = dataFolder_().getFiles();
   while (it.hasNext()) {
     var f = it.next(), n = f.getName();
-    if (/^(price|promo|lg)_\d+\.json$/.test(n)) info.history.push({ name: n, at: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd HH:mm') });
+    if (/^(price|promo|lg|ck|ckm)_\d+\.json$/.test(n)) info.history.push({ name: n, at: Utilities.formatDate(f.getDateCreated(), TZ, 'yyyy-MM-dd HH:mm') });
   }
   info.history.sort(function (a, b) { return a.name < b.name ? 1 : -1; });
   info.history = info.history.slice(0, 20);
@@ -868,10 +870,11 @@ function mvRank_(agg) {
 function getBest(arg) {
   var days = [1, 7, 30].indexOf(Number(arg && arg.days)) >= 0 ? Number(arg.days) : 7;
   // brand 'lg' → LG 계산기에서 보낸 모델('LG--' 접두어)만, 그 외에는 삼성 모델만
-  var lg = String(arg && arg.brand) === 'lg';
-  var cache = CacheService.getScriptCache(), ck = 'best_' + (lg ? 'lg_' : '') + days, c = cache.get(ck);
+  // brand 'ck' → 쿠쿠 계산기 모델('CK--' 접두어)만
+  var br = String(arg && arg.brand), lg = br === 'lg', kk = br === 'ck';
+  var cache = CacheService.getScriptCache(), ck = 'best_' + (lg ? 'lg_' : kk ? 'ck_' : '') + days, c = cache.get(ck);
   if (c) return JSON.parse(c);
-  var pick = function (rows) { return rows.filter(function (r) { return (String(r[0]).indexOf('LG--') === 0) === lg; }); };
+  var pick = function (rows) { return rows.filter(function (r) { var k = String(r[0]); return lg ? k.indexOf('LG--') === 0 : kk ? k.indexOf('CK--') === 0 : (k.indexOf('LG--') !== 0 && k.indexOf('CK--') !== 0); }); };
   var cur = pick(mvRank_(mvAgg_(mvDay_(days - 1), mvDay_(0)))), prev = pick(mvRank_(mvAgg_(mvDay_(days * 2 - 1), mvDay_(days))));
   var pr = {}; prev.forEach(function (r, i) { pr[r[0]] = i + 1; });
   var res = { days: days, at: Utilities.formatDate(new Date(), TZ, 'HH:mm'),
@@ -961,9 +964,9 @@ function fuFlush_(cache) {
 function fuKey_(k, brand) {
   k = String(k);
   if (k === 'lg') return null;   // 예전 LG 입장 표시
-  var isLg = k.indexOf('L_') === 0;
-  if ((brand === 'ss' && isLg) || (brand === 'lg' && !isLg)) return null;
-  return isLg ? k.slice(2) : k;
+  var isLg = k.indexOf('L_') === 0, isCk = k.indexOf('K_') === 0, b = isLg ? 'lg' : isCk ? 'ck' : 'ss';   // 쿠쿠 화면 기록은 'K_' 접두어
+  if (brand && brand !== b) return null;
+  return isLg || isCk ? k.slice(2) : k;
 }
 function fuAgg_(from, to, brand) {
   var out = {}, sh = fuSheet_(), n = sh.getLastRow();
@@ -1000,7 +1003,7 @@ function adminFeatures(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false };
   var days = [1, 7, 30].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7, cur, prev, date = String(arg.date || '').replace(/[^0-9]/g, '');
-  var brand = arg.brand === 'ss' || arg.brand === 'lg' ? arg.brand : '';
+  var brand = arg.brand === 'ss' || arg.brand === 'lg' || arg.brand === 'ck' ? arg.brand : '';
   if (date.length === 8) {   // 특정 날짜 하루 (이전 날과 비교)
     var dt = new Date(Number(date.slice(0, 4)), Number(date.slice(4, 6)) - 1, Number(date.slice(6, 8)));
     var pd = Utilities.formatDate(new Date(dt.getTime() - 86400000), TZ, 'yyyyMMdd');
@@ -1018,7 +1021,7 @@ function adminFeatures(arg) {
 
 /** 관리자: 사번별 삼성 · LG 이용 현황 (기능통계 시트의 사번 기록으로 계산)
  *  삼성 = 'L_' 없는 기능 · LG = 'L_' 기능 또는 예전 'lg' 입장 표시. ':' 들어간 항목은 사번이 없어 제외
- *  반환 rows: emp → [삼성 이용일, 삼성 담은 날, 삼성 견적 낸 날, 삼성 마지막, LG 이용일, LG 담은 날, LG 견적 낸 날, LG 마지막] */
+ *  반환 rows: emp → [삼성 이용일, 삼성 담은 날, 삼성 견적 낸 날, 삼성 마지막, LG 4칸, 쿠쿠 4칸('K_' 기능)] */
 function adminEmpUsage(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false };
@@ -1028,11 +1031,11 @@ function adminEmpUsage(arg) {
   var add = function (d, k, emps) {
     k = String(k); d = String(d);
     if (!emps || d < from || d > to || k.indexOf(':') >= 0) return;
-    var lg = k === 'lg' || k.indexOf('L_') === 0, b = lg ? 1 : 0, kk = k.indexOf('L_') === 0 ? k.slice(2) : k;
+    var lg = k === 'lg' || k.indexOf('L_') === 0, ckb = k.indexOf('K_') === 0, b = lg ? 1 : ckb ? 2 : 0, kk = (k.indexOf('L_') === 0 || ckb) ? k.slice(2) : k;
     if (!first || d < first) first = d;
     String(emps).split(',').forEach(function (e) {
       e = cleanEmp_(e); if (!e) return;
-      var u = U[e] || (U[e] = [{}, {}]), o = u[b];
+      var u = U[e] || (U[e] = [{}, {}, {}]), o = u[b];
       (o.d || (o.d = {}))[d] = 1;
       if (kk !== 'open' && k !== 'lg') { var f = o.f || (o.f = {}); (f[kk] || (f[kk] = {}))[d] = 1; }
       if (kk === 'add') (o.a || (o.a = {}))[d] = 1;
@@ -1046,9 +1049,9 @@ function adminEmpUsage(arg) {
   var cnt = function (o) { return o ? Object.keys(o).length : 0; }, last = function (o) { var k = o ? Object.keys(o).sort() : []; return k.length ? k[k.length - 1] : ''; };
   var rows = {}, feats = {};
   var fd = function (o) { var r = {}; Object.keys(o.f || {}).forEach(function (k) { r[k] = cnt(o.f[k]); }); return r; };
-  Object.keys(U).forEach(function (e) { var s = U[e][0], l = U[e][1];
-    rows[e] = [cnt(s.d), cnt(s.a), cnt(s.q), last(s.d), cnt(l.d), cnt(l.a), cnt(l.q), last(l.d)];
-    feats[e] = [fd(s), fd(l)]; });   // 사번별 기능 → 쓴 날 수
+  Object.keys(U).forEach(function (e) { var s = U[e][0], l = U[e][1], q = U[e][2] || {};
+    rows[e] = [cnt(s.d), cnt(s.a), cnt(s.q), last(s.d), cnt(l.d), cnt(l.a), cnt(l.q), last(l.d), cnt(q.d), cnt(q.a), cnt(q.q), last(q.d)];
+    feats[e] = [fd(s), fd(l), fd(q)]; });   // 사번별 기능 → 쓴 날 수
   return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, roster: rosterMap_(),
     at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
 }

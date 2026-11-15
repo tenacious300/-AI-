@@ -894,8 +894,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.32',VER_DATE='2026.11.15';
+var VERSION='v8.34',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.34','11.15',['⚙ 관리자 🅲 쿠쿠 단가 · 프로모션 탭: 쿠쿠 구독 단가 엑셀(제휴카드 포함) · 다품목 캐시백 가이드 엑셀을 올리면 쿠쿠 계산기에 자동 적용','📈 기능 사용 · 🧾 사번별 이용 · 🔥 베스트 모델에서 쿠쿠를 따로 볼 수 있어요 (쿠쿠 기록은 v8.34부터)']],
   ['v8.32','11.15',['💳 LG 카드 정책 이미지: 관리자가 올리면 깃허브 저장소(cardpol/)로 자동으로 옮겨 담아 직원 화면에서 빠르게 열려요 (토큰 등록 없음 · 5~10분 안에 반영)']],
   ['v8.31','11.15',['LG 카드 정책 이름을 달 표시 없이 \'카드 정책\'으로 통일 (관리자 제목 입력칸 없앰)']],
   ['v8.30','11.15',['💳 LG 제휴카드 정책 이미지를 구글 드라이브 대신 깃허브(cardpol/ 폴더)에 저장 · 직원 화면에서 훨씬 빨리 열려요','관리자: 처음 한 번 깃허브 토큰 등록 후 이미지 올리기 (올리고 1분쯤 뒤 반영)']],
@@ -1827,7 +1828,7 @@ var BRAND=(function(){var m=/[?&]brand=(ss|lg|ck)/.exec(location.search);return 
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':b==='ck'?'쿠쿠 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
 $('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=k==='lg'?'lg.html':'cuckoo.html';};
-var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||XCMP;
+var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),ADMIN_CK=/[?&]admin=ck/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||ADMIN_CK||XCMP;
 if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
 var ADM={pw:null,t:null};
@@ -1836,7 +1837,7 @@ function admLogin(){
     +'<div class="adm-pw"><input type="password" id="admPw" inputmode="numeric" placeholder="관리자 비밀번호" autocomplete="off"><button class="btn pri" id="admGo">확인</button></div><div id="admMsg" class="hint"></div>';
   var go=function(){var pw=$('#admPw').value.trim();if(!pw)return;$('#admMsg').textContent='확인 중…';
     if(!HAS_GS){$('#admMsg').textContent='배포된 웹앱 화면에서만 확인할 수 있어요.';return;}
-    gsr('adminStats',pw,function(r){if(!r||!r.ok){$('#admMsg').textContent='비밀번호가 맞지 않아요.';return;}ADM.pw=pw;ADM.tab=ADMIN_LG?'lg':'stat';rsLoad();admShow(r);if(ADMIN_LG)admRender();admInfo();renderVer();
+    gsr('adminStats',pw,function(r){if(!r||!r.ok){$('#admMsg').textContent='비밀번호가 맞지 않아요.';return;}ADM.pw=pw;ADM.tab=ADMIN_LG?'lg':ADMIN_CK?'ck':'stat';rsLoad();admShow(r);if(ADMIN_LG||ADMIN_CK)admRender();admInfo();renderVer();
       clearInterval(ADM.t);ADM.t=setInterval(admRefresh,30000);},function(){$('#admMsg').textContent='서버에 연결하지 못했어요.';});};
   $('#admGo').onclick=go;$('#admPw').addEventListener('keydown',function(e){if(e.key==='Enter')go();});
   setTimeout(function(){$('#admPw').focus();},50);
@@ -1931,51 +1932,51 @@ function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(functi
 var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교'],install:['📲','앱 설치 완료'],instguide:['📲','앱 설치 안내 보기']};
 var AFEAT={days:7,data:null,brand:''};
 var LGCARD_N={shinhan:'신한 더구독케어',wooripl:'우리 Platinum',woori:'우리 LG전자',lotte:'롯데 구독엔로카',kb:'KB국민 LG전자',hyundai:'현대 LG전자',hana:'하나 플러스',nh:'NH 올원 BEST',best:'광주/전북 베스트케어'};
-function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기':AFEAT.brand==='ss'?'판촉 모델 보기':'판촉 · 활성화 모델 보기';return FNAME[k][1];}
-function afBrandTag(){return AFEAT.brand==='ss'?'삼성_':AFEAT.brand==='lg'?'LG_':'';}
+function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기':AFEAT.brand==='ss'?'판촉 모델 보기':AFEAT.brand==='ck'?'반값 모델 보기':'판촉 · 활성화 · 반값 모델 보기';if(k==='cardpol'&&AFEAT.brand==='ck')return '카드 혜택표 보기';return FNAME[k][1];}
+function afBrandTag(){return AFEAT.brand==='ss'?'삼성_':AFEAT.brand==='lg'?'LG_':AFEAT.brand==='ck'?'쿠쿠_':'';}
 function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,brand:AFEAT.brand,days:AFEAT.days==='d'?1:AFEAT.days,date:AFEAT.days==='d'?(AFEAT.date||todayStr().replace(/-/g,'')):''},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
 /* ---------- 🧾 사번별 이용 : 삼성 · LG 둘 다 써 봤는지 ---------- */
 var AEMP={days:30,data:null,basis:'d',st:'all',br:'',q:'',open:''};
 var AEXTRA={lump:['⚖️','일시불 비교'],fav:['⭐','즐겨찾기'],logout:['🚪','로그아웃']};
-function aeFn(k,lg){if(k==='win')return ['🏆',lg?'활성화 모델 보기':'판촉 모델 보기'];return FNAME[k]||AEXTRA[k]||null;}
+function aeFn(k,lg){if(k==='win')return ['🏆',lg===2?'반값 모델 보기':lg?'활성화 모델 보기':'판촉 모델 보기'];if(k==='lumpitem')return ['🛒','일시불 품목 넣기'];return FNAME[k]||AEXTRA[k]||null;}
 function aeTop(f,lg){var k=Object.keys(f||{}).filter(function(k){return aeFn(k,lg)&&k!=='logout';}).sort(function(a,b){return f[b]-f[a];});return k;}
 function admEmpLoad(){AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
-function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4],a:[1,5],q:[2,6]}[AEMP.basis];
-  var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0;
-    var fe=(R.feats||{})[e]||[{},{}];L.push({f:fe,e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,r:r,s:s,l:l,st:s&&l?'both':s?'ss':l?'lg':'none'});};
+function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4,8],a:[1,5,9],q:[2,6,10]}[AEMP.basis];
+  var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0,k=(r[bi[2]]||0)>0;if(r.length<12)r=r.concat([0,0,0,'']);
+    var fe=(R.feats||{})[e]||[{},{},{}];L.push({f:fe,k:k,e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,r:r,s:s,l:l,st:s&&l?'both':s?'ss':l?'lg':'none'});};
   Object.keys(ro).forEach(push);Object.keys(rows).forEach(push);return L;}
 function aeMd(d){return d?(+d.slice(4,6))+'/'+(+d.slice(6,8)):'';}
 function admEmpHtml(){var R=AEMP.data,h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><div class="chips" style="margin:0">'+[[7,'7일'],[30,'30일'],[90,'90일'],[0,'전체 기간']].map(function(x){return '<button class="chip sm '+(AEMP.days===x[0]?'on':'')+'" data-aed="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="aeCsv">⬇ CSV</button></div>'
    +'<div class="afb">'+[['d','들어와서 사용'],['a','모델 담기'],['q','견적 냄 (인쇄·복사·보관)']].map(function(x){return '<button class="'+(AEMP.basis===x[0]?'on':'')+'" data-aeb="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
   if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
-  var L=aeList(),C={all:L.length,both:0,ss:0,lg:0,none:0};L.forEach(function(x){C[x.st]++;});
+  var L=aeList(),C={all:L.length,both:0,ss:0,lg:0,none:0,ck:0};L.forEach(function(x){C[x.st]++;if(x.k)C.ck++;});
   var pc=function(n){return C.all?Math.round(n/C.all*100)+'%':'-';};
   h+='<div class="hint" style="margin:8px 0 0">'+aeMd(R.from)+' ~ '+aeMd(R.to)+' 기록 · 명부 '+Object.keys(R.roster||{}).length+'명 · 기준: <b>'+{d:'계산기에 들어와 기능을 하나라도 쓴 날',a:'모델을 담은 날',q:'견적서를 인쇄 · 복사 · 보관한 날'}[AEMP.basis]+'</b> · '+esc(R.at)+'</div>';
-  h+='<div class="adm-kpi ae">'+[['all','대상 인원',C.all,''],['both','✅ 둘 다',C.both,pc(C.both)],['ss','삼성만',C.ss,pc(C.ss)],['lg','LG만',C.lg,pc(C.lg)],['none','미사용',C.none,pc(C.none)]].map(function(x){return '<div class="'+(AEMP.st===x[0]?'on':'')+'" data-aes="'+x[0]+'"><span>'+x[1]+'</span><b>'+x[2]+'</b>'+(x[3]?'<em>'+x[3]+'</em>':'')+'</div>';}).join('')+'</div>';
+  h+='<div class="adm-kpi ae">'+[['all','대상 인원',C.all,''],['both','✅ 둘 다',C.both,pc(C.both)],['ss','삼성만',C.ss,pc(C.ss)],['lg','LG만',C.lg,pc(C.lg)],['ck','🅲 쿠쿠 사용',C.ck,pc(C.ck)],['none','미사용 (삼성 · LG)',C.none,pc(C.none)]].map(function(x){return '<div class="'+(AEMP.st===x[0]?'on':'')+'" data-aes="'+x[0]+'"><span>'+x[1]+'</span><b>'+x[2]+'</b>'+(x[3]?'<em>'+x[3]+'</em>':'')+'</div>';}).join('')+'</div>';
   /* 지점별 */
-  var B={};L.forEach(function(x){var k=x.br||(x.inR?'(지점 없음)':'(명부 없음)'),b=B[k]||(B[k]={k:k,n:0,both:0,ss:0,lg:0,none:0});b.n++;b[x.st]++;});
+  var B={};L.forEach(function(x){var k=x.br||(x.inR?'(지점 없음)':'(명부 없음)'),b=B[k]||(B[k]={k:k,n:0,both:0,ss:0,lg:0,none:0,ck:0});b.n++;b[x.st]++;if(x.k)b.ck++;});
   var BL=Object.keys(B).map(function(k){return B[k];}).sort(function(a,b){return b.n-a.n||(a.k<b.k?-1:1);});
-  h+='<details class="fold" style="margin-top:12px"'+(AEMP.br?'':' open')+'><summary>지점별 현황 ('+BL.length+'곳)</summary><div class="scroll" style="margin-top:8px;max-height:320px"><table class="ae-tbl"><tr><th>지점</th><th style="text-align:right">인원</th><th style="text-align:right">둘 다</th><th style="text-align:right">삼성만</th><th style="text-align:right">LG만</th><th style="text-align:right">미사용</th><th>둘 다 비율</th></tr>'
-    +BL.map(function(b){var w=function(n){return (n/b.n*100).toFixed(1)+'%';};return '<tr data-aebr="'+esc(b.k)+'" style="cursor:pointer'+(AEMP.br===b.k?';background:#eef2ff':'')+'"><td><b>'+esc(b.k)+'</b></td><td class="n">'+b.n+'</td><td class="n" style="color:#15803d;font-weight:800">'+b.both+'</td><td class="n">'+b.ss+'</td><td class="n">'+b.lg+'</td><td class="n">'+b.none+'</td><td><div style="display:flex;align-items:center;gap:6px"><div class="ae-bar"><i style="width:'+w(b.both)+';background:#22c55e"></i><i style="width:'+w(b.ss)+';background:#818cf8"></i><i style="width:'+w(b.lg)+';background:#f472b6"></i></div><small>'+Math.round(b.both/b.n*100)+'%</small></div></td></tr>';}).join('')
+  h+='<details class="fold" style="margin-top:12px"'+(AEMP.br?'':' open')+'><summary>지점별 현황 ('+BL.length+'곳)</summary><div class="scroll" style="margin-top:8px;max-height:320px"><table class="ae-tbl"><tr><th>지점</th><th style="text-align:right">인원</th><th style="text-align:right">둘 다</th><th style="text-align:right">삼성만</th><th style="text-align:right">LG만</th><th style="text-align:right;color:#c8102e">쿠쿠</th><th style="text-align:right">미사용</th><th>둘 다 비율</th></tr>'
+    +BL.map(function(b){var w=function(n){return (n/b.n*100).toFixed(1)+'%';};return '<tr data-aebr="'+esc(b.k)+'" style="cursor:pointer'+(AEMP.br===b.k?';background:#eef2ff':'')+'"><td><b>'+esc(b.k)+'</b></td><td class="n">'+b.n+'</td><td class="n" style="color:#15803d;font-weight:800">'+b.both+'</td><td class="n">'+b.ss+'</td><td class="n">'+b.lg+'</td><td class="n" style="color:#c8102e;font-weight:700">'+b.ck+'</td><td class="n">'+b.none+'</td><td><div style="display:flex;align-items:center;gap:6px"><div class="ae-bar"><i style="width:'+w(b.both)+';background:#22c55e"></i><i style="width:'+w(b.ss)+';background:#818cf8"></i><i style="width:'+w(b.lg)+';background:#f472b6"></i></div><small>'+Math.round(b.both/b.n*100)+'%</small></div></td></tr>';}).join('')
     +'</table></div><div class="hint" style="margin:6px 0 0">지점을 누르면 아래 목록이 그 지점만 보여요 · 막대: <span style="color:#22c55e">■</span> 둘 다 <span style="color:#818cf8">■</span> 삼성만 <span style="color:#f472b6">■</span> LG만</div></details>';
   /* 목록 */
-  var q=AEMP.q.trim().toLowerCase(),F=L.filter(function(x){return (AEMP.st==='all'||x.st===AEMP.st)&&(!AEMP.br||(x.br||(x.inR?'(지점 없음)':'(명부 없음)'))===AEMP.br)&&(!q||(x.e+' '+x.name+' '+x.br+' '+x.rank).toLowerCase().indexOf(q)>=0);});
+  var q=AEMP.q.trim().toLowerCase(),F=L.filter(function(x){return (AEMP.st==='all'||(AEMP.st==='ck'?x.k:x.st===AEMP.st))&&(!AEMP.br||(x.br||(x.inR?'(지점 없음)':'(명부 없음)'))===AEMP.br)&&(!q||(x.e+' '+x.name+' '+x.br+' '+x.rank).toLowerCase().indexOf(q)>=0);});
   var ord={none:0,ss:1,lg:1,both:2};F.sort(function(a,b){return ord[a.st]-ord[b.st]||(a.br<b.br?-1:a.br>b.br?1:0)||(a.name<b.name?-1:1);});
   h+='<div class="ae-tools"><select id="aeBr"><option value="">전체 지점</option>'+BL.map(function(b){return '<option'+(AEMP.br===b.k?' selected':'')+'>'+esc(b.k)+'</option>';}).join('')+'</select><input type="search" id="aeQ" placeholder="사번 · 이름 · 직책 검색" value="'+esc(AEMP.q)+'" autocomplete="off"></div>';
   var cell=function(r,o){if(!r[o])return '<td class="bs z">—</td>';return '<td class="bs"><b>'+r[o]+'일</b> <small>· 담기 '+r[o+1]+' · 견적 '+r[o+2]+'</small><br><small>마지막 '+aeMd(r[o+3])+'</small></td>';};
   var BN={both:'✅ 둘 다',ss:'삼성만',lg:'LG만',none:'미사용'};
   h+='<div class="adm-sec">목록 <small>'+F.length+'명'+(F.length>400?' · 앞 400명만 표시 (CSV에는 전체)':'')+' · 미사용 → 한쪽만 → 둘 다 순 · 이름을 누르면 많이 쓴 기능</small></div>'
-    +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>상태</th><th style="color:#1428a0">삼성 이용</th><th style="color:#a50034">LG 이용</th><th>지점</th><th>직책</th></tr>'
-    +(F.length?F.slice(0,400).map(function(x){var op=AEMP.open===x.e;return '<tr data-aeo="'+esc(x.e)+'" style="cursor:pointer'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td><span class="ae-b '+x.st+'">'+BN[x.st]+'</span></td>'+cell(x.r,0)+cell(x.r,4)+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>'+(op?aeDetail(x):'');}).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
+    +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>상태</th><th style="color:#1428a0">삼성 이용</th><th style="color:#a50034">LG 이용</th><th style="color:#c8102e">쿠쿠 이용</th><th>지점</th><th>직책</th></tr>'
+    +(F.length?F.slice(0,400).map(function(x){var op=AEMP.open===x.e;return '<tr data-aeo="'+esc(x.e)+'" style="cursor:pointer'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td><span class="ae-b '+x.st+'">'+BN[x.st]+'</span></td>'+cell(x.r,0)+cell(x.r,4)+cell(x.r,8)+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>'+(op?aeDetail(x):'');}).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
     +'</table></div>';
-  h+='<div class="note">· 이용일은 그 기간에 해당 계산기를 쓴 날 수예요 (같은 날 여러 번은 1일). 담기 · 견적도 그 일이 있었던 날 수예요.<br>· LG 기록은 LG 계산기를 연 11/14부터 쌓였고, 들어오기만 하고 아무 기능도 안 쓴 날은 v8.28부터 기록돼요.<br>· 명부에 없는 사번은 명부 대조 없이 사번만 보여요.</div>';
+  h+='<div class="note">· 이용일은 그 기간에 해당 계산기를 쓴 날 수예요 (같은 날 여러 번은 1일). 담기 · 견적도 그 일이 있었던 날 수예요.<br>· LG 기록은 LG 계산기를 연 11/14부터 쌓였고, 들어오기만 하고 아무 기능도 안 쓴 날은 v8.28부터 기록돼요.<br>· 쿠쿠 기록은 v8.34(쿠쿠 계산기)부터 쌓여요. \'쿠쿠 사용\'은 삼성 · LG 상태와 겹쳐서 세요.<br>· 명부에 없는 사번은 명부 대조 없이 사번만 보여요.</div>';
   return h;}
-function aeDetail(x){var col=function(f,lg,r,o){var ks=aeTop(f,lg),mx=Math.max.apply(null,[1].concat(ks.map(function(k){return f[k];}))),c=lg?'#a50034':'#1428a0';
-    return '<div style="flex:1;min-width:230px;background:#fff;border-radius:10px;padding:10px 12px;border-top:3px solid '+c+'"><b style="color:'+c+'">'+(lg?'LG':'삼성')+'</b> <small style="color:var(--sub)">'+(r[o]?'이용 '+r[o]+'일 · 마지막 '+aeMd(r[o+3]):'이 기간 사용 없음')+'</small>'
+function aeDetail(x){var col=function(f,lg,r,o){f=f||{};var ks=aeTop(f,lg),mx=Math.max.apply(null,[1].concat(ks.map(function(k){return f[k];}))),c=lg===2?'#c8102e':lg?'#a50034':'#1428a0';
+    return '<div style="flex:1;min-width:230px;background:#fff;border-radius:10px;padding:10px 12px;border-top:3px solid '+c+'"><b style="color:'+c+'">'+(lg===2?'쿠쿠':lg?'LG':'삼성')+'</b> <small style="color:var(--sub)">'+(r[o]?'이용 '+r[o]+'일 · 마지막 '+aeMd(r[o+3]):'이 기간 사용 없음')+'</small>'
       +(ks.length?ks.map(function(k){var n=aeFn(k,lg);return '<div style="display:grid;grid-template-columns:22px 1fr 90px 34px;gap:6px;align-items:center;margin-top:6px;font-size:12.5px"><span>'+n[0]+'</span><span>'+n[1]+'</span><div class="ae-bar" style="min-width:0;height:8px"><i style="width:'+Math.round(f[k]/mx*100)+'%;background:'+c+'"></i></div><b style="text-align:right">'+f[k]+'일</b></div>';}).join('')
         :'<div style="margin-top:8px;font-size:12.5px;color:var(--sub)">'+(r[o]?'들어오기만 하고 기능은 안 썼어요':'—')+'</div>')+'</div>';};
-  return '<tr><td colspan="6" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">숫자는 그 기능을 쓴 날 수예요 (같은 날 여러 번은 1일)</div></div></td></tr>';}
+  return '<tr><td colspan="7" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+col(x.f[2],2,x.r,8)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">숫자는 그 기능을 쓴 날 수예요 (같은 날 여러 번은 1일)</div></div></td></tr>';}
 function admEmpBind(){
   Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-aeo]'),function(b){b.onclick=function(){AEMP.open=AEMP.open===b.dataset.aeo?'':b.dataset.aeo;var sc=b.closest('.scroll'),top=sc?sc.scrollTop:0;admRender();var n=document.querySelector('#admBody tr[data-aeo="'+b.dataset.aeo+'"]'),s2=n&&n.closest('.scroll');if(s2)s2.scrollTop=top;};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aed]'),function(b){b.onclick=function(){var v=+b.dataset.aed;if(AEMP.days===v)return;AEMP.days=v;admEmpLoad();admRender();};});
@@ -1986,12 +1987,12 @@ function admEmpBind(){
   var qi=$('#aeQ');if(qi)qi.oninput=function(){AEMP.q=this.value;var p=this.selectionStart;admRender();var n=$('#aeQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}};
   var cv=$('#aeCsv');if(cv)cv.onclick=function(){var R=AEMP.data;if(!R||!R.ok)return;var BN={both:'둘 다',ss:'삼성만',lg:'LG만',none:'미사용'};
     var tf=function(f,lg){return aeTop(f,lg).slice(0,5).map(function(k){return aeFn(k,lg)[1]+' '+f[k]+'일';}).join(' / ');};
-    csvDown([['사번','이름','지점','직책','삼성 이용일','삼성 담은 날','삼성 견적 낸 날','삼성 마지막','LG 이용일','LG 담은 날','LG 견적 낸 날','LG 마지막','상태','명부','삼성 많이 쓴 기능','LG 많이 쓴 기능']].concat(aeList().map(function(x){var r=x.r;return [x.e,x.name,x.br,x.rank,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],BN[x.st],x.inR?'O':'X',tf(x.f[0],0),tf(x.f[1],1)];})),'사번별이용_'+(AEMP.days?AEMP.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};
+    csvDown([['사번','이름','지점','직책','삼성 이용일','삼성 담은 날','삼성 견적 낸 날','삼성 마지막','LG 이용일','LG 담은 날','LG 견적 낸 날','LG 마지막','쿠쿠 이용일','쿠쿠 담은 날','쿠쿠 견적 낸 날','쿠쿠 마지막','상태 (삼성 · LG)','명부','삼성 많이 쓴 기능','LG 많이 쓴 기능','쿠쿠 많이 쓴 기능']].concat(aeList().map(function(x){var r=x.r;return [x.e,x.name,x.br,x.rank,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11],BN[x.st],x.inR?'O':'X',tf(x.f[0],0),tf(x.f[1],1),tf(x.f[2]||{},2)];})),'사번별이용_'+(AEMP.days?AEMP.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};
 }
 function afDs(d){return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);}
 function afMd(d){return (+d.slice(4,6))+'/'+(+d.slice(6,8));}
 function afShift(d,k){var t=new Date(+d.slice(0,4),+d.slice(4,6)-1,+d.slice(6,8)+k);return t.getFullYear()+('0'+(t.getMonth()+1)).slice(-2)+('0'+t.getDate()).slice(-2);}
-function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().replace(/-/g,''),h='<div class="afb">'+[['','전체'],['ss','삼성'],['lg','LG']].map(function(x){return '<button class="'+(AFEAT.brand===x[0]?'on':'')+'" data-afb="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+(AFEAT.brand==='lg'?'<div class="hint" style="margin:6px 0 0">LG 계산기 기능 기록은 v8.24부터 쌓여요.</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],['d','📅 날짜별']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
+function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().replace(/-/g,''),h='<div class="afb">'+[['','전체'],['ss','삼성'],['lg','LG'],['ck','쿠쿠']].map(function(x){return '<button class="'+(AFEAT.brand===x[0]?'on':'')+'" data-afb="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+(AFEAT.brand==='lg'?'<div class="hint" style="margin:6px 0 0">LG 계산기 기능 기록은 v8.24부터 쌓여요.</div>':AFEAT.brand==='ck'?'<div class="hint" style="margin:6px 0 0">쿠쿠 계산기 기능 기록은 v8.34부터 쌓여요.</div>':'')+'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],['d','📅 날짜별']].map(function(x){return '<button class="chip sm '+(AFEAT.days===x[0]?'on':'')+'" data-afd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="afCsv">⬇ CSV</button></div>';
   if(day){var dd=AFEAT.date||td;
     h+='<div class="afd-nav"><button class="btn line sm" data-afs="-1">‹ 전날</button><input type="date" id="afDate" value="'+afDs(dd)+'" max="'+afDs(td)+'"><button class="btn line sm" data-afs="1" '+(dd>=td?'disabled':'')+'>다음날 ›</button></div>';
     if(R&&R.ok&&R.daily){var mx2=Math.max.apply(null,[1].concat(R.daily.map(function(x){return x.n;})));
@@ -2010,9 +2011,9 @@ function admFeatHtml(){var R=AFEAT.data,day=AFEAT.days==='d',td=todayStr().repla
   var grp=function(pre,names,cols){var a=names.map(function(n,i){var x=D[pre+n[0]];return [n[1],x?x.n:0,cols[i]];}),s=a.reduce(function(t,v){return t+v[1];},0);if(!s)return '';
     a=a.filter(function(v){return v[1];}).map(function(v){return [v[0],Math.round(v[1]/s*100),v[2]];});
     return '<div><h5>'+'</h5><div class="sb">'+a.map(function(v){return '<span style="width:'+v[1]+'%;background:'+v[2]+'"></span>';}).join('')+'</div><div class="sl">'+a.map(function(v){return '<span><i style="background:'+v[2]+'"></i>'+esc(v[0])+' '+v[1]+'%</span>';}).join('')+'</div></div>';};
-  var G=[['고객 유형',grp('cust:',[['combo','신규 결합'],['single','신규 단건'],['exist','기존 구독'],['sb','소상공인']],['#6366f1','#93c5fd','#f59e0b','#10b981'])],
+  var G=[['고객 유형',grp('cust:',[['combo',AFEAT.brand==='ck'?'패키지 자동':'신규 결합'],['single',AFEAT.brand==='ck'?'단건':'신규 단건'],['exist','기존 구독'],['sb','소상공인']],['#6366f1','#93c5fd','#f59e0b','#10b981'])],
     ['견적 인쇄 종류',grp('print:',[['basic','기본'],['feel','체감가'],['lump','일시불 비교'],['feellump','체감가+일시불']],['#64748b','#e11d48','#0284c7','#7c3aed'])],
-    ['선택한 제휴카드',grp('card:',CARDS.map(function(c){return [c.id,c.name.replace('카드','').replace('은행BC','BC')+(AFEAT.brand?'':' (삼성)')];}).concat(Object.keys(LGCARD_N).map(function(k){return ['lg-'+k,LGCARD_N[k]+(AFEAT.brand?'':' (LG)')];})),['#1d4ed8','#f59e0b','#ef4444','#0ea5e9','#10b981','#94a3b8','#a50034','#7c3aed','#db2777','#0d9488','#ea580c','#65a30d','#475569','#be123c','#0369a1'])],
+    ['선택한 제휴카드',grp('card:',CARDS.map(function(c){return [c.id,c.name.replace('카드','').replace('은행BC','BC')+(AFEAT.brand?'':' (삼성)')];}).concat(Object.keys(LGCARD_N).map(function(k){return ['lg-'+k,LGCARD_N[k]+(AFEAT.brand?'':' (LG)')];})).concat(Object.keys(CKCARD_N).map(function(k){return ['ck-'+k,CKCARD_N[k]+(AFEAT.brand?'':' (쿠쿠)')];})),['#1d4ed8','#f59e0b','#ef4444','#0ea5e9','#10b981','#94a3b8','#a50034','#7c3aed','#db2777','#0d9488','#ea580c','#65a30d','#475569','#be123c','#0369a1'])],
     ['선납 선택',grp('pre:',[['0','안 함'],['20','20%'],['30','30%'],['40','40%'],['50','50%'],['rate','비율 선납 (LG)'],['fix','정액 선납 (LG)']],['#cbd5e1','#a5b4fc','#818cf8','#6366f1','#4338ca','#f472b6','#be185d'])],
     ['사용 기기',grp('dev:',[['PC','PC'],['모바일','모바일']],['#334155','#22c55e'])],
     ['계약 기간',grp('term:',[['max','최장'],['other','그 외']],['#16a34a','#cbd5e1'])]].filter(function(g){return g[1];});
@@ -2068,14 +2069,16 @@ function admRosterBind(){var f=$('#rsFile');if(f)f.onchange=function(){var file=
   var q=$('#rsQ');if(q){q.oninput=function(){RS.q=this.value;RS.more=false;rsList();};$('#rsBr').onchange=function(){RS.br=this.value;rsList();};$('#rsTp').onchange=function(){RS.tp=this.value;rsList();};$('#rsOn').onchange=function(){RS.on=this.value;rsList();};
     $('#rsCsv').onclick=function(){csvDown([['사번','성명','소속','직책','구분','협력업체','오늘 접속','마지막 접속']].concat(rsRows().map(function(x){return [x[0]].concat(x[1]).concat([x[2]?x[2].n:0,x[2]?x[2].last:'']);})),'직원명부_접속_'+todayStr()+'.csv');};rsList();}}
 function rsExAdd(e,memo,days){gsr('adminRosterEx',{pw:ADM.pw,op:'add',emp:e,memo:memo||'',days:+days||0},function(r){if(r&&r.ok){if(RS.data)RS.data.ex=r.ex;RS.ex=r.ex;toast(e+' 예외 허용했어요');admRender();}else toast('허용하지 못했어요');});}
-var ABEST={days:7,data:null,load:false};
+var ABEST={days:7,data:null,load:false,br:''};
+function abBr(code){code=String(code);return code.indexOf('LG--')===0?'lg':code.indexOf('CK--')===0?'ck':'ss';}
 function admBestLoad(){ABEST.load=true;ABEST.data=null;gsr('adminBest',{pw:ADM.pw,days:ABEST.days},function(r){ABEST.load=false;ABEST.data=r&&r.ok?r:{ok:false};if(ADM.tab==='best')admRender();},function(){ABEST.load=false;ABEST.data={ok:false};if(ADM.tab==='best')admRender();});}
-function admBestHtml(){var R=ABEST.data,h='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button class="chip sm '+(ABEST.days===x[0]?'on':'')+'" data-abd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="abCsv">⬇ 엑셀(CSV)</button></div>';
+function admBestHtml(){var R=ABEST.data,h='<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button class="chip sm '+(ABEST.days===x[0]?'on':'')+'" data-abd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="abCsv">⬇ 엑셀(CSV)</button></div><div class="afb">'+[['','전체'],['ss','삼성'],['lg','LG'],['ck','쿠쿠']].map(function(x){return '<button class="'+(ABEST.br===x[0]?'on':'')+'" data-abb="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
   if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  if(R.ok&&ABEST.br){var LL=R.list.filter(function(x){return abBr(x[0])===ABEST.br;}),TT=[0,0,0,0];LL.forEach(function(x){for(var j=0;j<4;j++)TT[j]+=x[1+j];});R={ok:true,list:LL,total:TT,models:LL.length};}
   if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
   var T=R.total;h+='<div class="adm-kpi" style="margin-top:10px"><div><span>조회 모델 수</span><b>'+R.models+'</b></div><div><span>총 조회</span><b>'+T[0].toLocaleString()+'</b></div><div><span>담기</span><b>'+T[1].toLocaleString()+'</b></div><div><span>인쇄</span><b>'+T[2].toLocaleString()+'</b></div><div><span>보관</span><b>'+T[3].toLocaleString()+'</b></div></div>';
   h+=R.list.length?'<div class="scroll" style="margin-top:10px"><table class="tbl"><tr><th>순위</th><th>모델</th><th>조회</th><th>담기</th><th>인쇄</th><th>보관</th><th>담기율</th></tr>'+R.list.slice(0,100).map(function(x,i){var m=byCode[x[0]];
-    return '<tr><td><b>'+(i+1)+'</b></td><td style="text-align:left"><b>'+esc(x[0])+'</b>'+(m?'<br><small style="color:var(--sub)">'+esc(catOf(m))+' · '+esc(subOf(m))+'</small>':'')+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td><td>'+x[3]+'</td><td>'+x[4]+'</td><td>'+(x[1]?Math.round(x[2]/x[1]*100)+'%':'-')+'</td></tr>';}).join('')+'</table></div>':'<div class="empty" style="margin-top:12px">아직 집계된 기록이 없어요.</div>';
+    return '<tr><td><b>'+(i+1)+'</b></td><td style="text-align:left"><b>'+esc(String(x[0]).replace(/^(LG|CK)--/,''))+'</b>'+({lg:' <small style="color:#a50034;font-weight:800">LG</small>',ck:' <small style="color:#c8102e;font-weight:800">쿠쿠</small>'}[abBr(x[0])]||'')+(m?'<br><small style="color:var(--sub)">'+esc(catOf(m))+' · '+esc(subOf(m))+'</small>':'')+'</td><td>'+x[1]+'</td><td>'+x[2]+'</td><td>'+x[3]+'</td><td>'+x[4]+'</td><td>'+(x[1]?Math.round(x[2]/x[1]*100)+'%':'-')+'</td></tr>';}).join('')+'</table></div>':'<div class="empty" style="margin-top:12px">아직 집계된 기록이 없어요.</div>';
   return h+'<div class="note">조회 = 모델을 눌러 선택한 횟수 (같은 사번도 매번 집계) · 담기 = 담은 모델에 추가 · 인쇄/보관 = 견적에 포함된 횟수. 순위는 조회 + 담기×2 기준, 5분마다 반영돼요.</div>';}
 function admVerHtml(){return '<div class="hint" style="margin-top:10px">현재 버전 <b>'+VERSION+'</b> ('+VER_DATE+') · 수정 내역은 관리자만 볼 수 있어요</div>'+CHANGELOG.map(function(c,k){return '<div class="cl"><div class="h">'+c[0]+' <small>'+c[1]+'</small>'+(k===0?'<span class="new">NEW</span>':'')+'</div><ul>'+c[2].map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul></div>';}).join('');}
 function admQuoteLoad(){ADM.qload=true;gsr('adminListQuotes',{pw:ADM.pw},function(r){ADM.qload=false;if(r&&r.ok){ADM.quotes=r;}else ADM.quotes={ok:false};if(ADM.tab==='quote')admRender();},function(){ADM.qload=false;ADM.quotes={ok:false,err:1};if(ADM.tab==='quote')admRender();});}
@@ -2112,7 +2115,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
@@ -2206,6 +2209,7 @@ function admRender(){
   else if(t==='price')h+=admPriceHtml();
   else if(t==='promo')h+=admPromoHtml();
   else if(t==='lg')h+=admLgHtml();
+  else if(t==='ck')h+=admCkHtml();
   else if(t==='roster')h+=admRosterHtml();
   else if(t==='best')h+=admBestHtml();
   else if(t==='feat')h+=admFeatHtml();
@@ -2219,6 +2223,7 @@ function admRender(){
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
   if(t==='lg'){admLgBind();cpaBind();}
+  if(t==='ck')admCkBind();
   if(t==='emp')admEmpBind();
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
@@ -2231,6 +2236,7 @@ function admRender(){
     var adi=$('#afDate');if(adi)adi.onchange=function(){afGo(this.value.replace(/-/g,''));};
     var fc=$('#afCsv');if(fc)fc.onclick=function(){var R=AFEAT.data;if(!R||!R.ok)return;csvDown([['기능','횟수','사번 수','이전 기간']].concat(R.list.map(function(x){return [FNAME[x.k]?fnm(x.k):x.k,x.n,x.u,x.prev];})),(AFEAT.days==='d'?'기능사용_'+afBrandTag()+(AFEAT.date||todayStr().replace(/-/g,''))+'.csv':'기능사용_'+afBrandTag()+AFEAT.days+'일_'+todayStr()+'.csv'));};}
   if(t==='best'){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-abd]'),function(b){b.onclick=function(){ABEST.days=+b.dataset.abd;admBestLoad();admRender();};});
+    Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-abb]'),function(b){b.onclick=function(){ABEST.br=b.dataset.abb;admRender();};});
     var ac=$('#abCsv');if(ac)ac.onclick=function(){var R=ABEST.data;if(!R||!R.ok)return;csvDown([['순위','모델','품목','조회','담기','인쇄','보관']].concat(R.list.map(function(x,i){var m=byCode[x[0]];return [i+1,x[0],m?catOf(m)+' '+subOf(m):'',x[1],x[2],x[3],x[4]];})),'베스트모델_'+ABEST.days+'일_'+todayStr()+'.csv');};}
   if(t==='stat'){
     var fz=$('#admForce');if(fz)fz.onclick=function(){if(!confirm('열려 있는 모든 화면을 '+VERSION+'으로 업데이트할까요?\n(v7.6 이상 화면은 75초 안에 자동 새로고침, 담은 모델은 유지돼요)\n직원들은 자동 로그아웃되어 사번을 다시 입력해야 해요.'))return;
@@ -2388,8 +2394,9 @@ $('#blkGo').onclick=function(){var x=BLK.x,m=BLK.mode,bt=this;bt.disabled=true;
     if(r&&r.ok){$('#blkModal').classList.remove('on');toast('차단했어요 · 75초 안에 해당 화면이 잠겨요');admRefresh();}else toast('차단하지 못했어요');},function(){bt.disabled=false;toast('서버에 연결하지 못했어요');});};
 $('#liveBtn').onclick=function(){$('#admModal').classList.add('on');if(ADM.pw)admRender();else admLogin();};
 $('#admLink').onclick=function(e){e.preventDefault();$('#liveBtn').onclick();};
-$('#admClose').onclick=function(){$('#admModal').classList.remove('on');if(ADMIN_LG)location.href='lg.html';};
+$('#admClose').onclick=function(){$('#admModal').classList.remove('on');if(ADMIN_LG)location.href='lg.html';if(ADMIN_CK)location.href='cuckoo.html';};
 /* LG 계산기에서 ⚙ 관리자로 들어온 경우: 관리자 모드를 LG 단가표 탭으로 바로 열기 */
+if(ADMIN_CK){ADM.tab='ck';setTimeout(function(){$('#admModal').classList.add('on');if(ADM.pw){admRender();admInfo();}else admLogin();},300);}
 if(ADMIN_LG){ADM.tab='lg';setTimeout(function(){$('#admModal').classList.add('on');if(ADM.pw){admRender();admInfo();}else admLogin();},300);}
 $('#admModal').addEventListener('click',function(e){if(e.target.id==='admModal')$('#admModal').classList.remove('on');});
 var XLSX_URL='https:\/\/cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
@@ -2513,6 +2520,64 @@ function admPromoHtml(){
 }
 /* ---------- LG 단가표 (전자랜드 단가표 + 구독 활성화 요약) ---------- */
 var LGA={wb:null,file:'',res:null,err:'',ps:'',as:'',cur:null};
+/* ---------- 🅲 쿠쿠 단가 · 프로모션 (관리자) : 구독 단가 엑셀(ck) · 다품목 캐시백 가이드(ckm) ---------- */
+function ckMd(s){var p=String(s||'').split('-');return p.length<3?s:(+p[1])+'/'+(+p[2]);}
+var CKA={ck:{file:'',res:null,err:''},ckm:{file:'',res:null,err:''}};
+var CKCARD_N={lotte:'쿠쿠 롯데',woori:'쿠쿠 우리',samsung:'쿠쿠 삼성',hyundai:'쿠쿠 현대',shinhan:'쿠쿠 신한',kb:'KB 쿠쿠렌탈Ⅱ',hana:'쿠쿠 하나'};
+function ckLoadLibs(cb){var need=[];if(!window.CKParse)need.push('ck-parse.js');if(!window.CK_DATA)need.push('data/ck.js');if(!window.CK_MULTI)need.push('data/ck-multi.js');
+  var n=need.length;if(!n){cb();return;}need.forEach(function(src){var sc=document.createElement('script');sc.src=src+'?d='+Date.now();sc.onload=sc.onerror=function(){if(--n===0)cb();};document.head.appendChild(sc);});}
+function ckNow(){var n=new Date();return n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2)+' '+('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);}
+function ckDiff(r){var od=window.CK_DATA;if(!od||!od.m)return null;var ob={},o={newM:[],remM:[],up:0,down:0,same:0};od.m.forEach(function(m){ob[m[0]]=m;});
+  var mn=function(m){return Math.min.apply(null,m[2].map(function(x){return x[3];}));};
+  r.m.forEach(function(m){var a=ob[m[0]];if(!a){o.newM.push(m[0]);return;}var x=mn(m),y=mn(a);if(x>y)o.up++;else if(x<y)o.down++;else o.same++;});
+  var nb={};r.m.forEach(function(m){nb[m[0]]=1;});od.m.forEach(function(m){if(!nb[m[0]])o.remM.push(m[0]);});return o;}
+function admCkHtml(){
+  var i=ADM.info||{},u1=i.ck,u2=i.ckm,A=CKA.ck,B=CKA.ckm,cd=window.CK_DATA,cm=window.CK_MULTI;
+  var h='<div class="adm-sec" style="margin-top:12px">① 쿠쿠 구독 단가 엑셀 <small>\'구독 모델별 내용\' 시트 (+ \'카드 판촉\' 시트가 있으면 제휴카드도 같이)</small></div>';
+  h+='<div class="adm-card">현재 적용: <b>'+(u1?esc(u1.file||u1.label||'-'):'기본 단가표 (저장소)')+'</b>'+(u1?' · '+esc(u1.at||'')+' 업로드 · 모델 '+(u1.models||'-')+'개 · 요금 '+(u1.rows||'-')+'행'+(u1.cards?' · 카드 '+u1.cards+'종':''):(cd&&cd.m?' · 모델 '+cd.m.length+'개':''))+'</div>';
+  h+='<label class="file-drop">📂 쿠쿠 구독 단가 엑셀(.xlsx) 선택<br><small>예: 쿠쿠 구독 모델별 내용 2026.11.xlsx · 수당 · 수수료 등 판매사 정보는 읽지 않아요</small><input type="file" id="ckFile" accept=".xlsx,.xls"></label>';
+  if(A.err)h+='<div class="warn">'+esc(A.err)+'</div>';
+  if(A.res){var r=A.res,d=ckDiff(r),cats={};r.m.forEach(function(m){var c=r.cats[m[1]];cats[c]=(cats[c]||0)+1;});
+    h+='<div class="adm-card"><b>'+esc(A.file)+'</b> 읽기 완료 · 기준 <b>'+esc(r.meta.label||'-')+'</b><br>모델 <b>'+r.m.length+'</b>개 · 요금 <b>'+r.rows+'</b>행'+(r.cards?' · 제휴카드 <b>'+r.cards.length+'</b>종 ('+r.cards.map(function(c){return esc(c.name);}).join(', ')+')':' · 카드 판촉 시트 없음 (지금 카드 혜택 유지)')
+      +'<br>품목: '+Object.keys(cats).map(function(c){return esc(c)+' '+cats[c];}).join(' · ')
+      +(d?'<br><br><b>지금 단가표와 비교</b><br>신규 모델 '+d.newM.length+'개 · 없어진 모델 '+d.remM.length+'개 · 최저 월요금 인상 '+d.up+' · 인하 '+d.down+' · 동일 '+d.same
+        +(d.newM.length?'<br><small>신규: '+esc(d.newM.slice(0,12).join(', '))+(d.newM.length>12?' 외':'')+'</small>':'')+(d.remM.length?'<br><small>없어짐: '+esc(d.remM.slice(0,12).join(', '))+(d.remM.length>12?' 외':'')+'</small>':''):'')
+      +'<div class="hint" style="margin:8px 0 0">기준 달 ('+esc(r.meta.label||'파일 이름에서 못 찾음')+')은 파일 이름의 2026.11 같은 표기에서 읽어요 · 아래에서 바꿀 수 있어요</div>'
+      +'<div class="adm-form" style="margin-top:6px"><div><label>기준 달 (YYYY.MM)</label><input id="ckLabel" value="'+esc(r.meta.label||'')+'" placeholder="2026.11"></div></div></div>'
+      +'<button class="btn pri block" id="ckApply" style="margin-top:10px">이 단가표로 적용하기</button>';}
+  if(u1)h+='<button class="btn line sm" id="ckReset" style="margin-top:10px">기본 단가표로 되돌리기</button>';
+
+  h+='<div class="adm-sec" style="margin-top:22px;border-top:1px solid var(--line);padding-top:16px">② 쿠쿠 다품목 캐시백 가이드 <small>\'공지요약\' (더블 기간 · 제외 품목 · 대상카드) + \'모델리스트\' (일시불 · 구독 캐시백)</small></div>';
+  h+='<div class="adm-card">현재 적용: <b>'+(u2?esc(u2.file||u2.label||'-'):'기본 가이드 (저장소)')+'</b>'+(u2?' · '+esc(u2.at||'')+' 업로드 · 일시불 '+(u2.lump||'-')+'개 · 구독 '+(u2.sub||'-')+'개 · 더블 '+(u2.dbl||0)+'회':(cm&&cm.lump?' · 일시불 '+cm.lump.length+'개':''))+'</div>';
+  h+='<label class="file-drop">💰 다품목 캐시백 가이드 엑셀(.xlsx) 선택<br><small>예: 쿠쿠 다품목 캐시백 가이드 26.11.xlsx</small><input type="file" id="ckmFile" accept=".xlsx,.xls"></label>';
+  if(B.err)h+='<div class="warn">'+esc(B.err)+'</div>';
+  if(B.res){var q=B.res,cnt={};q.lump.forEach(function(x){cnt[x[0]]=(cnt[x[0]]||0)+1;});
+    h+='<div class="adm-card"><b>'+esc(B.file)+'</b> 읽기 완료 · 기준 <b>'+esc(q.label)+'</b><br>일시불 대상 <b>'+q.lump.length+'</b>개 · 구독 대상 <b>'+q.subRaw.length+'</b>개 (전자랜드 상품코드)'
+      +'<br>더블 기간: '+(q.dbl.length?q.dbl.map(function(p){return ckMd(p[0])+"~"+ckMd(p[1]);}).join(' · '):'<b style="color:#dc2626">없음</b>')
+      +'<br>더블 제외: '+(q.dblEx.length?esc(q.dblEx.join(', ')):'없음')+' · 대상카드: '+esc(q.cards||'-')
+      +'<br><small>일시불 품목: '+Object.keys(cnt).map(function(c){return esc(c)+' '+cnt[c];}).join(' · ')+'</small></div>'
+      +'<button class="btn pri block" id="ckmApply" style="margin-top:10px">이 가이드로 적용하기</button>';}
+  if(u2)h+='<button class="btn line sm" id="ckmReset" style="margin-top:10px">기본 가이드로 되돌리기</button>';
+  h+='<div class="note">적용하면 쿠쿠 계산기에 바로 반영되고, 직원 화면은 새로 접속하거나 다음 접속 때 자동으로 새로 불러와요. 이전 파일은 드라이브 \'삼성AI구독_데이터\' 폴더에 백업돼요. 사진 · 기본 구독료(쿠쿠 홈페이지)는 그대로 유지돼요.</div>';
+  if(ADMIN_CK)h+='<a class="btn line sm" href="cuckoo.html" style="margin-top:10px;display:inline-flex;text-decoration:none">← 쿠쿠 계산기로 돌아가기</a>';
+  return h;}
+function admCkBind(){
+  if(!window.CKParse||!window.CK_DATA||!window.CK_MULTI)ckLoadLibs(function(){if(ADM.tab==='ck')admRender();});
+  var f=$('#ckFile');if(f)f.onchange=function(){var file=f.files[0];if(!file)return;toast('엑셀을 읽는 중…');
+    ckLoadLibs(function(){readXlsxFile(file,function(wb){var A=CKA.ck;A.file=file.name;try{A.res=CKParse.build(XLSX,wb,null,file.name);A.err='';}catch(e){A.res=null;A.err=String(e.message||e);}admRender();});});};
+  var g=$('#ckmFile');if(g)g.onchange=function(){var file=g.files[0];if(!file)return;toast('엑셀을 읽는 중…');
+    ckLoadLibs(function(){readXlsxFile(file,function(wb){var B=CKA.ckm;B.file=file.name;try{B.res=CKParse.buildMulti(XLSX,wb,file.name);B.err='';}catch(e){B.res=null;B.err=String(e.message||e);}admRender();});});};
+  var save=function(kind,btn,r,label,done){btn.disabled=true;btn.textContent='저장 중… (20초쯤 걸릴 수 있어요)';
+    gsr('adminSaveData',{pw:ADM.pw,kind:kind,payload:JSON.stringify(r)},function(x){if(!x||!x.ok){btn.disabled=false;btn.textContent=label;toast((x&&x.msg)||'저장하지 못했어요');return;}done();admInfo();},
+      function(){btn.disabled=false;btn.textContent=label;toast('서버에 연결하지 못했어요');});};
+  var a=$('#ckApply');if(a)a.onclick=function(){var r=CKA.ck.res;if(!r)return;var lb=($('#ckLabel').value||'').trim();if(lb&&!/^\d{4}\.\d{2}$/.test(lb)){toast('기준 달은 2026.11처럼 적어 주세요');return;}
+    r.meta.label=lb||r.meta.label;r.meta.at=ckNow();r.meta.file=CKA.ck.file;r.meta.models=r.m.length;r.meta.by=EMP||'';delete r.rows;
+    save('ck',a,r,'이 단가표로 적용하기',function(){window.CK_DATA=r;CKA.ck={file:'',res:null,err:''};toast('쿠쿠 단가표를 적용했어요 ('+r.m.length+'개 모델)');});};
+  var b=$('#ckmApply');if(b)b.onclick=function(){var r=CKA.ckm.res;if(!r)return;r.meta.at=ckNow();r.meta.by=EMP||'';
+    save('ckm',b,r,'이 가이드로 적용하기',function(){window.CK_MULTI=r;CKA.ckm={file:'',res:null,err:''};toast('다품목 캐시백 가이드를 적용했어요');});};
+  [['ckReset','ck','쿠쿠 기본 단가표'],['ckmReset','ckm','기본 다품목 가이드']].forEach(function(x){var rs=$('#'+x[0]);if(rs)rs.onclick=function(){if(rs.dataset.s!=='1'){rs.dataset.s='1';rs.textContent='한 번 더 누르면 되돌려요';return;}
+    gsr('adminResetData',{pw:ADM.pw,kind:x[1]},function(){toast(x[2]+'로 되돌렸어요');if(x[1]==='ck')window.CK_DATA=null;else window.CK_MULTI=null;ckLoadLibs(function(){});admInfo();});};});
+}
 function lgLoadLibs(cb){var need=[];if(!window.LGParse)need.push('lg-parse.js');if(!window.LG_DATA)need.push('data/lg.js');
   var n=need.length;if(!n){cb();return;}need.forEach(function(src){var sc=document.createElement('script');sc.src=src+'?d='+Date.now();sc.onload=sc.onerror=function(){if(--n===0)cb();};document.head.appendChild(sc);});}
 function lgCur(){var i=ADM.info;return i&&i.lg?i.lg:(window.LG_DATA?window.LG_DATA.meta:null);}
