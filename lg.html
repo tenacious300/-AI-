@@ -860,6 +860,7 @@ function renderList(){var raw=$('#q').value.trim(),q=raw.toUpperCase().replace(/
   if(CAT){var r2=D.m.filter(function(m){var c=D.cats[m[1]];return grp(c)===CAT&&(!SUB||subOf(c)===SUB);});l.style.display='block';l.innerHTML=r2.map(itemHtml).join('')||'<div class="msg">모델이 없어요</div>';}
   else l.style.display='none';}
 $('#q').addEventListener('input',renderList);
+var fuQT=null;$('#q').addEventListener('input',function(){clearTimeout(fuQT);var v=this.value.trim();if(v.length>=2)fuQT=setTimeout(function(){fuLog('search');},1500);});
 $('#qClr').onclick=function(){$('#q').value='';renderList();$('#q').focus();};
 $('#qList').addEventListener('click',function(e){var it=e.target.closest('.it');if(it)pickModel(it.dataset.c);});
 $('#list').addEventListener('click',function(e){var it=e.target.closest('.it');if(it)pickModel(it.dataset.c);});
@@ -926,7 +927,8 @@ $('#cycles').addEventListener('click',function(e){var b=e.target.closest('.chip'
 $('#pkPre').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.preK=b.dataset.v;renderPicked();});
 $('#addBtn').onclick=function(){if(!S.sel)return;var m=BY[S.sel.code],p=selRow(m).p;
   S.cart.push({code:m[0],term:p[R.term],ct:p[R.ct],cs:p[R.cs],cy:p[R.cy],preK:S.sel.preK});
-  mvLog(m[0],'add');S.sel=null;$('#picked').style.display='none';$('#q').value='';CAT=null;SUB=null;renderCats();renderList();render();toast(m[0]+' 담았어요 ('+S.cart.length+'개)');};
+  mvLog(m[0],'add');fuLog('add');fuLog('cust:'+S.cust);fuLog('term:'+(p[R.term]>=Math.max.apply(null,m[2].map(function(r){return r[R.term];}))?'max':'other'));var pk=S.sel.preK||'0';fuLog('pre:'+(pk==='0'?'0':pk[0]==='f'?'fix':'rate'));
+  S.sel=null;$('#picked').style.display='none';$('#q').value='';CAT=null;SUB=null;renderCats();renderList();render();toast(m[0]+' 담았어요 ('+S.cart.length+'개)');};
 
 /* ====== 계산 ====== */
 function calcItems(){var out=[];S.cart=S.cart.filter(function(it){var m=BY[it.code];if(!m)return false;
@@ -1064,12 +1066,12 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
         +'<div class="tot"><span>고객 총 혜택</span><span>'+won(t.sumDisc+t.cardTot+t.extra)+(t.gifts?' + 상품권 '+won(t.gifts):'')+'</span></div></div>';
   }
   $('#sList').innerHTML=h;
-  var lt=$('#lTog');if(lt)lt.onclick=function(){S.lumpOn=!S.lumpOn;render();};
+  var lt=$('#lTog');if(lt)lt.onclick=function(){S.lumpOn=!S.lumpOn;if(S.lumpOn)fuLog('lump');render();};
   Array.prototype.forEach.call(document.querySelectorAll('#sList [data-lump]'),function(inp){
     inp.oninput=function(){var v=this.value.replace(/[^0-9]/g,'');this.value=v?(+v).toLocaleString():'';};
     inp.onchange=function(){var c=S.cart[+this.dataset.lump];if(c){var v=+(this.value.replace(/[^0-9]/g,''))||0;c.lump=v;c.lumpManual=!!v;render();}};});
   Array.prototype.forEach.call(document.querySelectorAll('#sList [data-lreset]'),function(a){a.onclick=function(e){e.preventDefault();var c=S.cart[+a.dataset.lreset];if(c){c.lumpManual=false;render();}};});
-  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;render();};var fg=$('#fTog');if(fg)fg.onclick=function(){S.showFeel=!S.showFeel;render();};
+  var tg=$('#sTog');if(tg)tg.onclick=function(){S.showTot=!S.showTot;if(S.showTot)fuLog('detail');render();};var fg=$('#fTog');if(fg)fg.onclick=function(){S.showFeel=!S.showFeel;render();};
   var ph='';
   if(n){var sched;
     if(cs&&cs.tier)sched=cs.months;else{sched=[];for(var m=1;m<=feelN;m++)sched.push({m:m,pay:items.reduce(function(a,i){return a+payAt(i,m);},0),b:0,p:0});}
@@ -1095,7 +1097,7 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
 $('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();return;}var s=e.target.closest('[data-pre]');if(!s)return;S.cart[+s.dataset.pre].preK=s.value;render();});
-$('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;render();});
+$('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;if(S.card&&S.card!=='none')fuLog('card:lg-'+S.card);render();});
 $('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
 $('#cmpTerm').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cmpY=+b.dataset.v;render();});
@@ -1114,7 +1116,7 @@ function quoteText(){var items=calcItems(),t=totals(items),d=new Date(),me=meGet
   if(t.sumP)o.push('▶ 선납금 '+won(t.sumP));
   o.push('※ 활성화·카드 프로모션은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
   if(me)o.push('담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' '));return o.join('\n');}
-$('#copyBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}var t=quoteText(),done=function(){toast('견적을 복사했어요');};
+$('#copyBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}var t=quoteText(),done=function(){fuLog('copy');toast('견적을 복사했어요');};
   function fb(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){prompt('아래 내용을 복사해 주세요',t);}document.body.removeChild(ta);}
   if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(t).then(done,fb);else fb();};
 
@@ -1181,7 +1183,7 @@ $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};
 Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');var lm=b.dataset.pm==='lump'||b.dataset.pm==='feellump';
   if(lm){S.lumpOn=true;render();}
   if(lm&&!S.cart.every(function(i){return i.lump>0;})){var lb=$('#lTog');if(lb)lb.scrollIntoView({behavior:'smooth',block:'start'});toast('⚖️ 모델별 일시불 구매가를 먼저 입력해 주세요');return;}
-  printQuote(b.dataset.pm);};});
+  fuLog('print');fuLog('print:'+b.dataset.pm);printQuote(b.dataset.pm);};});
 window.__previewQuote=function(mode){buildPrint(mode||'basic');document.body.classList.add('preview');};
 
 /* ====== 서랍: 비교하기 · 활성화 모델 ====== */
@@ -1216,7 +1218,7 @@ function cmpRender(){
    +row('일시불 기준가',function(i){return '<td>'+(i.lp?won(i.lp):'-')+'</td>';})
    +row('',function(i){return '<td><a class="link" target="_blank" rel="noopener" href="'+lgUrl(i.code)+'">LG전자 ↗</a></td>';})
    +'</table></div>';}
-function cmpOpen(){drawerOpen('#cmpDrawer');cmpRender();}
+function cmpOpen(){fuLog('cmp');drawerOpen('#cmpDrawer');cmpRender();}
 $('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
 $('#xTab').onclick=function(){location.href='./?xcmp=1&from=lg';};
 var winCat=null;
@@ -1233,33 +1235,36 @@ function winRender(){var W=winList(),cats=GROUPS.filter(function(g){return W[g];
     return '<div class="wl-it"><div><b>'+esc(m[0])+'</b><div class="m">'+esc(o&&o.name?o.name:D.cats[m[1]])+(a.note?' · '+esc(a.note):'')+'</div><div style="margin-top:3px">'+t+'</div></div>'
       +'<div class="r"><span class="m">할인 후 월</span><span class="mo">'+(mn!==null?won(mn)+'~':'-')+'</span></div><button class="btn pri" data-pick="'+esc(m[0])+'">선택</button></div>';}).join('')
     :'<div class="empty" style="background:#fff">'+(q?'\''+esc(q)+'\' 모델은 이번 주 활성화 대상이 아니에요.':'해당 모델이 없어요.')+'</div>');}
-$('#winTab').onclick=function(){drawerOpen('#winDrawer');winRender();};
+$('#winTab').onclick=function(){fuLog('win');drawerOpen('#winDrawer');winRender();};
 $('#winChips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;winCat=b.dataset.v;$('#winQ').value='';winRender();$('#winBody').scrollTop=0;});
 $('#winQ').addEventListener('input',winRender);
 $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data-pick]');if(!b)return;careClose();pickModel(b.dataset.pick);
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.23',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.24',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
   try{localStorage.setItem('calcDid',v);}catch(e){}try{document.cookie='calcDid='+v+';max-age=31536000;path=/;SameSite=Lax';}catch(e){}return v;})();
 function devName(){var u=navigator.userAgent;var m=/Mobi|Android|iPhone|iPad/i.test(u)?'모바일':'PC';
   var b=/SamsungBrowser/.test(u)?'삼성인터넷':/Whale/.test(u)?'웨일':/Edg/.test(u)?'엣지':/KAKAOTALK/i.test(u)?'카카오톡':/NAVER/.test(u)?'네이버앱':/CriOS|Chrome/.test(u)?'크롬':/Safari/.test(u)?'사파리':'기타';return m+' · '+b;}
-var firstBeat=true;
+var firstBeat=true,FU={};
+/* 기능 사용 기록: 삼성과 나눠 보도록 'L_' 접두어 */
+function fuLog(k){var key='L_'+k;FU[key]=(FU[key]||0)+1;if(k.indexOf(':')<0){var h='L_h:'+('0'+new Date().getHours()).slice(-2);FU[h]=(FU[h]||0)+1;}}
 function mvLog(code,type){if(code)EVQ.push(['LG--'+code,type]);if(EVQ.length>200)EVQ=EVQ.slice(-200);}
 function idleMin(){return Math.floor((Date.now()-LASTIN)/60000);}
 ['pointerdown','keydown','touchstart','wheel','scroll','input'].forEach(function(e){window.addEventListener(e,function(){LASTIN=Date.now();if(FB.gone)fbPresence(true);},{passive:true,capture:true});});
 function curAct(){if($('#cmpDrawer').classList.contains('on'))return 'LG · 비교하기';if($('#winDrawer').classList.contains('on'))return 'LG · 활성화 모델';if($('#picked').style.display==='block')return 'LG · 모델 선택 중';if($('#q').value.trim())return 'LG · 모델 검색 중';if(S.cart.length)return 'LG · 견적 작성 중';return 'LG · 대기';}
 function beat(){if(!EMP||!window.API_URL)return;window.__lastBeat=Date.now();
-  var evs=EVQ.splice(0,60),idl=idleMin(),fu={};if(firstBeat){fu['dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;fu['lg']=1;}
+  var evs=EVQ.splice(0,60),idl=idleMin(),fu=FU;FU={};if(firstBeat){fu['L_dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;}
   var info={fu:fu,act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:LG_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
-  api('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);}
+  var refu=function(){Object.keys(fu).forEach(function(k){FU[k]=(FU[k]||0)+fu[k];});};
+  api('heartbeat',info,function(r){if(!r||r.online===-1){EVQ=evs.concat(EVQ);refu();}
     if(r&&r.blocked){if(r.reason==='roster'){try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(e){}}else lsPut('calcBlocked',1);location.href='./';return;}
     if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}
-    if(r&&r.me!==undefined&&r.me)lsPut('calcMe',{emp:EMP,name:r.me.name,br:r.me.br,rank:r.me.rank});},function(){EVQ=evs.concat(EVQ);if(!FB.on)$('#liveBtn').classList.add('off');});}
+    if(r&&r.me!==undefined&&r.me)lsPut('calcMe',{emp:EMP,name:r.me.name,br:r.me.br,rank:r.me.rank});},function(){EVQ=evs.concat(EVQ);refu();if(!FB.on)$('#liveBtn').classList.add('off');});}
 function fbPresence(on){if(!FB.me)return;try{if(on){FB.gone=false;FB.me.onDisconnect().remove();FB.me.set(firebase.database.ServerValue.TIMESTAMP);}else{FB.gone=true;FB.me.remove();}}catch(e){}}
 setInterval(function(){if(FB.me&&!FB.gone&&idleMin()>=30)fbPresence(false);},60000);
 function loadJs(u,cb){var sc=document.createElement('script');sc.src=u;sc.onload=cb;document.head.appendChild(sc);}
@@ -1295,7 +1300,7 @@ function bestRender(){var el=$('#bestSec'),r=BEST.data[BEST.days];el.style.displ
   el.innerHTML=h;hScroll(el.querySelector('.rw'));
   Array.prototype.forEach.call(el.querySelectorAll('[data-bd]'),function(b){b.onclick=function(){BEST.days=+b.dataset.bd;bestRender();bestLoad();};});
   var ba=el.querySelector('[data-ball]');if(ba)ba.onclick=function(){BEST.all=!BEST.all;bestRender();};
-  Array.prototype.forEach.call(el.querySelectorAll('[data-bc]'),function(b){b.onclick=function(){pickModel(b.dataset.bc);};});}
+  Array.prototype.forEach.call(el.querySelectorAll('[data-bc]'),function(b){b.onclick=function(){fuLog('best');pickModel(b.dataset.bc);};});}
 function startBeat(){if(!EMP||$('#gate').classList.contains('on'))return;fbInit();bestRender();bestLoad();beat();setInterval(beat,75000);setInterval(bestLoad,300000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden){LASTIN=Date.now();if(FB.gone)fbPresence(true);}if(Date.now()-(window.__lastBeat||0)>5000)beat();});}
 
