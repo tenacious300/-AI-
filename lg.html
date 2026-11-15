@@ -1343,7 +1343,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.32',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.35',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
