@@ -3,11 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AI 구독 계산기 · LG</title>
-<meta name="description" content="LG 가전구독 월 요금 · 결합할인 · 활성화 혜택을 한 번에 계산해 보세요.">
+<title>삼성·LG 통합 구독 계산기 · LG</title>
+<meta name="description" content="삼성 AI 구독 · LG 가전구독 월 구독료 · 결합 할인 · 제휴카드 혜택을 한 번에 계산하고 비교해 보세요.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="AI 구독 계산기 · LG">
-<meta property="og:description" content="LG 가전구독 월 요금 · 결합할인 · 활성화 혜택을 한 번에 계산해 보세요.">
+<meta property="og:site_name" content="삼성·LG 통합 구독 계산기">
+<meta property="og:title" content="삼성·LG 통합 구독 계산기">
+<meta property="og:description" content="삼성 AI 구독 · LG 가전구독 월 구독료 · 결합 할인 · 제휴카드 혜택을 한 번에 계산하고 비교해 보세요.">
+<meta property="og:url" content="https://tenacious300.github.io/-AI-/lg.html">
+<meta property="og:image" content="https://tenacious300.github.io/-AI-/og-share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0f1d45">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -1242,7 +1249,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.24',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.25',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
