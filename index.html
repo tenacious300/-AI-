@@ -668,11 +668,41 @@ a.link{color:var(--tp)}
 .cmpchk{border-radius:10px}
 .qi,.wl-it{border-radius:18px;box-shadow:var(--sh)}
 input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
-/* 일시불 비교: 닷컴 기준가 입력칸 (어두운 카드 위에서 잘 보이게) */
-.sum .lumpin input{background:#fff!important;color:#191F28!important;border:2px solid transparent!important;border-radius:10px!important;min-height:40px;font-weight:800;font-size:15px;padding:6px 10px;box-shadow:none}
-.sum .lumpin input::placeholder{color:#8B95A1;font-weight:600}
-.sum .lumpin input:focus{outline:0;border-color:var(--tp)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--tp) 35%,transparent)!important}
-.sum .lumpin span{opacity:1}.sum .lumpin span small{opacity:.75}
+/* 일시불 비교 카드 (새 디자인) */
+.sum .sgrp.lump-g{background:rgba(255,255,255,.06);border:0;border-radius:18px;padding:14px 14px 12px}
+.lp-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}.lp-h b{font-size:14.5px}
+.lp-h span{font-size:11.5px;font-weight:700;background:rgba(255,255,255,.1);border-radius:99px;padding:3px 9px;white-space:nowrap}
+.sum .lumpin{padding:9px 0;gap:10px;border-top:1px solid rgba(255,255,255,.07)}
+.sum .lumpin span{opacity:1;font-size:13.5px;font-weight:700;min-width:0;overflow-wrap:anywhere}
+.sum .lumpin span small{font-size:11.5px;font-weight:500;opacity:.6;margin-top:2px}
+.lp-iw{display:flex;align-items:center;gap:4px;flex:none;width:148px;min-height:42px;padding:0 12px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.14);border-radius:12px;cursor:text;transition:border-color .15s,background .15s}
+.lp-iw:focus-within{border-color:var(--tp);background:rgba(255,255,255,.12)}
+.sum .lp-iw input{flex:1;min-width:0;width:100%;min-height:0;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important;padding:0!important;color:#fff!important;font-size:16px;font-weight:800;text-align:right}
+.sum .lp-iw input::placeholder{color:rgba(255,255,255,.3);font-weight:700}
+.lp-iw em{font-style:normal;font-size:13px;opacity:.65}
+.lp-viz{margin-top:4px;padding-top:12px;border-top:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:12px}
+.lp-bh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;margin-bottom:6px}.lp-bh span{opacity:.8}.lp-bh small{opacity:.75;font-size:11px}.lp-bh b{font-size:15px;white-space:nowrap}
+.lp-tr{height:10px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}.lp-tr i{display:block;height:100%;border-radius:99px;min-width:6px}
+.lp-tr i.l{background:#8B95A1}.lp-tr i.s{background:var(--tp)}
+.lp-vd{display:flex;gap:10px;align-items:center;margin-top:14px;border-radius:14px;padding:12px 14px}
+.lp-vd.dn{background:rgba(11,163,96,.16)}.lp-vd.up{background:rgba(255,138,61,.15)}
+.lp-vd .ic{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:14px;flex:none;color:#fff}
+.lp-vd.dn .ic{background:#0BA360}.lp-vd.up .ic{background:#FF8A3D}
+.lp-vd b{display:block;font-size:15px;line-height:1.35}.lp-vd b em{font-style:normal}.lp-vd.dn b em{color:#6EE7B7}.lp-vd.up b em{color:#FFB37A}
+.lp-vd small{display:block;font-size:12px;opacity:.7;margin-top:2px}
+.sum .lump-g .snote{display:block;margin-top:10px;font-size:11.5px;opacity:.55;line-height:1.5}
+.sum .lump-g .snote a,.sum .lumpin small a{color:inherit;text-decoration:underline}
+.sum-l .lump-g div{padding:0}
+.sum-l .lp-viz{display:flex;flex-direction:column;gap:12px;padding-top:12px}
+.sum-l .lp-b,.sum-l .lp-tr,.sum-l .lp-vd>div{display:block}
+.sum-l .lp-bh{display:flex;justify-content:space-between;align-items:baseline}
+.sum-l .lp-vd{display:flex;padding:12px 14px}
+.sum-l .lp-h{display:flex}
+.sum .lumpin span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sum .lumpin span small{white-space:normal}
+.sum-l .lump-g .lumpin{padding:8px 0;justify-content:flex-start}
+.sum-l .lp-vd{justify-content:flex-start;align-items:center}
+.sum-l .lp-bh{align-items:flex-end}.lp-bh small{display:block;margin-top:1px}
 /* ===== 새 디자인 끝 ===== */
 
 /* ===== 사용성 개선 (UX) ===== */
@@ -733,6 +763,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .cap-mode .sh-more1{background:rgba(49,130,246,.35)}
 .cap-mode,.cap-mode *{letter-spacing:0!important;font-feature-settings:normal!important}
 .cap-mode .cap-val{font-size:15px;font-weight:800;white-space:nowrap}
+.cap-mode .lp-iw .cap-val{flex:1;text-align:right;font-size:16px}
 .cap-foot{display:flex;flex-direction:column;gap:2px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.6}
 /* ===== 사용성 개선 끝 ===== */
 </style>
@@ -1078,8 +1109,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.37',VER_DATE='2026.11.15';
+var VERSION='v8.38',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.38','11.15',['⚖️ 일시불 구매 vs 구독 비교를 새 디자인으로: 깔끔한 입력칸, 막대로 한눈에 비교, 결과를 색깔 배지로 강조']],
   ['v8.37','11.15',['📸 견적 캡처: 화면의 견적 카드를 그대로 이미지로 저장 (대표 모델 사진 · 조건 · 금액 · 포인트, 입력한 일시불 비교 포함)']],
   ['v8.36','11.15',['🎨 화면 디자인을 새롭게 (밝은 카드 · 반투명 상단바 · Pretendard 글꼴)','🔍 검색이 더 똑똑해짐: 띄어쓰기·하이픈 무시, 단어 순서 무관, 줄임말(김냉·식세기·티비·갤북 등), 없으면 비슷한 모델 표시','📈 조건을 바꾸면 월 납부액이 얼마나 바뀌었는지 바로 표시','🖼 견적 카드 위에 대표 모델 사진 · 제품명 · 계약 조건 요약','📱 모바일: 옆 탭을 \'도구\' 하나로 정리, 보관함은 하단바로, 버튼을 더 크게, 휴대폰에서 \'견적 공유\'로 바로 카톡 전송','⚖️ 일시불 비교의 닷컴 기준가 입력칸이 잘 보이게 수정']],
   ['v8.35','11.15',['🅻 LG 제휴카드를 누르면 카드 이미지와 정책 표시 (간편/개별신청 · 실적 인정 · 전월실적별 할인 · 할인 기간 · 연회비 · 발급 ARS · 최대 혜택 총액)']],
@@ -1587,13 +1619,14 @@ function render(){
     var LP=lumpCalc(items,feelT,feelN);
     h+='<button class="stog lump-b" id="lTog" type="button">'+(S.lumpOn?'⚖️ 일시불 비교 끄기 ▴':'⚖️ 일시불 구매와 비교 <small style="font-weight:500;opacity:.8">(선택)</small> ▾')+'</button>';
     if(S.lumpOn){
-      h+='<div class="sgrp lump-g"><div class="sg-h">⚖️ 일시불 구매 vs 구독 ('+yy+')</div>'
+      h+='<div class="sgrp lump-g"><div class="lp-h"><b>⚖️ 일시불 구매 vs 구독</b><span>'+yy+'</span></div>'
         +items.map(function(it,i){var o=INFO[it.code]||{},lp=o.st==='ok'&&o.lp>=it.mon*10?o.lp:0;
           var src=it.lumpManual?(lp?'직접 입력 · <a href="#" data-lreset="'+i+'">↺ 기준가 '+won(lp)+'</a>':'직접 입력'):lp?'삼성닷컴 기준가':(o.st==='loading'?'기준가 불러오는 중…':'기준가를 못 찾았어요 · 직접 입력');
-          return '<div class="lumpin"><span>'+esc(it.code)+' 구매가<small>'+src+'</small></span><input type="text" inputmode="numeric" data-lump="'+i+'" value="'+(it.lump?it.lump.toLocaleString():'')+'" placeholder="금액 입력"></div>';}).join('');
+          return '<div class="lumpin"><span>'+esc(it.code)+'<small>'+src+'</small></span><label class="lp-iw"><input type="text" inputmode="numeric" data-lump="'+i+'" value="'+(it.lump?it.lump.toLocaleString():'')+'" placeholder="0" aria-label="'+esc(it.code)+' 일시불 구매가"><em>원</em></label></div>';}).join('');
       if(LP.ok){
-        h+=row('일시불 구매가 합계',won(LP.L))+row('구독 총 실부담 <small style="opacity:.7">(카드·포인트 반영)</small>',won(feelT))
-          +'<div class="tot"><span>'+(LP.diff>0?'구독이 더 들어요':'구독이 덜 들어요')+'</span><span>'+won(Math.abs(LP.diff))+' <small style="opacity:.7">(월 '+won(Math.abs(LP.diffM))+')</small></span></div>'
+        h+=(function(L,T,d,dm,why){var mx=Math.max(L,T)||1,a=Math.abs(d),pct=L?Math.round(a/L*100):0,bar=function(lb,v,c){return '<div class="lp-b"><div class="lp-bh"><span>'+lb+'</span><b>'+won(v)+'</b></div><div class="lp-tr"><i class="'+c+'" style="width:'+Math.max(3,Math.round(v/mx*100))+'%"></i></div></div>';};
+          return '<div class="lp-viz">'+bar('일시불 구매',L,'l')+bar('구독 총 실부담 <small>('+why+')</small>',T,'s')+'</div>'
+            +'<div class="lp-vd '+(d>0?'up':'dn')+'"><span class="ic">'+(d>0?'!':'✓')+'</span><div><b>구독이 <em>'+won(a)+'</em> '+(d>0?'더 들어요':'덜 들어요')+'</b><small>월 '+won(Math.abs(dm))+' 차이 · 일시불 대비 '+pct+'% '+(d>0?'높아요':'낮아요')+'</small></div></div>';})(LP.L,feelT,LP.diff,LP.diffM,'카드·포인트 반영')
           +'<div class="snote" style="display:block">구독은 무상수리연장 서비스가 들어있습니다. 단순 금액 비교예요.</div>';
       }else h+='<div class="snote" style="display:block">담은 모델의 구매가를 모두 입력하면 비교돼요 ('+LP.have+' / '+items.length+')</div>';
       h+='</div>';
@@ -2560,7 +2593,7 @@ function capShot(){
     return html2canvas(el,{scale:Math.min(3,Math.max(2,1000/w)),backgroundColor:null,useCORS:true,logging:false,imageTimeout:4000,
       onclone:function(doc){var c=doc.querySelector('.card.sum');if(!c)return;c.classList.add('cap-mode');c.style.position='static';
         var f=doc.createElement('div');f.className='cap-foot';f.innerHTML='<span>전자랜드 여수본점'+(EMP?' · 담당 '+esc(EMP):'')+' · '+ds+' 견적</span><span>※ 참고용 견적 · 최종 금액은 계약 시 확인</span>';c.appendChild(f);
-        [].forEach.call(c.querySelectorAll('.lumpin input'),function(ip){var sp=doc.createElement('b');sp.className='cap-val';sp.textContent=ip.value?ip.value+'원':'미입력';ip.replaceWith(sp);});
+        [].forEach.call(c.querySelectorAll('.lumpin input'),function(ip){var sp=doc.createElement('b');sp.className='cap-val';sp.textContent=ip.value||'미입력';ip.replaceWith(sp);});
         [].forEach.call(c.querySelectorAll('.sgrp'),function(g){if(g.querySelector('.lumpin')&&!g.querySelector('.lumpin .cap-val:not(:empty)')){}if(g.querySelector('.lumpin')&&![].some.call(g.querySelectorAll('.cap-val'),function(v){return v.textContent!=='미입력';}))g.style.display='none';});
         [].forEach.call(c.querySelectorAll('img'),function(im){if(!im.complete||!im.naturalWidth){var sp=doc.createElement('span');sp.textContent='📦';im.replaceWith(sp);}});}});});}
 function capQuote(){var items=calcItems();if(!items.length){toast('담은 모델이 없어요');return;}
