@@ -1926,11 +1926,14 @@ function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기'
 function afBrandTag(){return AFEAT.brand==='ss'?'삼성_':AFEAT.brand==='lg'?'LG_':'';}
 function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,brand:AFEAT.brand,days:AFEAT.days==='d'?1:AFEAT.days,date:AFEAT.days==='d'?(AFEAT.date||todayStr().replace(/-/g,'')):''},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
 /* ---------- 🧾 사번별 이용 : 삼성 · LG 둘 다 써 봤는지 ---------- */
-var AEMP={days:30,data:null,basis:'d',st:'all',br:'',q:''};
+var AEMP={days:30,data:null,basis:'d',st:'all',br:'',q:'',open:''};
+var AEXTRA={lump:['⚖️','일시불 비교'],fav:['⭐','즐겨찾기'],logout:['🚪','로그아웃']};
+function aeFn(k,lg){if(k==='win')return ['🏆',lg?'활성화 모델 보기':'판촉 모델 보기'];return FNAME[k]||AEXTRA[k]||null;}
+function aeTop(f,lg){var k=Object.keys(f||{}).filter(function(k){return aeFn(k,lg)&&k!=='logout';}).sort(function(a,b){return f[b]-f[a];});return k;}
 function admEmpLoad(){AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
 function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4],a:[1,5],q:[2,6]}[AEMP.basis];
   var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0;
-    L.push({e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,r:r,s:s,l:l,st:s&&l?'both':s?'ss':l?'lg':'none'});};
+    var fe=(R.feats||{})[e]||[{},{}];L.push({f:fe,e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,r:r,s:s,l:l,st:s&&l?'both':s?'ss':l?'lg':'none'});};
   Object.keys(ro).forEach(push);Object.keys(rows).forEach(push);return L;}
 function aeMd(d){return d?(+d.slice(4,6))+'/'+(+d.slice(6,8)):'';}
 function admEmpHtml(){var R=AEMP.data,h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><div class="chips" style="margin:0">'+[[7,'7일'],[30,'30일'],[90,'90일'],[0,'전체 기간']].map(function(x){return '<button class="chip sm '+(AEMP.days===x[0]?'on':'')+'" data-aed="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="aeCsv">⬇ CSV</button></div>'
@@ -1953,13 +1956,19 @@ function admEmpHtml(){var R=AEMP.data,h='<div style="display:flex;justify-conten
   h+='<div class="ae-tools"><select id="aeBr"><option value="">전체 지점</option>'+BL.map(function(b){return '<option'+(AEMP.br===b.k?' selected':'')+'>'+esc(b.k)+'</option>';}).join('')+'</select><input type="search" id="aeQ" placeholder="사번 · 이름 · 직책 검색" value="'+esc(AEMP.q)+'" autocomplete="off"></div>';
   var cell=function(r,o){if(!r[o])return '<td class="bs z">—</td>';return '<td class="bs"><b>'+r[o]+'일</b> <small>· 담기 '+r[o+1]+' · 견적 '+r[o+2]+'</small><br><small>마지막 '+aeMd(r[o+3])+'</small></td>';};
   var BN={both:'✅ 둘 다',ss:'삼성만',lg:'LG만',none:'미사용'};
-  h+='<div class="adm-sec">목록 <small>'+F.length+'명'+(F.length>400?' · 앞 400명만 표시 (CSV에는 전체)':'')+' · 미사용 → 한쪽만 → 둘 다 순</small></div>'
+  h+='<div class="adm-sec">목록 <small>'+F.length+'명'+(F.length>400?' · 앞 400명만 표시 (CSV에는 전체)':'')+' · 미사용 → 한쪽만 → 둘 다 순 · 이름을 누르면 많이 쓴 기능</small></div>'
     +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>상태</th><th style="color:#1428a0">삼성 이용</th><th style="color:#a50034">LG 이용</th><th>지점</th><th>직책</th></tr>'
-    +(F.length?F.slice(0,400).map(function(x){return '<tr><td><b>'+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td><span class="ae-b '+x.st+'">'+BN[x.st]+'</span></td>'+cell(x.r,0)+cell(x.r,4)+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>';}).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
+    +(F.length?F.slice(0,400).map(function(x){var op=AEMP.open===x.e;return '<tr data-aeo="'+esc(x.e)+'" style="cursor:pointer'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td><span class="ae-b '+x.st+'">'+BN[x.st]+'</span></td>'+cell(x.r,0)+cell(x.r,4)+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>'+(op?aeDetail(x):'');}).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
     +'</table></div>';
   h+='<div class="note">· 이용일은 그 기간에 해당 계산기를 쓴 날 수예요 (같은 날 여러 번은 1일). 담기 · 견적도 그 일이 있었던 날 수예요.<br>· LG 기록은 LG 계산기를 연 11/14부터 쌓였고, 들어오기만 하고 아무 기능도 안 쓴 날은 v8.28부터 기록돼요.<br>· 명부에 없는 사번은 명부 대조 없이 사번만 보여요.</div>';
   return h;}
+function aeDetail(x){var col=function(f,lg,r,o){var ks=aeTop(f,lg),mx=Math.max.apply(null,[1].concat(ks.map(function(k){return f[k];}))),c=lg?'#a50034':'#1428a0';
+    return '<div style="flex:1;min-width:230px;background:#fff;border-radius:10px;padding:10px 12px;border-top:3px solid '+c+'"><b style="color:'+c+'">'+(lg?'LG':'삼성')+'</b> <small style="color:var(--sub)">'+(r[o]?'이용 '+r[o]+'일 · 마지막 '+aeMd(r[o+3]):'이 기간 사용 없음')+'</small>'
+      +(ks.length?ks.map(function(k){var n=aeFn(k,lg);return '<div style="display:grid;grid-template-columns:22px 1fr 90px 34px;gap:6px;align-items:center;margin-top:6px;font-size:12.5px"><span>'+n[0]+'</span><span>'+n[1]+'</span><div class="ae-bar" style="min-width:0;height:8px"><i style="width:'+Math.round(f[k]/mx*100)+'%;background:'+c+'"></i></div><b style="text-align:right">'+f[k]+'일</b></div>';}).join('')
+        :'<div style="margin-top:8px;font-size:12.5px;color:var(--sub)">'+(r[o]?'들어오기만 하고 기능은 안 썼어요':'—')+'</div>')+'</div>';};
+  return '<tr><td colspan="6" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">숫자는 그 기능을 쓴 날 수예요 (같은 날 여러 번은 1일)</div></div></td></tr>';}
 function admEmpBind(){
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-aeo]'),function(b){b.onclick=function(){AEMP.open=AEMP.open===b.dataset.aeo?'':b.dataset.aeo;var sc=b.closest('.scroll'),top=sc?sc.scrollTop:0;admRender();var n=document.querySelector('#admBody tr[data-aeo="'+b.dataset.aeo+'"]'),s2=n&&n.closest('.scroll');if(s2)s2.scrollTop=top;};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aed]'),function(b){b.onclick=function(){var v=+b.dataset.aed;if(AEMP.days===v)return;AEMP.days=v;admEmpLoad();admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aeb]'),function(b){b.onclick=function(){AEMP.basis=b.dataset.aeb;admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aes]'),function(b){b.onclick=function(){AEMP.st=b.dataset.aes;admRender();};});
@@ -1967,7 +1976,8 @@ function admEmpBind(){
   var sb=$('#aeBr');if(sb)sb.onchange=function(){AEMP.br=this.value;admRender();};
   var qi=$('#aeQ');if(qi)qi.oninput=function(){AEMP.q=this.value;var p=this.selectionStart;admRender();var n=$('#aeQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}};
   var cv=$('#aeCsv');if(cv)cv.onclick=function(){var R=AEMP.data;if(!R||!R.ok)return;var BN={both:'둘 다',ss:'삼성만',lg:'LG만',none:'미사용'};
-    csvDown([['사번','이름','지점','직책','삼성 이용일','삼성 담은 날','삼성 견적 낸 날','삼성 마지막','LG 이용일','LG 담은 날','LG 견적 낸 날','LG 마지막','상태','명부']].concat(aeList().map(function(x){var r=x.r;return [x.e,x.name,x.br,x.rank,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],BN[x.st],x.inR?'O':'X'];})),'사번별이용_'+(AEMP.days?AEMP.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};
+    var tf=function(f,lg){return aeTop(f,lg).slice(0,5).map(function(k){return aeFn(k,lg)[1]+' '+f[k]+'일';}).join(' / ');};
+    csvDown([['사번','이름','지점','직책','삼성 이용일','삼성 담은 날','삼성 견적 낸 날','삼성 마지막','LG 이용일','LG 담은 날','LG 견적 낸 날','LG 마지막','상태','명부','삼성 많이 쓴 기능','LG 많이 쓴 기능']].concat(aeList().map(function(x){var r=x.r;return [x.e,x.name,x.br,x.rank,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],BN[x.st],x.inR?'O':'X',tf(x.f[0],0),tf(x.f[1],1)];})),'사번별이용_'+(AEMP.days?AEMP.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};
 }
 function afDs(d){return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);}
 function afMd(d){return (+d.slice(4,6))+'/'+(+d.slice(6,8));}

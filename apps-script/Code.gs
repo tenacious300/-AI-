@@ -1033,6 +1033,7 @@ function adminEmpUsage(arg) {
       e = cleanEmp_(e); if (!e) return;
       var u = U[e] || (U[e] = [{}, {}]), o = u[b];
       (o.d || (o.d = {}))[d] = 1;
+      if (kk !== 'open' && k !== 'lg') { var f = o.f || (o.f = {}); (f[kk] || (f[kk] = {}))[d] = 1; }
       if (kk === 'add') (o.a || (o.a = {}))[d] = 1;
       if (QK[kk]) (o.q || (o.q = {}))[d] = 1;
     });
@@ -1042,10 +1043,12 @@ function adminEmpUsage(arg) {
   var buf = JSON.parse(CacheService.getScriptCache().get('fubuf') || '{}');
   Object.keys(buf).forEach(function (k) { var p = k.split('|'); add(p[0], p[1], buf[k][1]); });
   var cnt = function (o) { return o ? Object.keys(o).length : 0; }, last = function (o) { var k = o ? Object.keys(o).sort() : []; return k.length ? k[k.length - 1] : ''; };
-  var rows = {};
+  var rows = {}, feats = {};
+  var fd = function (o) { var r = {}; Object.keys(o.f || {}).forEach(function (k) { r[k] = cnt(o.f[k]); }); return r; };
   Object.keys(U).forEach(function (e) { var s = U[e][0], l = U[e][1];
-    rows[e] = [cnt(s.d), cnt(s.a), cnt(s.q), last(s.d), cnt(l.d), cnt(l.a), cnt(l.q), last(l.d)]; });
-  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, roster: rosterMap_(),
+    rows[e] = [cnt(s.d), cnt(s.a), cnt(s.q), last(s.d), cnt(l.d), cnt(l.a), cnt(l.q), last(l.d)];
+    feats[e] = [fd(s), fd(l)]; });   // 사번별 기능 → 쓴 날 수
+  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, roster: rosterMap_(),
     at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
 }
 
