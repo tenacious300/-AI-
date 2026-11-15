@@ -32,7 +32,7 @@ var API_FUNCS = {
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage,
-  adminGhToken: adminGhToken, adminSetMinVer: adminSetMinVer,
+  getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
@@ -1054,18 +1054,68 @@ function adminEmpUsage(arg) {
 }
 
 
-/* ===================== LG 제휴카드 정책 이미지 → 깃허브 저장소(cardpol/)에 올림 =====================
- * 관리자 화면이 깃허브에 직접 올리고, 여기서는 깃허브 토큰(이 저장소 Contents 읽기/쓰기 전용)만 보관 */
-function adminGhToken(arg) {
+/* ===================== LG 카드 정책 이미지 =====================
+ * 관리자가 올린 원본은 드라이브에 보관 → 깃허브 액션(5분마다)이 저장소 cardpol/ 폴더로 옮겨 담아
+ * 직원 화면은 깃허브 페이지에서 바로 빠르게 읽음 (토큰 필요 없음) */
+var CARDPOL_FOLDER_NAME = '삼성AI구독_LG카드정책';
+function cardPolFolder_() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('cardPolFolderId');
+  try { if (id) return DriveApp.getFolderById(id); } catch (e) {}
+  var it = DriveApp.getFoldersByName(CARDPOL_FOLDER_NAME);
+  var folder = it.hasNext() ? it.next() : DriveApp.createFolder(CARDPOL_FOLDER_NAME);
+  props.setProperty('cardPolFolderId', folder.getId());
+  return folder;
+}
+function cardPolRead_() {
+  var v = PropertiesService.getScriptProperties().getProperty('cardPol');
+  try { var o = v ? JSON.parse(v) : null; if (o && o.imgs) return o; } catch (e) {}
+  return { at: '', imgs: [] };
+}
+function cardPolSave_(o) {
+  o.at = Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm:ss');
+  PropertiesService.getScriptProperties().setProperty('cardPol', JSON.stringify(o));
+  return o;
+}
+/** 누구나 (깃허브 동기화용): 현재 목록 */
+function getCardPolicy() { return cardPolRead_(); }
+/** 누구나 (깃허브 동기화용): 목록에 있는 이미지 한 장의 원본 */
+function cardPolImage(arg) {
+  var id = String(arg && arg.id || ''), o = cardPolRead_();
+  if (!o.imgs.some(function (x) { return x.id === id; })) return { ok: false };
+  var b = DriveApp.getFileById(id).getBlob();
+  return { ok: true, mime: b.getContentType(), data: Utilities.base64Encode(b.getBytes()) };
+}
+/** 관리자: 이미지 한 장 올리기 (data: base64) → 목록 끝에 추가 */
+function adminCardPolicyUpload(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
-  var props = PropertiesService.getScriptProperties();
-  if (arg.token != null) {
-    var t = String(arg.token).trim();
-    if (t && !/^(github_pat_|ghp_)[A-Za-z0-9_]{20,}$/.test(t)) return { ok: false, msg: '깃허브 토큰 형식이 아니에요.' };
-    if (t) props.setProperty('ghToken', t); else props.deleteProperty('ghToken');
-  }
-  return { ok: true, token: props.getProperty('ghToken') || '' };
+  var m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(arg.data || ''));
+  if (!m) return { ok: false, msg: '이미지 파일만 올릴 수 있어요.' };
+  var bytes = Utilities.base64Decode(m[2]);
+  if (bytes.length > 8 * 1024 * 1024) return { ok: false, msg: '이미지가 너무 커요 (8MB 이하).' };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { ok: false, msg: '잠시 후 다시 시도해 주세요.' }; }
+  try {
+    var ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[m[1]];
+    var f = cardPolFolder_().createFile(Utilities.newBlob(bytes, m[1], 'cardpol_' + Date.now() + '.' + ext));
+    var o = cardPolRead_();
+    o.imgs.push({ id: f.getId(), ext: ext, name: cleanStr_(arg.name, 60), w: Number(arg.w) || 0, h: Number(arg.h) || 0 });
+    return { ok: true, pol: cardPolSave_(o) };
+  } finally { lock.releaseLock(); }
+}
+/** 관리자: 순서 바꾸기 · 빠진 이미지는 드라이브 휴지통으로 */
+function adminCardPolicySet(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { ok: false, msg: '잠시 후 다시 시도해 주세요.' }; }
+  try {
+    var o = cardPolRead_(), keep = (arg.ids || []).map(String), by = {};
+    o.imgs.forEach(function (x) { by[x.id] = x; });
+    o.imgs.forEach(function (x) { if (keep.indexOf(x.id) < 0) { try { DriveApp.getFileById(x.id).setTrashed(true); } catch (e) {} } });
+    o.imgs = keep.filter(function (id) { return by[id]; }).map(function (id) { return by[id]; });
+    return { ok: true, pol: cardPolSave_(o) };
+  } finally { lock.releaseLock(); }
 }
 
 /* ===================== 직원 명부 (드라이브에만 저장 · 공개 안 됨) ===================== */
