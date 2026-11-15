@@ -728,6 +728,29 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   .bar .boxb .bd{position:absolute;top:-4px;right:-4px;background:#F04452;color:#fff;border-radius:99px;font-size:11px;min-width:18px;height:18px;line-height:18px;padding:0 5px}
   .side-bg{position:fixed;inset:0;z-index:44;background:rgba(0,23,51,.25);display:none}.side-bg.on{display:block}
 }
+
+/* 견적 카드 상단 요약 */
+.shd{margin:12px 0 14px}
+.sh-im{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;overflow:hidden}
+.sh-im.b{width:76px;height:76px;border-radius:16px}
+.sh-im img{width:100%;height:100%;object-fit:contain}
+.sh-im span{font-size:22px}.sh-im.b span{font-size:34px}
+.sh-one,.sh-empty{display:flex;gap:14px;align-items:center}
+.sh-tx{min-width:0;flex:1}
+.sh-tx b{display:block;font-size:15.5px;line-height:1.35;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sh-tx small{display:block;font-size:12px;opacity:.65;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-empty{background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.22);border-radius:16px;padding:12px}
+.sh-empty .sh-im{background:rgba(255,255,255,.1)}
+.sh-empty b{display:block;font-size:14.5px}.sh-empty small{display:block;font-size:12.5px;opacity:.65;margin-top:2px}
+.sh-ch{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.sh-ch span{font-size:12.5px;font-weight:700;background:rgba(255,255,255,.1);border-radius:8px;padding:5px 9px;white-space:nowrap}
+.sh-list{display:flex;flex-direction:column;gap:8px}
+.sh-row{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 10px}
+.sh-row .sh-tx b{font-size:14px;-webkit-line-clamp:1}
+.sh-row em{font-style:normal;font-weight:800;font-size:14px;white-space:nowrap}
+.sh-more{font-size:12px;opacity:.65;padding-left:4px}
+.sum .sh-head-line{border-top:1px solid rgba(255,255,255,.12)}
+#sHead+.cap{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
 /* ===== 사용성 개선 끝 ===== */
 </style>
 </head>
@@ -899,6 +922,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 <aside class="sticky" id="secSum">
   <section class="card sum">
     <h2 class="sum-h"><small>SAMSUNG AI SUBSCRIPTION</small>맞춤 구독 견적</h2>
+    <div class="shd" id="sHead"></div>
     <div class="cap" id="sCap"></div>
     <div class="big" id="sBig">0원</div>
     <div class="cap" id="sSub"></div>
@@ -1309,6 +1333,22 @@ function subOf(m){return D.subs[m[2]].split('|')[1];}
 function minPrice(m){return Math.min.apply(null,m[3].map(function(p){return p[2];}));}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
+/* 견적 카드 상단: 제품 사진 · 모델명 · 계약 조건 요약 */
+var CAT_IC={'TV':'📺','냉장고':'🧊','김치냉장고':'🥬','세탁기':'🧺','건조기':'🌀','에어드레서':'👔','에어컨':'❄️','공기청정기':'🍃','제습기':'💧','청소기':'🧹','식기세척기':'🍽️','전기레인지':'🔥','후드':'🍳','정수기':'🚰','모니터':'🖥️','오디오':'🔊','갤럭시 탭':'📱','갤럭시 북':'💻'};
+function shThumb(it,big){var o=INFO[it.code];if(o&&o.st==='ok'&&o.img)return '<div class="sh-im'+(big?' b':'')+'"><img src="'+esc(o.img)+'" alt=""></div>';return '<div class="sh-im'+(big?' b':'')+'"><span>'+(CAT_IC[it.cat]||'📦')+'</span></div>';}
+function shName(it){var o=INFO[it.code];return (o&&o.st==='ok'&&o.name)?o.name:(it.cat+' · '+it.sub);}
+function sumHead(items,card,cs){
+  var el=$('#sHead');if(!el)return;
+  if(!items.length){el.innerHTML='<div class="sh-empty"><div class="sh-im b"><span>🛒</span></div><div><b>아직 담은 모델이 없어요</b><small>모델을 담으면 여기에 제품 사진과 계약 조건이 보여요</small></div></div>';return;}
+  var cardTxt=S.multi&&S.mc&&S.mc.length?'💳 카드 여러 장':(card&&cs&&cs.tier?'💳 '+card.name+' · '+S.usage+'만↑':'💳 제휴카드 미적용');
+  if(items.length===1){var it=items[0];
+    el.innerHTML='<div class="sh-one">'+shThumb(it,1)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+'</small></div></div>'
+      +'<div class="sh-ch"><span>📅 '+it.y+'년 계약</span><span>🛠 '+esc(it.type)+'</span><span>'+(it.pre?'💰 선납 '+it.pre+'%':'💰 선납 없음')+'</span><span>'+esc(cardTxt)+'</span></div>';
+    return;}
+  var max=3,rows=items.slice(0,max).map(function(it){return '<div class="sh-row">'+shThumb(it,0)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+' · '+it.y+'년 · '+esc(it.type)+(it.pre?' · 선납 '+it.pre+'%':'')+'</small></div><em>'+won(it.mon2)+'</em></div>';}).join('');
+  el.innerHTML='<div class="sh-list">'+rows+(items.length>max?'<div class="sh-more">외 '+(items.length-max)+'개 모델 · 아래 \'담은 모델\'에서 전체 확인</div>':'')+'</div>'
+    +'<div class="sh-ch"><span>📦 '+items.length+'개 모델</span><span>'+esc(cardTxt)+'</span></div>';
+}
 function infoThumb(code){var o=INFO[code];if(o&&o.st==='ok'&&o.img)return '<img class="thumb" src="'+esc(o.img)+'" alt="">';return '<div class="thumb"></div>';}
 function infoName(code){var o=INFO[code];if(!o)return '';if(o.st==='loading')return '<div class="pname" style="color:var(--sub)">제품 정보 불러오는 중…</div>';
   if(o.st==='none')return '<div class="pname" style="color:var(--sub)">삼성닷컴에서 이 모델을 찾지 못했어요 <span class="stk n">닷컴 미검색</span></div>';
@@ -1572,6 +1612,7 @@ function render(){
   var feelN=n?Math.max.apply(null,items.map(function(i){return i.N;})):0,feelT=totPay-cardTot-extra-allPts;
   var feelM=feelN?Math.round(feelT/feelN/10)*10:0,sameN=items.every(function(i){return i.N===feelN;});
   $('#sBig').classList.toggle('feel',!!(n&&S.showFeel));
+  sumHead(items,card,cs);
   if(n&&!S.showFeel){
     $('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';$('#sBig').textContent=won(net);
     $('#sSub').textContent='정상 월 '+won(sumMon)+(sumP?' · 선납금 '+won(sumP)+' 별도':'');
