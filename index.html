@@ -36,7 +36,13 @@ button{-webkit-tap-highlight-color:transparent}
 .top{background:var(--navy);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:30}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .top h1{margin:0;font-size:18px;letter-spacing:-.3px;flex:1}
-.btag{border:0;background:#fff;color:var(--navy);font-size:12px;font-weight:800;border-radius:99px;padding:3px 10px;flex:none;white-space:nowrap;cursor:pointer}
+.bsw{display:inline-flex;flex:none;background:rgba(255,255,255,.16);border-radius:99px;padding:3px;gap:2px}
+.bsw button{border:0;background:transparent;color:rgba(255,255,255,.8);font-size:12.5px;font-weight:800;border-radius:99px;padding:5px 13px;min-height:30px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+.bsw button:hover{color:#fff}
+.bsw button.on{background:#fff;cursor:default}
+.bsw button.on[data-b="ss"]{color:#1428a0}.bsw button.on[data-b="lg"]{color:#a50034}
+@media(max-width:480px){.bsw button{padding:5px 10px}}
+@media(max-width:420px){.top .top-in h1{display:none}.bsw{margin-right:auto}}
 @media(max-width:520px){.top h1{font-size:16px;white-space:nowrap}}
 .brand-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .brand-pick button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 6px;font-size:16px;font-weight:800;cursor:pointer;color:var(--sub)}
@@ -532,7 +538,7 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 <header class="top"><div class="top-in">
   <button class="ver" id="verBtn" tabindex="-1"></button>
-  <button class="btag" id="brandTag" title="삼성 / LG 바꾸기">삼성 ▾</button>
+  <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" class="on" aria-pressed="true">삼성</button><button data-b="lg" title="LG 계산기로 바로 전환">LG</button></div>
   <h1>AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="me lo" id="logoutBtn" title="로그아웃" style="display:none"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
@@ -1781,7 +1787,7 @@ if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}
 var BRAND=(function(){var m=/[?&]brand=(ss|lg)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
-$('#brandTag').onclick=openGate;
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b!=='lg')return;if(!EMP){brandSet('lg');openGate();return;}lsPut('calcBrand','lg');try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href='lg.html';};
 var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||XCMP;
 if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
