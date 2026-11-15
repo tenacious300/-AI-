@@ -956,10 +956,19 @@ function fuFlush_(cache) {
   if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 4).setValues(add);
   cache.put('fubuf', '{}', 21600);
 }
-function fuAgg_(from, to) {
+/** 브랜드 구분: LG 화면 기록은 'L_' 접두어. brand '' = 전체(접두어 떼고 합침), 'ss' = 삼성만, 'lg' = LG만 */
+function fuKey_(k, brand) {
+  k = String(k);
+  if (k === 'lg') return null;   // 예전 LG 입장 표시
+  var isLg = k.indexOf('L_') === 0;
+  if ((brand === 'ss' && isLg) || (brand === 'lg' && !isLg)) return null;
+  return isLg ? k.slice(2) : k;
+}
+function fuAgg_(from, to, brand) {
   var out = {}, sh = fuSheet_(), n = sh.getLastRow();
   var addRow = function (d, k, c, emps) {
     if (d < from || d > to) return;
+    k = fuKey_(k, brand); if (k == null) return;
     var o = out[k] || (out[k] = { n: 0, e: {} });
     o.n += Number(c || 0);
     String(emps || '').split(',').forEach(function (e) { if (e) o.e[e] = 1; });
@@ -970,11 +979,12 @@ function fuAgg_(from, to) {
   return out;
 }
 /** 최근 n일 날짜별 기능 사용 합계 · 사번 수 */
-function fuDaily_(nDays) {
+function fuDaily_(nDays, brand) {
   var from = mvDay_(nDays - 1), to = mvDay_(0), out = {};
   for (var i = 0; i < nDays; i++) out[mvDay_(i)] = { n: 0, e: {} };
   var add = function (d, k, c, emps) {
-    if (d < from || d > to || String(k).indexOf(':') >= 0 || !out[d]) return;
+    k = fuKey_(k, brand);
+    if (k == null || d < from || d > to || k.indexOf(':') >= 0 || !out[d]) return;
     out[d].n += Number(c || 0);
     String(emps || '').split(',').forEach(function (e) { if (e) out[d].e[e] = 1; });
   };
@@ -989,18 +999,19 @@ function adminFeatures(arg) {
   arg = arg || {};
   if (String(arg.pw) !== ADMIN_PW) return { ok: false };
   var days = [1, 7, 30].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7, cur, prev, date = String(arg.date || '').replace(/[^0-9]/g, '');
+  var brand = arg.brand === 'ss' || arg.brand === 'lg' ? arg.brand : '';
   if (date.length === 8) {   // 특정 날짜 하루 (이전 날과 비교)
     var dt = new Date(Number(date.slice(0, 4)), Number(date.slice(4, 6)) - 1, Number(date.slice(6, 8)));
     var pd = Utilities.formatDate(new Date(dt.getTime() - 86400000), TZ, 'yyyyMMdd');
-    cur = fuAgg_(date, date); prev = fuAgg_(pd, pd); days = 1;
-  } else { cur = fuAgg_(mvDay_(days - 1), mvDay_(0)); prev = fuAgg_(mvDay_(days * 2 - 1), mvDay_(days)); }
+    cur = fuAgg_(date, date, brand); prev = fuAgg_(pd, pd, brand); days = 1;
+  } else { cur = fuAgg_(mvDay_(days - 1), mvDay_(0), brand); prev = fuAgg_(mvDay_(days * 2 - 1), mvDay_(days), brand); }
   var users = {}, list = Object.keys(cur).map(function (k) {
     if (k.indexOf(':') < 0) Object.keys(cur[k].e).forEach(function (e) { users[e] = 1; });
     return { k: k, n: cur[k].n, u: Object.keys(cur[k].e).length, prev: prev[k] ? prev[k].n : 0 };
   }).sort(function (a, b) { return b.n - a.n; });
   var addE = cur.add ? cur.add.e : {}, done = 0;
   Object.keys(addE).forEach(function (e) { if ((cur.print && cur.print.e[e]) || (cur.save && cur.save.e[e]) || (cur.copy && cur.copy.e[e])) done++; });
-  return { ok: true, days: days, date: date.length === 8 ? date : '', list: list, users: Object.keys(users).length, addUsers: Object.keys(addE).length, done: done, daily: fuDaily_(14) };
+  return { ok: true, brand: brand, days: days, date: date.length === 8 ? date : '', list: list, users: Object.keys(users).length, addUsers: Object.keys(addE).length, done: done, daily: fuDaily_(14, brand) };
 }
 
 
