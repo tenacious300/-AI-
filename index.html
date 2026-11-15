@@ -668,7 +668,65 @@ a.link{color:var(--tp)}
 .cmpchk{border-radius:10px}
 .qi,.wl-it{border-radius:18px;box-shadow:var(--sh)}
 input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
+/* 일시불 비교: 닷컴 기준가 입력칸 (어두운 카드 위에서 잘 보이게) */
+.sum .lumpin input{background:#fff!important;color:#191F28!important;border:2px solid transparent!important;border-radius:10px!important;min-height:40px;font-weight:800;font-size:15px;padding:6px 10px;box-shadow:none}
+.sum .lumpin input::placeholder{color:#8B95A1;font-weight:600}
+.sum .lumpin input:focus{outline:0;border-color:var(--tp)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--tp) 35%,transparent)!important}
+.sum .lumpin span{opacity:1}.sum .lumpin span small{opacity:.75}
 /* ===== 새 디자인 끝 ===== */
+
+/* ===== 사용성 개선 (UX) ===== */
+.uxd{position:absolute;left:50%;top:-40px;transform:translateX(-50%) translateY(6px);opacity:0;pointer-events:none;white-space:nowrap;font-size:13px;font-weight:800;border-radius:99px;padding:6px 12px;transition:.25s;background:#191F28;color:#fff;box-shadow:0 6px 18px rgba(0,23,51,.2)}
+.uxd.on{opacity:1;transform:translateX(-50%) translateY(0)}.uxd.dn b{color:#6EE7B7}.uxd.up b{color:#FFB4B4}
+.sum .uxd{position:static;display:none;transform:none;margin-top:6px;background:rgba(255,255,255,.12);box-shadow:none}
+.sum .uxd.on{display:inline-block}
+.side-tog{display:none}
+@media(max-width:600px){
+  .top .me,.top .live,.top .rst,.ver{min-height:36px}.bsw button{min-height:38px}
+  .tb .tabs button,.tb .per button,.tb .more{min-height:36px}
+  .cx-ap{min-height:38px;padding:8px 16px;font-size:13.5px}
+  .winchk,.cmpchk{min-height:38px;padding:6px 12px}.winchk input,.cmpchk input{width:20px;height:20px}
+  .switch input{width:22px;height:22px}
+  .item .link,a.link{display:inline-flex;align-items:center;min-height:36px}
+  .x{width:38px;height:38px}
+  .rrow .rc{min-height:36px}
+  .toast{bottom:150px}
+  .side-tabs{bottom:150px;gap:6px}
+  .side-tabs .care-tab{display:none}
+  .side-tabs.open .care-tab{display:block}
+  .side-tog{display:block;position:relative;border:0;background:#191F28;color:#fff;border-radius:14px 0 0 14px;padding:12px 8px;writing-mode:vertical-rl;font-size:13px;font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:-4px 4px 14px rgba(0,23,51,.18)}
+  .side-tog .bd{position:absolute;top:-5px;left:-5px;writing-mode:horizontal-tb;background:#F04452;width:12px;height:12px;border-radius:50%;display:none}
+  .side-tog.has .bd{display:block}
+  .fab{display:none!important}
+  .bar .boxb{flex:none;position:relative;border:0;background:#F2F4F6;color:#333D4B;border-radius:16px;min-height:46px;padding:0 14px;font-weight:700;font-size:14px;cursor:pointer}
+  .bar .boxb .bd{position:absolute;top:-4px;right:-4px;background:#F04452;color:#fff;border-radius:99px;font-size:11px;min-width:18px;height:18px;line-height:18px;padding:0 5px}
+  .side-bg{position:fixed;inset:0;z-index:44;background:rgba(0,23,51,.25);display:none}.side-bg.on{display:block}
+}
+
+/* 견적 카드 상단 요약 */
+.shd{margin:12px 0 14px}
+.sh-im{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;overflow:hidden}
+.sh-im.b{width:76px;height:76px;border-radius:16px}
+.sh-im img{width:100%;height:100%;object-fit:contain}
+.sh-im span{font-size:22px}.sh-im.b span{font-size:34px}
+.sh-one,.sh-empty{display:flex;gap:14px;align-items:center}
+.sh-tx{min-width:0;flex:1}
+.sh-tx b{display:block;font-size:15.5px;line-height:1.35;color:#fff;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sh-tx small{display:block;font-size:12px;opacity:.65;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-empty{background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.22);border-radius:16px;padding:12px}
+.sh-empty .sh-im{background:rgba(255,255,255,.1)}
+.sh-empty b{display:block;font-size:14.5px}.sh-empty small{display:block;font-size:12.5px;opacity:.65;margin-top:2px}
+.sh-ch{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.sh-ch span{font-size:12.5px;font-weight:700;background:rgba(255,255,255,.1);border-radius:8px;padding:5px 9px;white-space:nowrap}
+.sh-list{display:flex;flex-direction:column;gap:8px}
+.sh-row{display:flex;gap:10px;align-items:center;background:rgba(255,255,255,.06);border-radius:14px;padding:8px 10px}
+.sh-row .sh-tx b{font-size:14px;-webkit-line-clamp:1}
+.sh-row em{font-style:normal;font-weight:800;font-size:14px;white-space:nowrap}
+.sh-more{font-size:12px;opacity:.65;padding-left:4px}
+.sh-more1{display:inline-block;margin-top:6px;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--tp) 35%,transparent);color:#fff;border-radius:8px;padding:3px 8px}
+.sum .sh-head-line{border-top:1px solid rgba(255,255,255,.12)}
+#sHead+.cap{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+/* ===== 사용성 개선 끝 ===== */
 </style>
 </head>
 <body>
@@ -838,6 +896,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 <aside class="sticky" id="secSum">
   <section class="card sum">
     <h2 class="sum-h"><small>SAMSUNG AI SUBSCRIPTION</small>맞춤 구독 견적</h2>
+    <div class="shd" id="sHead"></div>
     <div class="cap" id="sCap"></div>
     <div class="big" id="sBig">0원</div>
     <div class="cap" id="sSub"></div>
@@ -1206,6 +1265,20 @@ function subOf(m){return D.subs[m[2]].split('|')[1];}
 function minPrice(m){return Math.min.apply(null,m[3].map(function(p){return p[2];}));}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
+/* 견적 카드 상단: 제품 사진 · 모델명 · 계약 조건 요약 */
+var CAT_IC={'TV':'📺','냉장고':'🧊','김치냉장고':'🥬','세탁기':'🧺','건조기':'🌀','에어드레서':'👔','에어컨':'❄️','공기청정기':'🍃','제습기':'💧','청소기':'🧹','식기세척기':'🍽️','전기레인지':'🔥','후드':'🍳','정수기':'🚰','모니터':'🖥️','오디오':'🔊','갤럭시 탭':'📱','갤럭시 북':'💻'};
+function shThumb(it,big){var o=INFO[it.code];if(o&&o.st==='ok'&&o.img)return '<div class="sh-im'+(big?' b':'')+'"><img src="'+esc(o.img)+'" alt=""></div>';return '<div class="sh-im'+(big?' b':'')+'"><span>'+(CAT_IC[it.cat]||'📦')+'</span></div>';}
+function shName(it){var o=INFO[it.code];return (o&&o.st==='ok'&&o.name)?o.name:(it.cat+' · '+it.sub);}
+function sumHead(items,card,cs){
+  var el=$('#sHead');if(!el)return;
+  if(!items.length){el.innerHTML='<div class="sh-empty"><div class="sh-im b"><span>🛒</span></div><div><b>아직 담은 모델이 없어요</b><small>모델을 담으면 여기에 제품 사진과 계약 조건이 보여요</small></div></div>';return;}
+  var cardTxt=S.multi&&S.mc&&S.mc.length?'💳 카드 여러 장':(card&&cs&&cs.tier?'💳 '+card.name+' · '+S.usage+'만↑':'💳 제휴카드 미적용');
+  /* 여러 개면 월 납부액이 가장 큰 모델을 대표로 하나만 보여줌 */
+  var it=items.reduce(function(a,x){return x.mon2>a.mon2?x:a;},items[0]),more=items.length-1;
+  el.innerHTML='<div class="sh-one">'+shThumb(it,1)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+'</small>'
+      +(more?'<span class="sh-more1">외 '+more+'개 모델 함께 구독</span>':'')+'</div></div>'
+    +'<div class="sh-ch"><span>📅 '+it.y+'년 계약</span><span>🛠 '+esc(it.type)+'</span><span>'+(it.pre?'💰 선납 '+it.pre+'%':'💰 선납 없음')+'</span><span>'+esc(cardTxt)+'</span></div>';
+}
 function infoThumb(code){var o=INFO[code];if(o&&o.st==='ok'&&o.img)return '<img class="thumb" src="'+esc(o.img)+'" alt="">';return '<div class="thumb"></div>';}
 function infoName(code){var o=INFO[code];if(!o)return '';if(o.st==='loading')return '<div class="pname" style="color:var(--sub)">제품 정보 불러오는 중…</div>';
   if(o.st==='none')return '<div class="pname" style="color:var(--sub)">삼성닷컴에서 이 모델을 찾지 못했어요 <span class="stk n">닷컴 미검색</span></div>';
@@ -1290,7 +1363,7 @@ function renderList(){
   $('#qList').style.display='none';$('#list').style.display='none';
   if(v.length>=2){
     el=$('#qList');
-    list=MODELS.filter(function(m){return m[0].toUpperCase().indexOf(v)>=0||(catOf(m)+subOf(m)).toUpperCase().replace(/\s/g,'').indexOf(v)>=0;});
+    list=smartSearch($('#q').value);
   }else if(S.cat!==null){
     el=$('#list');
     list=MODELS.filter(function(m){return m[1]===S.cat&&(S.sub===null||m[2]===S.sub);});
@@ -1299,7 +1372,25 @@ function renderList(){
   el.style.display='block';
   el.innerHTML=hits.length?hits.map(function(m,i){return '<div class="it" data-i="'+i+'"><div><b>'+m[0]+'</b><span>'+esc(catOf(m))+' · '+esc(subOf(m))+'</span></div><div class="pr">월 '+won(minPrice(m))+'~</div></div>';}).join('')
     +(list.length>hits.length?'<div class="msg">'+list.length+'개 중 150개 표시 · 검색어를 더 입력해 주세요</div>':'')
-    :'<div class="msg">일치하는 모델이 없어요</div>';
+    :'<div class="msg">일치하는 모델이 없어요<br><small>모델코드 앞부분만 넣거나(예: WF, RF) 아래 <b>품목으로 찾기</b>를 눌러 보세요</small></div>';
+  if(el===$('#qList')&&list.similar)el.insertAdjacentHTML('afterbegin','<div class="msg" style="text-align:left;padding:10px 14px;background:var(--soft)">정확히 일치하는 모델이 없어 <b>비슷한 모델</b>을 보여드려요</div>');
+}
+/* 똑똑한 검색: 띄어쓰기·하이픈·대소문자 무시, 여러 단어 순서 무관, 줄임말(김냉·식세기·티비 등), 없으면 비슷한 코드 */
+var SRCH_ALIAS={'티비':'TV','텔레비전':'TV','테레비':'TV','김냉':'김치냉장고','식세기':'식기세척기','식세':'식기세척기','식기세척':'식기세척기','공청기':'공기청정기','공기청정':'공기청정기','인덕션':'전기레인지','하이라이트':'전기레인지','전기렌지':'전기레인지','노트북':'갤럭시북','갤북':'갤럭시북','태블릿':'갤럭시탭','갤탭':'갤럭시탭','스타일러':'에어드레서','사운드바':'오디오','에어콘':'에어컨','냉장':'냉장고','세탁':'세탁기','건조':'건조기','제습':'제습기','정수':'정수기','청소':'청소기','김치':'김치냉장고'};
+var SRCH_STOP={'비스포크':1,'BESPOKE':1,'삼성':1,'SAMSUNG':1,'구독':1,'모델':1};
+function srchNorm(x){return String(x).toUpperCase().replace(/[\s\-_.\/()]/g,'');}
+function smartSearch(raw){
+  var toks=String(raw).trim().split(/\s+/).map(function(t){var n=srchNorm(t);if(SRCH_STOP[n])return '';
+      Object.keys(SRCH_STOP).forEach(function(w){if(n.length>w.length&&n.indexOf(w)===0)n=n.slice(w.length);});
+      return n?(SRCH_ALIAS[n]?[n,srchNorm(SRCH_ALIAS[n])]:[n]):'';}).filter(Boolean);
+  if(!toks.length)return [];
+  var hay=function(m){return srchNorm(m[0])+'|'+srchNorm(catOf(m)+subOf(m));};
+  var res=MODELS.filter(function(m){var h=hay(m);return toks.every(function(alts){return alts.some(function(t){return h.indexOf(t)>=0;});});});
+  var code=toks.map(function(a){return a[0];}).filter(function(t){return /[A-Z]/.test(t)&&/^[A-Z0-9]+$/.test(t);})[0];
+  var sc=function(m){var c=srchNorm(catOf(m)),k=0;if(code&&srchNorm(m[0]).indexOf(code)===0)k-=2;if(toks.some(function(a){return a.indexOf(c)>=0;}))k-=1;return k;};
+  res=res.map(function(m,i){return [sc(m),i,m];}).sort(function(a,b){return a[0]-b[0]||a[1]-b[1];}).map(function(x){return x[2];});
+  if(!res.length&&code){for(var L=code.length-1;L>=2&&!res.length;L--){var pre=code.slice(0,L);res=MODELS.filter(function(m){return srchNorm(m[0]).indexOf(pre)===0;});}if(res.length)res.similar=1;}
+  return res;
 }
 function recentList(){return (lsGet('recentV')||[]).filter(function(c){return byCode[c];});}
 function favList(){return (lsGet('favM')||[]).filter(function(c){return byCode[c];});}
@@ -1444,6 +1535,7 @@ function render(){
   var feelN=n?Math.max.apply(null,items.map(function(i){return i.N;})):0,feelT=totPay-cardTot-extra-allPts;
   var feelM=feelN?Math.round(feelT/feelN/10)*10:0,sameN=items.every(function(i){return i.N===feelN;});
   $('#sBig').classList.toggle('feel',!!(n&&S.showFeel));
+  sumHead(items,card,cs);
   if(n&&!S.showFeel){
     $('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';$('#sBig').textContent=won(net);
     $('#sSub').textContent='정상 월 '+won(sumMon)+(sumP?' · 선납금 '+won(sumP)+' 별도':'');
@@ -1614,7 +1706,8 @@ $('#copyBtn').onclick=function(){
   t+='※ 최종 금액은 계약 시 확인';
   var ok=function(){fuLog('copy');toast('견적을 복사했어요');markAct('견적 복사');gsr('logEvent',{name:'copy',emp:EMP});};
   var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){}ta.remove();};
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,fb);else fb();
+  var cp=function(){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,fb);else fb();};
+  if(window.UX_SHARE&&navigator.share){navigator.share({title:'구독 견적',text:t}).then(function(){fuLog('copy');markAct('견적 공유');gsr('logEvent',{name:'copy',emp:EMP});},function(er){if(er&&er.name==='AbortError')return;cp();});}else cp();
 };
 
 function buildPrint(mode){
@@ -3043,6 +3136,49 @@ iaShow();
 (function(){var ios=/iPhone|iPad/i.test(navigator.userAgent)&&!window.navigator.standalone;if(ios&&!CUST&&!lsGet('instX'))setTimeout(function(){var b=$('#instBar');b.querySelector('span').innerHTML='📲 공유 버튼 → <b>홈 화면에 추가</b>로 앱처럼 쓸 수 있어요';$('#instGo').style.display='none';b.classList.add('on');},4000);})();
 
 })();
+</script>
+<script>
+/* ===== 사용성 개선 (UX) ===== */
+(function(){
+  var $=function(q){return document.querySelector(q);};
+  var mob=function(){return window.matchMedia&&matchMedia('(max-width:600px)').matches;};
+  /* 1. 모바일 옆 탭: 화면을 가리지 않게 '도구' 하나로 접기 */
+  var st=$('.side-tabs');
+  if(st){
+    var tog=document.createElement('button');tog.className='side-tog';tog.type='button';tog.setAttribute('aria-expanded','false');tog.innerHTML='도구 ▴<span class="bd"></span>';
+    st.insertBefore(tog,st.firstChild);
+    var bg=document.createElement('div');bg.className='side-bg';document.body.appendChild(bg);
+    var set=function(o){st.classList.toggle('open',o);bg.classList.toggle('on',o);tog.setAttribute('aria-expanded',o?'true':'false');tog.innerHTML=(o?'닫기 ▾':'도구 ▴')+'<span class="bd"></span>';syncBd();};
+    tog.onclick=function(){set(!st.classList.contains('open'));};
+    bg.onclick=function(){set(false);};
+    st.addEventListener('click',function(e){if(e.target.closest('.care-tab'))set(false);});
+    var syncBd=function(){var any=[].some.call(st.querySelectorAll('.care-tab .bd'),function(b){return b.style.display!=='none'&&b.textContent;});tog.classList.toggle('has',any);};
+    new MutationObserver(syncBd).observe(st,{subtree:true,attributes:true,childList:true,characterData:true});
+  }
+  /* 2. 조건을 바꾸면 월 납부액이 얼마나 바뀌었는지 바로 보여주기 */
+  var bv=$('#barVal'),sb=$('#sBig'),cc=$('#cartCnt');
+  var num=function(t){var n=String(t||'').replace(/[^0-9-]/g,'');return n?+n:0;};
+  var prev=bv?num(bv.textContent):0,prevN=cc?cc.textContent:'',tm=null;
+  var chips=[];
+  var mk=function(host){if(!host)return null;var d=document.createElement('div');d.className='uxd';host.appendChild(d);chips.push(d);return d;};
+  if(bv){var bar=$('#bar');if(bar){bar.style.position='fixed';mk(bar);}}
+  if(sb&&sb.parentNode){var w=document.createElement('div');sb.parentNode.insertBefore(w,sb.nextSibling);mk(w);}
+  var show=function(diff){var up=diff>0,txt=(up?'▲ 월 ':'▼ 월 ')+'<b>'+Math.abs(diff).toLocaleString()+'원</b> '+(up?'늘었어요':'줄었어요');
+    chips.forEach(function(c){c.className='uxd '+(up?'up':'dn');c.innerHTML=txt;void c.offsetWidth;c.classList.add('on');});
+    clearTimeout(tm);tm=setTimeout(function(){chips.forEach(function(c){c.classList.remove('on');});},2600);};
+  if(bv)new MutationObserver(function(){var v=num(bv.textContent),n=cc?cc.textContent:'';
+    if(n===prevN&&prev&&v&&v!==prev)show(v-prev);prev=v;prevN=n;}).observe(bv,{childList:true,characterData:true,subtree:true});
+  /* 보관함: 모바일에서는 떠 있는 버튼 대신 하단바 안으로 */
+  var fab=$('#boxFab'),barBtn=$('#barBtn');
+  if(fab&&barBtn){var bb=document.createElement('button');bb.type='button';bb.className='boxb';bb.setAttribute('aria-label','보관함');bb.innerHTML='📁<span class="bd" style="display:none"></span>';
+    barBtn.parentNode.insertBefore(bb,barBtn);bb.onclick=function(){fab.click();};
+    var fbd=$('#boxBd'),sync=function(){var d=bb.querySelector('.bd');if(fbd){d.style.display=fbd.style.display;d.textContent=fbd.textContent;}};
+    if(fbd)new MutationObserver(sync).observe(fbd,{attributes:true,childList:true,characterData:true,subtree:true});sync();}
+  /* 3. 휴대폰에서는 '견적 복사' 대신 바로 카톡·문자로 보내는 '견적 공유' */
+  var touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  if(navigator.share&&touch){window.UX_SHARE=true;var cb=$('#copyBtn');if(cb)cb.textContent='📤 견적 공유';}
+})();
+/* ===== 사용성 개선 끝 ===== */
 </script>
 </body>
 </html>

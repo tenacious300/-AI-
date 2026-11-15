@@ -674,6 +674,11 @@ a.link{color:var(--tp)}
 .cmpchk{border-radius:10px}
 .qi,.wl-it{border-radius:18px;box-shadow:var(--sh)}
 input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
+/* 일시불 비교: 닷컴 기준가 입력칸 (어두운 카드 위에서 잘 보이게) */
+.sum .lumpin input{background:#fff!important;color:#191F28!important;border:2px solid transparent!important;border-radius:10px!important;min-height:40px;font-weight:800;font-size:15px;padding:6px 10px;box-shadow:none}
+.sum .lumpin input::placeholder{color:#8B95A1;font-weight:600}
+.sum .lumpin input:focus{outline:0;border-color:var(--tp)!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--tp) 35%,transparent)!important}
+.sum .lumpin span{opacity:1}.sum .lumpin span small{opacity:.75}
 /* ===== 새 디자인 끝 ===== */
 </style>
 </head>
