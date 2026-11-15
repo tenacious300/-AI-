@@ -31,7 +31,8 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, adminSetMinVer: adminSetMinVer,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage,
+  getCardPolicy: getCardPolicy, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
 };
@@ -1050,6 +1051,72 @@ function adminEmpUsage(arg) {
     feats[e] = [fd(s), fd(l)]; });   // 사번별 기능 → 쓴 날 수
   return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, roster: rosterMap_(),
     at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
+}
+
+
+/* ===================== LG 제휴카드 정책 이미지 (관리자가 매달 올림) ===================== */
+var CARDPOL_FOLDER_NAME = '삼성AI구독_LG제휴카드정책';
+function cardPolFolder_() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('cardPolFolderId');
+  try { if (id) return DriveApp.getFolderById(id); } catch (e) {}
+  var it = DriveApp.getFoldersByName(CARDPOL_FOLDER_NAME);
+  var folder = it.hasNext() ? it.next() : DriveApp.createFolder(CARDPOL_FOLDER_NAME);
+  try { folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+  props.setProperty('cardPolFolderId', folder.getId());
+  return folder;
+}
+function cardPolRead_() {
+  var v = PropertiesService.getScriptProperties().getProperty('cardPol');
+  try { var o = v ? JSON.parse(v) : null; if (o && o.imgs) return o; } catch (e) {}
+  return { title: '', at: '', imgs: [] };
+}
+function cardPolSave_(o) {
+  o.at = Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm');
+  PropertiesService.getScriptProperties().setProperty('cardPol', JSON.stringify(o));
+  CacheService.getScriptCache().remove('cardPolC');
+  return o;
+}
+/** 누구나: 현재 LG 제휴카드 정책 (제목 · 올린 시각 · 이미지 id 목록) */
+function getCardPolicy() {
+  var c = CacheService.getScriptCache(), v = c.get('cardPolC');
+  if (v) { try { return JSON.parse(v); } catch (e) {} }
+  var o = cardPolRead_(); c.put('cardPolC', JSON.stringify(o), 21600); return o;
+}
+/** 관리자: 이미지 한 장 올리기 (data: base64) → 목록 끝에 추가 */
+function adminCardPolicyUpload(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  var m = /^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/.exec(String(arg.data || ''));
+  if (!m) return { ok: false, msg: '이미지 파일만 올릴 수 있어요.' };
+  var bytes = Utilities.base64Decode(m[2]);
+  if (bytes.length > 8 * 1024 * 1024) return { ok: false, msg: '이미지가 너무 커요 (8MB 이하).' };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { ok: false, msg: '잠시 후 다시 시도해 주세요.' }; }
+  try {
+    var ext = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' }[m[1]];
+    var name = cleanStr_(arg.name, 60).replace(/[\\/:*?"<>|]/g, '') || ('카드정책_' + Date.now() + '.' + ext);
+    var f = cardPolFolder_().createFile(Utilities.newBlob(bytes, m[1], name));
+    try { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); } catch (e) {}
+    var o = cardPolRead_();
+    if (arg.title != null) o.title = cleanStr_(arg.title, 60);
+    o.imgs.push({ id: f.getId(), name: name });
+    return { ok: true, pol: cardPolSave_(o) };
+  } finally { lock.releaseLock(); }
+}
+/** 관리자: 제목 · 순서 바꾸기, 빠진 이미지는 휴지통으로 */
+function adminCardPolicySet(arg) {
+  arg = arg || {};
+  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(20000); } catch (e) { return { ok: false, msg: '잠시 후 다시 시도해 주세요.' }; }
+  try {
+    var o = cardPolRead_(), keep = (arg.ids || []).map(String), by = {};
+    o.imgs.forEach(function (x) { by[x.id] = x; });
+    o.imgs.forEach(function (x) { if (keep.indexOf(x.id) < 0) { try { DriveApp.getFileById(x.id).setTrashed(true); } catch (e) {} } });
+    o.imgs = keep.filter(function (id) { return by[id]; }).map(function (id) { return by[id]; });
+    if (arg.title != null) o.title = cleanStr_(arg.title, 60);
+    return { ok: true, pol: cardPolSave_(o) };
+  } finally { lock.releaseLock(); }
 }
 
 

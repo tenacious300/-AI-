@@ -890,8 +890,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.28',VER_DATE='2026.11.15';
+var VERSION='v8.29',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.29','11.15',['🅻 LG 계산기 오른쪽 \'💳 카드 정책\' 탭 · 제휴카드 칸의 \'이번 달 제휴카드 정책 보기\'','관리자 🅻 LG 단가 · 카드정책 탭에서 정책 이미지를 올리면 바로 반영 (순서 바꾸기 · 삭제 · 모두 지우기)']],
   ['v8.28','11.15',['관리자 🧾 사번별 이용: 직원마다 삼성 · LG 둘 다 썼는지 (둘 다 / 삼성만 / LG만 / 미사용), 지점별 현황, 이름을 누르면 많이 쓴 기능, CSV','계산기에 들어오기만 한 날도 브랜드별로 기록']],
   ['v8.27','11.15',['🅻 LG: 신규 결합 · 기존 구독 · 소상공인으로 2개 이상 담으면 💳 카드 여러 장으로 나눠 결제 (카드별 전월실적 · 할인 한도 · 선납 캐시백 따로 계산, 견적서 · 복사 · 비교에도 반영)','📲 상단 앱 설치 버튼 (설치 창이 안 뜨는 브라우저는 아이폰 · 삼성 인터넷 · 카카오톡별 설치 방법 안내)']],
   ['v8.26','11.15',['🔥⚖️ 체감가 + 일시불 비교 견적서: 체감가 계산을 일시불 비교 안으로 합쳐 한 장에 깔끔하게 (중복 제거)','일시불 구매가를 못 찾은 모델이 있으면 입력칸으로 바로 이동 · 다 넣으면 인쇄 창이 다시 열려요']],
@@ -1711,7 +1712,7 @@ $('#verClose').onclick=function(){$('#verModal').classList.remove('on');};
 $('#verModal').addEventListener('click',function(e){if(e.target.id==='verModal')$('#verModal').classList.remove('on');});
 renderVer();
 var HAS_GS=!!(window.google&&google.script&&google.script.run);
-function gsr(fn,arg,cb,err){if(!HAS_GS){if(err)err();return;}if(window.TEST_MODE&&/^admin(Save|Reset|Post|Edit|Clear|Block|Unblock|SendMsg|SetMinVer|RosterMode|RosterEx|DeleteQuote)/.test(fn)){toast('테스트 버전에서는 실제 데이터를 바꾸지 않아요');if(err)err();return;}var r=google.script.run.withSuccessHandler(cb||function(){}).withFailureHandler(err||function(){});r[fn](arg);}
+function gsr(fn,arg,cb,err){if(!HAS_GS){if(err)err();return;}if(window.TEST_MODE&&/^admin(Save|Reset|Post|Edit|Clear|Block|Unblock|SendMsg|SetMinVer|RosterMode|RosterEx|DeleteQuote|CardPolicy)/.test(fn)){toast('테스트 버전에서는 실제 데이터를 바꾸지 않아요');if(err)err();return;}var r=google.script.run.withSuccessHandler(cb||function(){}).withFailureHandler(err||function(){});r[fn](arg);}
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 function devName(){var u=navigator.userAgent;var m=/Mobi|Android|iPhone|iPad/i.test(u)?'모바일':'PC';
   var b=/SamsungBrowser/.test(u)?'삼성인터넷':/Whale/.test(u)?'웨일':/Edg/.test(u)?'엣지':/KAKAOTALK/i.test(u)?'카카오톡':/NAVER/.test(u)?'네이버앱':/CriOS|Chrome/.test(u)?'크롬':/Safari/.test(u)?'사파리':'기타';return m+' · '+b;}
@@ -2104,7 +2105,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가표'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;
@@ -2210,7 +2211,7 @@ function admRender(){
   var r=$('#admRef');if(r)r.onclick=admRefresh;
   var o=$('#admOut');if(o)o.onclick=function(){ADM.pw=null;ADM.stat=null;ADM.tab='stat';clearInterval(ADM.t);admLogin();renderVer();};
   if(t==='price'||t==='promo')admBind(t);
-  if(t==='lg')admLgBind();
+  if(t==='lg'){admLgBind();cpaBind();}
   if(t==='emp')admEmpBind();
   if(t==='quote')admQuoteBind();
   if(t==='notice')admNoticeBind();
@@ -2530,8 +2531,44 @@ function admLgHtml(){
       +'<button class="btn pri block" id="lgApply" style="margin-top:12px">이 단가표로 적용하기</button>';}
   if(up)h+='<button class="btn line sm" id="lgReset" style="margin-top:12px">기본 단가표로 되돌리기</button>';
   h+='<div class="note">적용하면 LG 계산기에 바로 반영되고, 다른 사용자는 새로 접속(새로고침)할 때부터 적용돼요. 이전 단가표는 드라이브 \'삼성AI구독_데이터\' 폴더에 백업돼요.</div>';
+  h+=cpaHtml();
   if(ADMIN_LG)h+='<a class="btn line sm" href="lg.html" style="margin-top:10px;display:inline-flex;text-decoration:none">← LG 계산기로 돌아가기</a>';
   return h;
+}
+/* ---------- 💳 LG 제휴카드 정책 이미지 (관리자) ---------- */
+var CPA={pol:null,busy:'',title:null};
+function cpaImg(id,w){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;}
+function cpaHtml(){var o=CPA.pol,h='<div class="adm-sec" style="margin-top:22px;border-top:1px solid var(--line);padding-top:16px">💳 LG 제휴카드 정책 이미지 <small>LG 계산기 오른쪽 \'💳 카드 정책\' 탭에 보여요</small></div>';
+  if(!o)return h+'<div class="empty" style="margin-top:8px">불러오는 중…</div>';
+  h+='<div class="adm-form" style="margin-top:8px"><div class="full"><label>제목</label><input type="text" id="cpaTitle" maxlength="60" placeholder="예: 11월 LG 제휴카드 정책" value="'+esc(CPA.title!=null?CPA.title:o.title||'')+'"></div></div>';
+  h+='<label class="file-drop" style="margin-top:8px">🖼 정책 이미지 올리기 (여러 장 가능)<br><small>JPG · PNG · 캡처 이미지 · 올리면 바로 LG 계산기에 반영돼요</small><input type="file" id="cpaFile" accept="image/*" multiple></label>';
+  if(CPA.busy)h+='<div class="hint" style="margin-top:6px">⏳ '+esc(CPA.busy)+'</div>';
+  h+='<div class="hint" style="margin-top:6px">'+(o.imgs.length?'지금 '+o.imgs.length+'장'+(o.at?' · '+esc(o.at)+' 업데이트':''):'아직 올린 이미지가 없어요')+'</div>';
+  if(o.imgs.length)h+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px">'+o.imgs.map(function(x,i){
+      return '<div style="border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff"><a href="'+cpaImg(x.id,3000)+'" target="_blank" rel="noopener"><img src="'+cpaImg(x.id,400)+'" alt="" style="width:100%;height:150px;object-fit:contain;background:var(--soft);border-radius:6px"></a>'
+        +'<div style="font-size:11.5px;color:var(--sub);margin:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(i+1)+'. '+esc(x.name||'')+'</div>'
+        +'<div style="display:flex;gap:4px"><button class="btn line sm" data-cpm="'+i+'|-1" '+(i?'':'disabled')+'>↑</button><button class="btn line sm" data-cpm="'+i+'|1" '+(i<o.imgs.length-1?'':'disabled')+'>↓</button><button class="btn line sm" data-cpd="'+i+'" style="margin-left:auto;color:#dc2626">삭제</button></div></div>';}).join('')+'</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn pri sm" id="cpaSave">제목 저장</button>'+(o.imgs.length?'<button class="btn line sm" id="cpaClear" style="color:#dc2626">🗑 모두 지우기 (새 달 정책 올리기 전에)</button>':'')+'</div>';
+  h+='<div class="note">매달 바꿀 때: <b>모두 지우기</b> → 제목 바꾸기 → 새 이미지 올리기. 지운 이미지는 드라이브 휴지통으로 가요 (\'삼성AI구독_LG제휴카드정책\' 폴더).</div>';
+  return h;}
+function cpaLoad(){gsr('getCardPolicy',{},function(r){CPA.pol=r&&r.imgs?r:{title:'',at:'',imgs:[]};if(ADM.tab==='lg')admRender();},function(){CPA.pol={title:'',at:'',imgs:[]};if(ADM.tab==='lg')admRender();});}
+function cpaSet(ids,msg){var t=$('#cpaTitle');CPA.title=t?t.value:CPA.title;CPA.busy='저장하는 중…';admRender();
+  gsr('adminCardPolicySet',{pw:ADM.pw,ids:ids,title:CPA.title},function(r){CPA.busy='';if(r&&r.ok){CPA.pol=r.pol;CPA.title=null;toast(msg||'저장했어요');}else toast((r&&r.msg)||'저장하지 못했어요');admRender();},function(){CPA.busy='';admRender();toast('저장하지 못했어요');});}
+function cpaShrink(file,cb){var fr=new FileReader();fr.onload=function(){var img=new Image();img.onload=function(){var mw=2000,w=img.width,h=img.height;
+      if(w<=mw&&file.size<1500000&&/jpe?g|png/.test(file.type)){cb(fr.result);return;}
+      var k=Math.min(1,mw/w),c=document.createElement('canvas');c.width=Math.round(w*k);c.height=Math.round(h*k);var x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',0.9));};
+    img.onerror=function(){cb(null);};img.src=fr.result;};fr.readAsDataURL(file);}
+function cpaBind(){
+  if(!CPA.pol)cpaLoad();
+  var f=$('#cpaFile');if(f)f.onchange=function(){var files=Array.prototype.slice.call(f.files||[]).filter(function(x){return /^image\//.test(x.type);});if(!files.length)return;
+    var t=$('#cpaTitle');CPA.title=t?t.value:CPA.title;var i=0,okN=0;
+    var next=function(){if(i>=files.length){CPA.busy='';admRender();toast(okN+'장 올렸어요 · LG 계산기에 바로 보여요');return;}var file=files[i++];CPA.busy=file.name+' 올리는 중… ('+i+'/'+files.length+')';admRender();
+      cpaShrink(file,function(data){if(!data){next();return;}gsr('adminCardPolicyUpload',{pw:ADM.pw,data:data,name:file.name.replace(/\.[^.]+$/,'')+(/^data:image\/jpeg/.test(data)?'.jpg':'.'+file.name.split('.').pop()),title:CPA.title},function(r){if(r&&r.ok){CPA.pol=r.pol;CPA.title=null;okN++;}else toast((r&&r.msg)||'올리지 못했어요');next();},function(){toast(file.name+' 올리지 못했어요');next();});});};
+    next();};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cpm]'),function(b){b.onclick=function(){var p=b.dataset.cpm.split('|'),i=+p[0],j=i+(+p[1]),ids=CPA.pol.imgs.map(function(x){return x.id;});var t=ids[i];ids[i]=ids[j];ids[j]=t;cpaSet(ids,'순서를 바꿨어요');};});
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cpd]'),function(b){b.onclick=function(){if(!confirm('이 이미지를 지울까요?'))return;var i=+b.dataset.cpd;cpaSet(CPA.pol.imgs.filter(function(x,k){return k!==i;}).map(function(x){return x.id;}),'지웠어요');};});
+  var sv=$('#cpaSave');if(sv)sv.onclick=function(){cpaSet(CPA.pol.imgs.map(function(x){return x.id;}),'제목을 저장했어요');};
+  var cl=$('#cpaClear');if(cl)cl.onclick=function(){if(!confirm('올려 둔 카드 정책 이미지를 모두 지울까요?\n(드라이브 휴지통으로 이동)'))return;cpaSet([],'모두 지웠어요 · 새 이미지를 올려 주세요');};
 }
 function admLgBind(){
   if(!window.LGParse||!window.LG_DATA){lgLoadLibs(function(){if(ADM.tab==='lg')admRender();});}

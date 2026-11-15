@@ -279,6 +279,8 @@ body.preview{background:#e5e7eb;padding:0}
 .winchk{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;border:1px solid #fcd34d;background:#fffbeb;color:#92400e;border-radius:8px;padding:3px 9px;cursor:pointer}
 .winchk input{width:15px;height:15px;accent-color:#b45309;margin:0}
 .winchk.on{background:#fde68a}
+.cp-img{display:block;width:100%;border-radius:10px;border:1px solid var(--line);background:#fff;margin-top:10px;min-height:120px}
+.cp-a{display:block;text-decoration:none;color:inherit}
 .side-tabs{position:fixed;right:0;top:32%;z-index:45;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 .care-tab{position:relative;background:var(--pri);color:#fff;border:0;border-radius:12px 0 0 12px;padding:14px 8px;writing-mode:vertical-rl;font-size:13.5px;font-weight:800;letter-spacing:2px;cursor:pointer;box-shadow:-4px 4px 14px rgba(29,78,216,.3)}
 .care-tab:hover{background:var(--pri-d)}
@@ -641,6 +643,7 @@ body.preview{background:#e5e7eb;padding:0}
     <h2><span class="num">4</span>제휴카드</h2>
     <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(담은 모델 2개 이상 · 모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
+    <button class="btn line sm" id="cpOpen2" type="button" style="margin:-2px 0 10px;color:#0f766e;border-color:#99f6e4">💳 이번 달 제휴카드 정책 보기</button>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
       <div class="chips" id="usage"></div>
@@ -721,6 +724,7 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
   <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab">🔥 활성화 모델</button>
+  <button class="care-tab" id="cpTab" style="background:#0f766e">💳 카드 정책</button>
 </div>
 <div class="drawer-bg" id="careBg"></div>
 <aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
@@ -732,6 +736,10 @@ body.preview{background:#e5e7eb;padding:0}
   <div style="padding:10px 16px 0"><div class="search"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="winQ" placeholder="모델코드로 활성화 대상 확인" autocomplete="off" spellcheck="false"></div></div>
   <div class="drawer-c" id="winChips"></div>
   <div class="drawer-b" id="winBody"></div>
+</aside>
+<aside class="drawer" id="cpDrawer" aria-label="LG 제휴카드 정책">
+  <div class="drawer-h"><b id="cpTitle">💳 LG 제휴카드 정책</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="drawer-b" id="cpBody"></div>
 </aside>
 <div id="printArea"></div>
 
@@ -1246,7 +1254,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.
 window.__previewQuote=function(mode){buildPrint(mode||'basic');document.body.classList.add('preview');};
 
 /* ====== 서랍: 비교하기 · 활성화 모델 ====== */
-function careClose(){['#cmpDrawer','#winDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
+function careClose(){['#cmpDrawer','#winDrawer','#cpDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
 function drawerOpen(id){careClose();$(id).classList.add('on');$('#careBg').classList.add('on');}
 Array.prototype.forEach.call(document.querySelectorAll('.dclose'),function(b){b.onclick=careClose;});$('#careBg').onclick=careClose;
 function cmpRender(){
@@ -1301,7 +1309,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.28',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.29',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
@@ -1389,6 +1397,20 @@ document.getElementById('iaX').onclick=function(){document.getElementById('iaMod
 document.getElementById('iaModal').onclick=function(ev){if(ev.target===this)this.classList.remove('on');};
 window.addEventListener('appinstalled',function(){INST=null;document.getElementById('iaModal').classList.remove('on');toast('앱을 설치했어요. 홈 화면에서 열어 보세요');setTimeout(iaShow,500);});
 iaShow();
+
+/* ---------- 💳 제휴카드 정책 이미지 (관리자가 올린 그림) ---------- */
+var CP=lsGet('lgCardPol');
+function cpImg(id,w){return 'https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w'+w;}
+function cpRender(){var b=$('#cpBody'),o=CP;
+  $('#cpTitle').textContent='💳 '+(o&&o.title?o.title:'LG 제휴카드 정책');
+  if(!o){b.innerHTML='<div class="empty" style="background:#fff">불러오는 중…</div>';return;}
+  if(!o.imgs||!o.imgs.length){b.innerHTML='<div class="empty" style="background:#fff">아직 올라온 카드 정책 이미지가 없어요.<br><small>관리자 → 🅻 LG 단가표 → 제휴카드 정책에서 올릴 수 있어요.</small></div>';return;}
+  b.innerHTML='<div class="hint" style="margin:0">'+(o.at?esc(o.at)+' 업데이트 · ':'')+'그림을 누르면 크게 볼 수 있어요</div>'
+    +o.imgs.map(function(x){return '<a class="cp-a" href="'+cpImg(x.id,3000)+'" target="_blank" rel="noopener"><img class="cp-img" loading="lazy" src="'+cpImg(x.id,1600)+'" alt="'+esc(x.name||'카드 정책')+'"></a>';}).join('')
+    +'<div class="note" style="margin-top:10px">카드사 정책은 바뀔 수 있어요. 계산기 금액과 다르면 이 안내를 기준으로 확인해 주세요.</div>';}
+function cpOpen(){fuLog('cardpol');drawerOpen('#cpDrawer');cpRender();
+  api('getCardPolicy',{},function(r){if(r&&r.imgs){CP=r;lsPut('lgCardPol',r);if($('#cpDrawer').classList.contains('on'))cpRender();}},function(){if(!CP){CP={imgs:[]};cpRender();}});}
+$('#cpTab').onclick=cpOpen;$('#cpOpen2').onclick=cpOpen;
 function startBeat(){if(!EMP||$('#gate').classList.contains('on'))return;fbInit();bestRender();bestLoad();beat();setInterval(beat,75000);setInterval(bestLoad,300000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden){LASTIN=Date.now();if(FB.gone)fbPresence(true);}if(Date.now()-(window.__lastBeat||0)>5000)beat();});}
 
