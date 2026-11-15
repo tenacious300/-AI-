@@ -636,7 +636,7 @@ body.preview{background:#e5e7eb;padding:0}
 
   <section class="card" id="secCard">
     <h2><span class="num">4</span>제휴카드</h2>
-    <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(모델마다 다른 카드 · 결합 고객)</small></label>
+    <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(담은 모델 2개 이상 · 모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
@@ -1005,7 +1005,7 @@ function lumpCalc(items,feelT,feelN){var have=items.filter(function(i){return i.
   var diff=feelT-L;return {ok:have===items.length&&items.length>0,have:have,L:L,diff:diff,diffM:feelN?Math.round(diff/feelN/10)*10:0};}
 
 /* 카드 여러 장 (결합 고객): 모델마다 결제 카드를 정하고, 카드별로 전월실적 · 한도 · 선납 캐시백을 따로 계산해 합침 */
-function multiOk(){return S.cust==='combo'||S.cust==='exist';}
+function multiOk(){return (S.cust==='combo'||S.cust==='exist'||S.cust==='sb')&&S.cart.length>=2;}
 function multiOn(){return !!(S.multi&&multiOk());}
 function cardById(id){return CARDS.filter(function(c){return c.id===id;})[0];}
 function multiSched(items){
@@ -1298,7 +1298,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.26',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.27',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
