@@ -36,7 +36,14 @@ button{-webkit-tap-highlight-color:transparent}
 .top{background:var(--navy);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:30}
 .top-in{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:10px}
 .top h1{margin:0;font-size:18px;letter-spacing:-.3px;flex:1}
-.btag{border:0;background:#fff;color:var(--navy);font-size:12px;font-weight:800;border-radius:99px;padding:3px 10px;flex:none;white-space:nowrap;cursor:pointer}
+.bsw{display:inline-flex;flex:none;background:rgba(255,255,255,.16);border-radius:99px;padding:3px;gap:2px}
+.bsw button{border:0;background:transparent;color:rgba(255,255,255,.8);font-size:12.5px;font-weight:800;border-radius:99px;padding:5px 13px;min-height:30px;white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+.bsw button:hover{color:#fff}
+.bsw button.on{background:#fff;cursor:default}
+.bsw button.on[data-b="ss"]{color:#1428a0}.bsw button.on[data-b="lg"]{color:#a50034}
+@media(max-width:600px){.top{z-index:48}.top .top-in h1{display:none}.top .top-in{gap:6px}
+.bsw{flex:1 1 0;max-width:190px;margin-right:auto}.bsw button{flex:1;min-height:34px;font-size:13.5px;padding:5px 6px}}
+@media(max-width:400px){.top #meBtn{font-size:0;padding:4px 9px}.top #meBtn::before{content:'👤';font-size:12px}}
 @media(max-width:520px){.top h1{font-size:16px;white-space:nowrap}}
 .brand-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .brand-pick button{border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 6px;font-size:16px;font-weight:800;cursor:pointer;color:var(--sub)}
@@ -532,7 +539,7 @@ body.preview{background:#e5e7eb;padding:0}
 </div></div>
 <header class="top"><div class="top-in">
   <button class="ver" id="verBtn" tabindex="-1"></button>
-  <button class="btag" id="brandTag" title="삼성 / LG 바꾸기">삼성 ▾</button>
+  <div class="bsw" id="brandSw" role="group" aria-label="삼성 / LG 계산기 전환"><button data-b="ss" class="on" aria-pressed="true">삼성</button><button data-b="lg" title="LG 계산기로 바로 전환">LG</button></div>
   <h1>AI 구독 계산기</h1>
   <button class="me" id="meBtn" title="사번 변경"></button>
   <button class="me lo" id="logoutBtn" title="로그아웃" style="display:none"><span class="ic">⏻</span><span class="t"> 로그아웃</span></button>
@@ -860,8 +867,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.22',VER_DATE='2026.11.15';
+var VERSION='v8.23',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.23','11.15',['상단에 삼성 | LG 전환 스위치 추가 · 한 번 누르면 사번 재입력 없이 바로 전환 (휴대폰은 제목 대신 스위치 표시)']],
   ['v8.22','11.15',['🆕 오른쪽 \'삼성 vs LG\' 탭 추가 · 같은 품목에서 삼성 · LG 모델을 골라 월 납부액 · 총 납부액 · 혜택을 나란히 비교 (LG 계산기에서도 열려요)']],
   ['v8.21','11.15',['🆕 AI 구독 계산기로 이름 변경 · 사번 입력 화면에서 삼성 / LG 계산기 선택','🆕 LG 가전구독 계산기 추가 (전자랜드 단가표 + 주간 활성화 반영) · 위쪽 브랜드 표시를 누르면 다시 고를 수 있어요','⚙ 관리자 모드에 🅻 LG 단가표 탭 추가 (LG 계산기 아래 ⚙ 관리자에서도 바로 열림)']],
   ['v8.20','11.14',['상단에 ⏻ 로그아웃 버튼 추가 (이 기기에 저장된 사번 삭제 → 입장 화면)','휴대폰 상단 접속자 표시를 \'● 4명\'으로 줄임']],
@@ -1781,7 +1789,7 @@ if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}
 var BRAND=(function(){var m=/[?&]brand=(ss|lg)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
-$('#brandTag').onclick=openGate;
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b!=='lg')return;if(!EMP){brandSet('lg');openGate();return;}lsPut('calcBrand','lg');try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href='lg.html';};
 var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||XCMP;
 if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
