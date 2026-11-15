@@ -769,6 +769,13 @@ function api(fn,arg,ok,fail){if(!window.API_URL){if(fail)fail();return;}
 var D=window.CK_DATA,BY={},GROUPS=[],IMG=window.CK_IMG||{p:{},m:{}};
 /* row: [관리유형, 관리상세, 계약월, 약정할인가, 반값개월, 패키지(+원/−%), 다품목캐시백, 소유권, ERP 상품명, 전자랜드 코드] */
 var R={care:0,det:1,term:2,fee:3,half:4,pkg:5,cb:6,own:7,erp:8,code:9};
+/* 정수기 셀프관리: 계약기간마다 가장 싼 방문관리 요금에서 월 1,000원을 뺀 요금으로 '셀프관리' 메뉴를 만들어요 (반값 · 패키지 · 캐시백 조건은 그대로) */
+var SELF_OFF=1000,SELF_CARE=D.cares.indexOf('셀프관리');
+if(SELF_CARE<0){D.cares.push('셀프관리');SELF_CARE=D.cares.length-1;}
+var SELF_DET=D.dets.length;D.dets.push('* 필터는 택배로 받아 고객이 직접 교체 (방문 없음)\n* 방문관리 요금보다 월 '+SELF_OFF.toLocaleString()+'원 저렴');
+D.m.forEach(function(m){if(D.cats[m[1]]!=='정수기'||m[2].some(function(r){return r[R.care]===SELF_CARE;}))return;
+  var terms={};m[2].forEach(function(r){var t=terms[r[R.term]];if(!t||r[R.fee]<t[R.fee])terms[r[R.term]]=r;});
+  Object.keys(terms).forEach(function(k){var b=terms[k],s=b.slice();s[R.care]=SELF_CARE;s[R.det]=SELF_DET;s[R.fee]=b[R.fee]-SELF_OFF;s[R.erp]=b[R.erp]+' · 셀프관리';s[R.code]='';m[2].push(s);});});
 D.m.forEach(function(m){BY[m[0]]=m;var g=D.cats[m[1]];if(GROUPS.indexOf(g)<0)GROUPS.push(g);});
 (function(){var meta=D.meta||{};$('#perTag').textContent='쿠쿠 '+(meta.label||'');
   var fs=$('#footSrc');if(fs)fs.textContent='기준: 전자랜드 쿠쿠 구독 '+(meta.label||'')+' · 쿠쿠 홈페이지 '+(IMG.at||'')+' · 모델 '+D.m.length+'개';})();
