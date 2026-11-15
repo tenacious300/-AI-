@@ -687,6 +687,7 @@ body.preview{background:#e5e7eb;padding:0}
 <div class="toast" id="toast"></div>
 <div class="side-tabs">
   <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
+  <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab">🔥 활성화 모델</button>
 </div>
 <div class="drawer-bg" id="careBg"></div>
@@ -1209,6 +1210,7 @@ function cmpRender(){
    +'</table></div>';}
 function cmpOpen(){drawerOpen('#cmpDrawer');cmpRender();}
 $('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
+$('#xTab').onclick=function(){location.href='./?xcmp=1&from=lg';};
 var winCat=null;
 function winList(){var o={};Object.keys(D.act||{}).forEach(function(c){var m=BY[c];if(!m)return;var a=actInfo(c),k=a.mid+(a.live?a.add:0);if(!a.type||!k)return;var g=grp(D.cats[m[1]]);(o[g]=o[g]||[]).push([m,a,k]);});return o;}
 function winRender(){var W=winList(),cats=GROUPS.filter(function(g){return W[g];});
@@ -1230,7 +1232,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.21',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.22',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();

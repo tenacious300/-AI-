@@ -736,6 +736,7 @@ body.preview{background:#e5e7eb;padding:0}
   <button class="care-tab" id="careTab">케어 가이드</button>
   <button class="care-tab c4" id="aiTab">🎯 혜택 TOP</button>
   <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
+  <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab"><span id="winTabTxt">우승기념 모델</span></button>
 </div>
 <div class="drawer-bg" id="careBg"></div>
@@ -747,6 +748,11 @@ body.preview{background:#e5e7eb;padding:0}
 <aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
   <div class="drawer-h"><b>⚖️ 월 구독료 비교</b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="drawer-b" id="cmpBody"></div>
+</aside>
+<aside class="drawer wide" id="xDrawer" aria-label="삼성 · LG 비교" style="width:min(1100px,100vw)">
+  <div class="drawer-h"><b>🆚 삼성 · LG 구독 비교</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="drawer-c" id="xCats"></div>
+  <div class="drawer-b" id="xBody"></div>
 </aside>
 <aside class="drawer" id="winDrawer" aria-label="우승기념 대상 모델">
   <div class="drawer-h"><b>🏆 <span id="winTitle">우승기념</span> 지원 대상 모델</b><button class="dclose" aria-label="닫기">✕</button></div>
@@ -854,8 +860,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.21',VER_DATE='2026.11.15';
+var VERSION='v8.22',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.22','11.15',['🆕 오른쪽 \'삼성 vs LG\' 탭 추가 · 같은 품목에서 삼성 · LG 모델을 골라 월 납부액 · 총 납부액 · 혜택을 나란히 비교 (LG 계산기에서도 열려요)']],
   ['v8.21','11.15',['🆕 AI 구독 계산기로 이름 변경 · 사번 입력 화면에서 삼성 / LG 계산기 선택','🆕 LG 가전구독 계산기 추가 (전자랜드 단가표 + 주간 활성화 반영) · 위쪽 브랜드 표시를 누르면 다시 고를 수 있어요','⚙ 관리자 모드에 🅻 LG 단가표 탭 추가 (LG 계산기 아래 ⚙ 관리자에서도 바로 열림)']],
   ['v8.20','11.14',['상단에 ⏻ 로그아웃 버튼 추가 (이 기기에 저장된 사번 삭제 → 입장 화면)','휴대폰 상단 접속자 표시를 \'● 4명\'으로 줄임']],
   ['v8.19','11.14',['🖨 인쇄 오류 수정: 인쇄 설정에서 \'배경 그래픽\'을 꺼도 체감가 · 일시불 비교의 색 칸과 글자가 흐려지지 않게']],
@@ -1556,7 +1563,7 @@ function careShow(key){
 function careOpen(key){fuLog('care');drawerOpen('#careDrawer');
   if(!key){var it=S.cart[S.cart.length-1];key=it?careKey(it.cat,it.sub):(S.sel.m?careKey(catOf(S.sel.m),subOf(S.sel.m)):'');}
   careShow(key||careCur||CARE[0][0]);}
-function careClose(){['#careDrawer','#cmpDrawer','#winDrawer','#boxDrawer','#aiDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
+function careClose(){if(window.XCMP_BACK&&$('#xDrawer').classList.contains('on')){location.href='lg.html';return;}['#careDrawer','#cmpDrawer','#winDrawer','#boxDrawer','#aiDrawer','#xDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
 function drawerOpen(id){careClose();$(id).classList.add('on');$('#careBg').classList.add('on');}
 Array.prototype.forEach.call(document.querySelectorAll('.dclose'),function(b){b.onclick=careClose;});
 function cmpItems(){return calcItems().filter(function(i){return i.cmp!==false;});}
@@ -1758,7 +1765,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
-  if(BRAND==='lg'&&!ADMIN_LG){location.replace('lg.html');return;}
+  if(BRAND==='lg'&&!STAY){location.replace('lg.html');return;}
   if(location.search)try{history.replaceState(null,'',location.pathname+location.hash);}catch(e){}
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
@@ -1775,8 +1782,8 @@ var BRAND=(function(){var m=/[?&]brand=(ss|lg)/.exec(location.search);return m?m
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
 $('#brandTag').onclick=openGate;
-var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search);
-if(EMP&&!CUST&&!FORCE_GATE&&!ADMIN_LG&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
+var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||XCMP;
+if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&BRAND==='lg'&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace('lg.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
 var ADM={pw:null,t:null};
 function admLogin(){
@@ -2478,6 +2485,80 @@ function admBind(t){
     var pr=$('#poReset');if(pr)pr.onclick=function(){gsr('adminResetData',{pw:ADM.pw,kind:'promo'},function(){toast('기본값으로 되돌렸어요. 새로고침하면 적용돼요');admInfo();});};
   }
 }
+/* ---------- 삼성 · LG 비교 (같은 품목에서 브랜드별 모델을 골라 나란히 비교) ---------- */
+var XC={cat:null,list:lsGet('xcmpList')||[],q:{ss:'',lg:''},ready:false};
+var XMAP={'TV':/^(TV|스탠바이미)$/,'냉장고':/^냉장고 \((?!김치)/,'김치냉장고':/김치냉장고/,'세탁기':/^세탁기 \((?!건조기)/,'건조기':/^세탁기 \(건조기\)/,'에어드레서':/^(스타일러|슈케어)$/,'에어컨':/^에어컨/,'공기청정기':/^(공기청정기|에어로)/,'제습기':/^제습기$/,'청소기':/청소기$/,'식기세척기':/^식기세척기$/,'전기레인지':/^전기레인지$/,'정수기':/^(얼음)?정수기$/,'갤럭시 북':/^노트북$/};
+var XLAB={'에어드레서':'의류관리기','갤럭시 북':'노트북'};
+function xLG(){var o=lsGet('ovr_lg');return (o&&o.x&&o.x.m)?o.x:window.LG_DATA;}
+function xLoad(cb){if(XC.ready){cb();return;}var need=[];if(!window.LG_DATA)need.push('data/lg.js');if(!window.LG_IMG)need.push('data/lg-img.js');
+  var n=need.length,done=function(){XC.ready=true;XC.by={};xLG().m.forEach(function(m){XC.by[m[0]]=m;});cb();};if(!n){done();return;}
+  need.forEach(function(src){var sc=document.createElement('script');sc.src=src+'?d='+todayStr();sc.onload=sc.onerror=function(){if(--n===0)done();};document.head.appendChild(sc);});}
+function xAct(code){var L=xLG(),a=L.act&&L.act[code];if(!a)return null;var t=todayStr();return {mid:a[0],add:a[1],s:a[2],e:a[3],type:a[4],note:a[5],live:!a[2]||(t>=a[2]&&t<=a[3])};}
+function xLgRows(m){var L=xLG(),w={single:'결합없음',combo:'신규결합',exist:'기존결합'}[S.cust]||'결합없음',g={},o=[];
+  m[2].forEach(function(r){if(L.bd[r[4]]==='소상공인')return;var k=r[3]+'|'+r[0]+'|'+r[1]+'|'+r[2];if(!g[k]){g[k]=[];o.push(k);}g[k].push(r);});
+  return o.map(function(k){var A=g[k];return A.filter(function(r){return L.bd[r[4]]===w;})[0]||A.filter(function(r){return L.bd[r[4]]==='결합없음';})[0]||A[0];});}
+function xLgMon(code,r){var a=xAct(code),ex=0;if(a&&a.type==='요금인하'){var k=a.mid+(a.live?a.add:0);if(k)ex=Math.max(0,Math.ceil(k*1000/72/100)*100-r[9]);}return r[10]-ex;}
+function xLgType(r){var L=xLG(),a=L.ct[r[0]],b=L.cs[r[1]];return (b?a+' '+b:a)+(L.cy[r[2]]?' '+L.cy[r[2]]+'주기':'');}
+function xSave(){lsPut('xcmpList',XC.list);}
+function xCats(){return D.cats.filter(function(c){return XMAP[c];});}
+function xItem(it){
+  if(it.b==='ss'){var m=byCode[it.code];if(!m)return null;var cat=catOf(m),ys=[];m[3].forEach(function(p){if(ys.indexOf(p[0])<0)ys.push(p[0]);});ys.sort(function(a,b){return a-b;});
+    if(ys.indexOf(it.y)<0)it.y=ys[ys.length-1];var ps=m[3].filter(function(p){return p[0]===it.y;});
+    var p=ps.filter(function(x){return x[1]===it.t;})[0]||ps.slice().sort(function(a,b){return a[2]-b[2];})[0];it.t=p[1];
+    var parts=partsFor(cat,it.y,0,S.cust==='combo'?2:1),c=calcPlan(p[2],it.y,parts,0),pm=promoOf(it.code),isMax=it.y===maxYears(cat),sp=Math.floor(c.T*0.05/10)*10,pp=isMax?p[2]*((pm.fin&&promoLive())?pm.fin:pm.fest):0,o=INFO[it.code]||{};
+    return {b:'ss',code:it.code,cat:cat,sub:subOf(m),img:o.img,name:o.name,ys:ys,types:ps.map(function(x){return [x[1],D.types[x[1]]];}),y:it.y,t:it.t,N:c.N,mon:p[2],mon2:c.mon2,rate:c.rate,parts:parts.map(function(x){return x[0].replace(' 할인','')+' '+pct(x[1]);}),tot:c.mon2*c.N,benV:sp+pp,ben:'포인트 '+(sp+pp).toLocaleString()+'P'+(pp?' (구독 '+sp.toLocaleString()+' + 지원 '+pp.toLocaleString()+')':''),lp:infoLp(it.code),url:stockUrl(it.code)};}
+  var L=xLG(),m2=XC.by[it.code];if(!m2)return null;var rows=xLgRows(m2),ys2=[];rows.forEach(function(r){if(ys2.indexOf(r[3])<0)ys2.push(r[3]);});ys2.sort(function(a,b){return a-b;});
+  if(ys2.indexOf(it.y*12)<0)it.y=ys2[ys2.length-1]/12;var rs=rows.filter(function(r){return r[3]===it.y*12;});
+  var r=rs.filter(function(x){return xLgType(x)===it.t;})[0]||rs.slice().sort(function(a,b){return xLgMon(it.code,a)-xLgMon(it.code,b);})[0];it.t=xLgType(r);
+  var mon2=xLgMon(it.code,r),a=xAct(it.code),nt=(L.notes[r[14]]||'')+' '+(a&&a.live?a.note:''),hm=/(\d+)개월\s*(월요금\s*)?반값/.exec(nt),hmN=hm?+hm[1]:0,half=hmN?(mon2-Math.floor(mon2/2/10)*10)*hmN:0;
+  var gift=a&&a.type==='모상'&&a.live?(a.mid+a.add)*1000:0,o2=(window.LG_IMG||{})[it.code],bd=L.bd[r[4]],parts2=[];
+  if(bd!=='결합없음')parts2.push(bd+' '+r[6]+'%');if(r[7]-mon2-r[8]>0)parts2.push('활성화 −'+won(r[7]-mon2-r[8]));
+  return {b:'lg',code:it.code,cat:String(L.cats[m2[1]]),sub:'',img:o2?'https://static.lge.co.kr'+o2[0]:'',name:o2?o2[1]:'',ys:ys2.map(function(v){return v/12;}),types:rs.map(function(x){return [xLgType(x),xLgType(x)];}),y:it.y,t:it.t,N:r[3],mon:r[7],mon2:mon2,rate:(r[7]-mon2)/r[7],parts:parts2,
+    tot:mon2*r[3]-half,benV:gift,ben:[hmN?'처음 '+hmN+'개월 반값 (−'+won(half)+')':'',gift?'모바일상품권 '+won(gift):''].filter(Boolean).join(' · ')||'-',lp:m2[3]||0,url:o2&&o2[2]?'https://www.lge.co.kr'+o2[2]:'https://www.lge.co.kr/search?keyword='+encodeURIComponent(it.code.replace(/\..*$/,''))+'&tab=all'};}
+function xPickList(b){var q=XC.q[b].trim().toUpperCase().replace(/[^A-Z0-9]/g,''),h='',L,res;
+  if(b==='ss'){res=MODELS.filter(function(m){return catOf(m)===XC.cat&&(!q||m[0].toUpperCase().indexOf(q)>=0);});
+    h=res.slice(0,40).map(function(m){var mx=maxYears(XC.cat),ps=m[3].filter(function(p){return p[0]===mx;});if(!ps.length)ps=m[3];var mn=Math.min.apply(null,ps.map(function(p){return p[2];}));
+      return '<div class="it" data-xadd="ss|'+esc(m[0])+'"><div><b>'+esc(m[0])+'</b><span>'+esc(subOf(m))+'</span></div><div class="pr">월 '+won(mn)+'~</div></div>';}).join('');}
+  else{L=xLG();res=L.m.filter(function(m){return XMAP[XC.cat].test(String(L.cats[m[1]]))&&(!q||m[0].replace(/[^A-Z0-9]/g,'').indexOf(q)>=0);});
+    h=res.slice(0,40).map(function(m){var rs=xLgRows(m),mn=Math.min.apply(null,rs.map(function(r){return xLgMon(m[0],r);})),o=(window.LG_IMG||{})[m[0]];
+      return '<div class="it" data-xadd="lg|'+esc(m[0])+'"><div><b>'+esc(m[0])+'</b><span>'+esc(o&&o[1]?o[1]:L.cats[m[1]])+'</span></div><div class="pr">월 '+won(mn)+'~</div></div>';}).join('');}
+  return '<div class="list" style="display:block;max-height:230px;margin-top:8px">'+(h||'<div class="msg">해당 모델이 없어요</div>')+(res.length>40?'<div class="msg">'+res.length+'개 중 40개 · 모델코드를 입력해 주세요</div>':'')+'</div>';}
+function xRender(){var cats=xCats();if(!XC.cat||cats.indexOf(XC.cat)<0)XC.cat=cats[0];
+  $('#xCats').innerHTML=cats.map(function(c){return '<button class="chip sm '+(c===XC.cat?'on':'')+'" data-v="'+esc(c)+'">'+esc(XLAB[c]||c)+'</button>';}).join('');
+  var its=XC.list.map(function(it,i){var x=xItem(it);if(x)x.i=i;return x;}).filter(Boolean);
+  its.forEach(function(x){if(x.b==='ss'&&!INFO[x.code])fetchInfo(x.code);});
+  var col=function(b,name,color){return '<div style="flex:1;min-width:280px;background:#fff;border-radius:12px;padding:12px;border-top:4px solid '+color+'"><b style="color:'+color+'">'+name+'</b> <span style="font-size:12px;color:var(--sub)">· '+esc(XLAB[XC.cat]||XC.cat)+' · 누르면 비교에 추가</span>'
+    +'<div class="search" style="margin-top:8px"><input type="text" data-xq="'+b+'" placeholder="모델코드 검색" value="'+esc(XC.q[b])+'" autocomplete="off" spellcheck="false" style="padding-left:14px;min-height:42px"></div><div data-xl="'+b+'">'+xPickList(b)+'</div></div>';};
+  var h='<div style="display:flex;gap:12px;flex-wrap:wrap">'+col('ss','삼성','#1428a0')+col('lg','LG','#a50034')+'</div>';
+  if(!its.length)h+='<div class="empty" style="background:#fff;margin-top:12px">위에서 삼성 모델과 LG 모델을 눌러 추가하면 여기에 나란히 비교돼요.</div>';
+  else{var minMon=Math.min.apply(null,its.map(function(x){return x.mon2;})),minTot=Math.min.apply(null,its.map(function(x){return x.tot;})),net=function(x){return x.tot-x.benV;},minNet=Math.min.apply(null,its.map(net)),minY=Math.min.apply(null,its.map(function(x){return x.tot/x.y;}));
+    var row=function(l,fn){return '<tr><td>'+l+'</td>'+its.map(fn).join('')+'</tr>';},bc=function(x){return x.b==='ss'?'#1428a0':'#a50034';};
+    var best=function(v,mn,big){var b=Math.abs(v-mn)<1;return '<td class="'+(b?'best-cell':'')+'"><span class="'+(big?'big2 ':'')+(b?'best':'')+'">'+won(v)+'</span>'+(big?(b?'<span class="diff" style="color:var(--ok)">최저</span>':'<span class="diff">+'+won(v-mn)+'</span>'):'')+'</td>';};
+    h+='<div class="hint" style="margin:14px 0 8px">'+its.length+'개 비교 중 · 고객 유형 <b>'+({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust])+'</b> 기준 · 선납 · 제휴카드는 뺀 금액 · 초록색이 가장 저렴해요 <button class="btn line sm" id="xClear" style="margin-left:6px">모두 지우기</button></div>'
+     +'<div class="scroll" style="border-radius:12px"><table class="cmp-tbl"><tr><th></th>'+its.map(function(x){return '<th style="border-top:4px solid '+bc(x)+'"><button class="x" data-xdel="'+x.i+'" style="float:right;border:0;background:var(--soft);border-radius:50%;width:24px;height:24px;cursor:pointer">✕</button><span class="tag" style="background:'+bc(x)+';color:#fff">'+(x.b==='ss'?'삼성':'LG')+'</span>'+(x.img?'<img class="ci" src="'+esc(x.img)+'" alt="">':'<div class="ci"></div>')+'<div class="cn">'+esc(x.code)+'</div><div style="font-size:12px;color:var(--sub);font-weight:500">'+esc(x.name||(x.cat+(x.sub?' · '+x.sub:'')))+'</div></th>';}).join('')+'</tr>'
+     +row('계약 기간',function(x){return '<td><select data-xy="'+x.i+'" style="min-height:36px;padding:4px 8px;font-size:13px">'+x.ys.map(function(y){return '<option value="'+y+'"'+(y===x.y?' selected':'')+'>'+y+'년</option>';}).join('')+'</select></td>';})
+     +row('케어 서비스',function(x){return '<td><select data-xt="'+x.i+'" style="min-height:36px;padding:4px 8px;font-size:13px;max-width:190px">'+x.types.map(function(t){return '<option value="'+esc(t[0])+'"'+(t[0]===x.t?' selected':'')+'>'+esc(t[1])+'</option>';}).join('')+'</select></td>';})
+     +row('정상 월',function(x){return '<td>'+won(x.mon)+'</td>';})
+     +row('할인',function(x){return '<td><b>'+pct(x.rate)+'</b><br><span style="font-size:11.5px;color:var(--sub)">'+(x.parts.map(esc).join(' · ')||'-')+'</span></td>';})
+     +row('월 납부액',function(x){return best(x.mon2,minMon,1);})
+     +row('총 납부액',function(x){return best(x.tot,minTot,0);})
+     +row('1년 환산',function(x){return best(Math.round(x.tot/x.y),Math.round(minY),0);})
+     +row('🎁 구독 혜택',function(x){return '<td><span style="color:#059669;font-size:12.5px">'+esc(x.ben)+'</span></td>';})
+     +row('<b>실부담 총액</b><br><span style="font-weight:500">(혜택 차감)</span>',function(x){return best(net(x),minNet,1);})
+     +row('일시불 기준가',function(x){return '<td>'+(x.lp?won(x.lp):'-')+'</td>';})
+     +row('',function(x){return '<td><a class="link" target="_blank" rel="noopener" href="'+x.url+'">'+(x.b==='ss'?'삼성닷컴':'LG전자')+' ↗</a></td>';})
+     +'</table></div><div class="note">삼성은 구독료 할인·포인트(1P=1원), LG는 단가표 활성화·반값·상품권 기준이에요. 케어 내용과 제품 사양이 다르니 금액만으로 단순 비교한 참고용이에요.</div>';}
+  var act=document.activeElement,fq=act&&act.dataset&&act.dataset.xq,pos=fq?act.selectionStart:0;
+  $('#xBody').innerHTML=h;if(fq){var el=document.querySelector('[data-xq="'+fq+'"]');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}}}
+function xOpen(){drawerOpen('#xDrawer');$('#xBody').innerHTML='<div class="empty" style="background:#fff">LG 단가를 불러오는 중…</div>';xLoad(xRender);}
+$('#xTab').onclick=xOpen;
+onChip($('#xCats'),function(v){XC.cat=v;XC.q={ss:'',lg:''};xRender();$('#xBody').scrollTop=0;});
+$('#xBody').addEventListener('input',function(e){var b=e.target.dataset&&e.target.dataset.xq;if(!b)return;XC.q[b]=e.target.value;document.querySelector('[data-xl="'+b+'"]').innerHTML=xPickList(b);});
+$('#xBody').addEventListener('click',function(e){var a=e.target.closest('[data-xadd]');if(a){var p=a.dataset.xadd.split('|');if(XC.list.length>=6){toast('6개까지 비교할 수 있어요');return;}XC.list.push({b:p[0],code:p[1],y:99,t:null});xSave();xRender();toast((p[0]==='ss'?'삼성 ':'LG ')+p[1]+' 추가');return;}
+  var d=e.target.closest('[data-xdel]');if(d){XC.list.splice(+d.dataset.xdel,1);xSave();xRender();return;}
+  if(e.target.id==='xClear'){XC.list=[];xSave();xRender();}});
+$('#xBody').addEventListener('change',function(e){var t=e.target;if(t.dataset.xy){XC.list[+t.dataset.xy].y=+t.value;XC.list[+t.dataset.xy].t=null;xSave();xRender();}else if(t.dataset.xt){var xi=XC.list[+t.dataset.xt];xi.t=xi.b==='ss'?+t.value:t.value;xSave();xRender();}});
+if(XCMP){window.XCMP_BACK=/[?&]from=lg/.test(location.search);setTimeout(function(){if(EMP)xOpen();},400);}
 var BOX=[],boxLoaded=false;
 var LS_KEY='calcQuotes';
 function lsAll(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return [];}}
