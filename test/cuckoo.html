@@ -583,7 +583,9 @@ body.preview{background:#e5e7eb;padding:0}
 <main>
   <section class="card" id="secCond">
     <h2><span class="num">1</span>고객 조건</h2>
-    <div class="cond">
+    <div class="lbl">구매 방식</div>
+    <div class="chips" id="buyMode"><button class="chip" data-v="sub">구독 결합</button><button class="chip" data-v="lump">일시불</button></div>
+    <div class="cond" id="condSub">
       <div>
         <div class="lbl">패키지 할인 (구독 2대 이상)</div>
         <div class="chips" id="custType">
@@ -641,7 +643,7 @@ body.preview{background:#e5e7eb;padding:0}
 
   <section class="card" id="secLump">
     <h2><span class="num">4</span>일시불 품목 <small style="font-size:13px;color:var(--sub);font-weight:600">다품목 캐시백용</small> <span class="cnt" id="lumpCnt"></span></h2>
-    <div class="warn" style="margin:0 0 10px">⚠️ 다품목 캐시백은 <b>일시불 품목이 1개 이상 꼭 들어가야</b> 지급돼요. (구독 + 구독 = 지급 불가 / 일시불 + 구독 = 지급)</div>
+    <div class="warn" id="lumpWarn" style="margin:0 0 10px">⚠️ 다품목 캐시백은 <b>일시불 품목이 1개 이상 꼭 들어가야</b> 지급돼요. (구독 + 구독 = 지급 불가 / 일시불 + 구독 = 지급)</div>
     <div id="lumpSel"></div>
     <div class="search" style="margin-top:10px">
       <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -815,8 +817,8 @@ function infoName(code){var o=infoOf(code);return o&&o.name?'<div class="pname">
 
 /* ====== 상태 ====== */
 var S=lsGet('ckState')||{};
-S={cust:S.cust||'auto',lumps:S.lumps||[],dbl:S.dbl||'auto',sel:null,cart:S.cart||[],card:S.card||'none',usage:S.usage||40,promo:S.promo!==false,cmpY:null,showTot:false,lumpOn:false};
-function save(){lsPut('ckState',{cust:S.cust,lumps:S.lumps,dbl:S.dbl,cart:S.cart,card:S.card,usage:S.usage,promo:S.promo});}
+S={mode:S.mode==='lump'?'lump':'sub',cust:S.cust||'auto',lumps:S.lumps||[],dbl:S.dbl||'auto',sel:null,cart:S.cart||[],card:S.card||'none',usage:S.usage||40,promo:S.promo!==false,cmpY:null,showTot:false,lumpOn:false};
+function save(){lsPut('ckState',{mode:S.mode,cust:S.cust,lumps:S.lumps,dbl:S.dbl,cart:S.cart,card:S.card,usage:S.usage,promo:S.promo});}
 function pkgOn(){return S.cust==='auto'&&S.cart.length>=2;}
 
 /* ====== 계산 ======
@@ -839,10 +841,10 @@ function lumpOfName(n){return MU.lump.filter(function(x){return x[1]===n;})[0];}
 function dblToday(){var t=todayStr();return MU.dbl.some(function(p){return t>=p[0]&&t<=p[1];});}
 function dblOn(){return S.dbl==='on'||(S.dbl!=='off'&&dblToday());}
 function multiCB(subItems){
-  var E=subItems.map(function(i){return {kind:'구독',cat:catN(i.cat),name:i.code,amt:i.cb0,ref:i};})
-    .concat((S.cust==='off'?[]:S.lumps||[]).map(function(n){var x=lumpOfName(n);return x?{kind:'일시불',cat:catN(x[0]),name:n,amt:x[2]}:null;}).filter(Boolean));
+  var E=(S.mode==='lump'?[]:subItems).map(function(i){return {kind:'구독',cat:catN(i.cat),name:i.code,amt:i.cb0,ref:i};})
+    .concat((S.cust==='off'&&S.mode!=='lump'?[]:S.lumps||[]).map(function(n){var x=lumpOfName(n);return x?{kind:'일시불',cat:catN(x[0]),name:n,amt:x[2]}:null;}).filter(Boolean));
   var by={};E.forEach(function(e){var b=by[e.cat];if(!b||e.amt>b.amt)by[e.cat]=e;});
-  var keep=Object.keys(by).map(function(k){return by[k];}),hasLump=E.some(function(e){return e.kind==='일시불';}),ok=S.cust!=='off'&&hasLump&&keep.length>=2,dbl=dblOn();
+  var keep=Object.keys(by).map(function(k){return by[k];}),hasLump=E.some(function(e){return e.kind==='일시불';}),ok=(S.mode==='lump'||S.cust!=='off')&&hasLump&&keep.length>=2,dbl=dblOn();
   keep.forEach(function(e){e.x2=dbl&&MU.dblEx.indexOf(e.cat)<0;e.pay=ok?e.amt*(e.x2?2:1):0;});
   return {E:E,keep:keep,ok:ok,hasLump:hasLump,nCat:keep.length,dbl:dbl,total:keep.reduce(function(a,e){return a+e.pay;},0),
     lumpTot:keep.filter(function(e){return e.kind==='일시불';}).reduce(function(a,e){return a+e.pay;},0),dup:E.length-keep.length};}
@@ -860,6 +862,7 @@ function renderCond(n){
   else msg='쿠쿠 제품을 <b>구독 2대 이상</b> 같이 하면 모델마다 <b>월 패키지 할인</b>(대부분 2,000원)이 자동으로 들어가요. 지금 '+n+'대 담음';
   if(S.cust!=='off')msg+='<br>💰 <b>다품목 캐시백</b>은 아래 <b>④ 일시불 품목</b>을 1개 이상 넣어야 지급돼요.';
   $('#autoMsg').innerHTML=msg;}
+$('#buyMode').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.mode=b.dataset.v;fuLog('mode:'+S.mode);render();window.scrollTo(0,0);});
 $('#custType').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cust=b.dataset.v;render();});
 
 /* ====== 모델 찾기 ====== */
@@ -983,7 +986,12 @@ $('#polCard').innerHTML=CARDS.map(function(c){var pl=c.tiers.map(function(t){ret
 var LCAT=null;
 function lumpCats(){var o=[];MU.lump.forEach(function(x){if(o.indexOf(x[0])<0)o.push(x[0]);});return o;}
 function renderLump(MC){
-  var off=S.cust==='off';$('#secLump').style.display=off?'none':'';$('#cardNum').textContent=off?'4':'5';if(off)return;
+  var LM=S.mode==='lump';
+  Array.prototype.forEach.call(document.querySelectorAll('#buyMode .chip'),function(b){b.classList.toggle('on',b.dataset.v===S.mode);});
+  ['#condSub','#autoMsg','#secPick','#secCart','#secCard','#secSum','#bar'].forEach(function(id){var el=$(id);if(el)el.style.display=LM?'none':'';});
+  document.querySelector('#secLump .num').textContent=LM?'2':'4';
+  $('#lumpWarn').innerHTML=LM?'🛒 <b>일시불만</b> 고르는 화면이에요. 모델을 여러 개(같은 모델 중복도) 골라 다품목 캐시백을 확인하세요. <b>2품목 이상</b>이어야 지급되고, 같은 품목은 1품목으로 집계돼요.':'⚠️ 다품목 캐시백은 <b>일시불 품목이 1개 이상 꼭 들어가야</b> 지급돼요. (구독 + 구독 = 지급 불가 / 일시불 + 구독 = 지급)';
+  var off=S.cust==='off'&&!LM;$('#secLump').style.display=off?'none':'';$('#cardNum').textContent=off?'4':'5';if(off)return;
   var L=S.lumps||[];$('#lumpCnt').textContent=L.length?L.length+'개':'';
   $('#lumpSel').innerHTML=L.length?'<div class="tags">'+L.map(function(n,i){var x=lumpOfName(n);return '<span class="tag" style="font-size:13px;padding:5px 10px">🛒 '+esc(n)+' <small>'+esc(x?x[0]:'')+' · '+won(x?x[2]:0)+'</small> <b data-ldel="'+i+'" style="cursor:pointer;margin-left:4px">✕</b></span>';}).join(' ')+'</div>'
     :'<div class="hint" style="margin:0">아직 고른 일시불 품목이 없어요. 아래에서 고객이 일시불로 같이 사는 품목을 골라 주세요.</div>';
@@ -991,8 +999,8 @@ function renderLump(MC){
   $('#lumpCats').innerHTML=lumpCats().map(function(c){return '<button class="chip sm '+(c===LCAT?'on':'')+'" data-v="'+esc(c)+'">'+esc(c)+'</button>';}).join('');
   var list=raw?MU.lump.filter(function(x){return (q&&x[1].toUpperCase().replace(/[^A-Z0-9]/g,'').indexOf(q)>=0)||(kw&&x[0].indexOf(kw)>=0);}):LCAT?MU.lump.filter(function(x){return x[0]===LCAT;}):[];
   var ll=$('#lumpList');
-  if(raw||LCAT){ll.style.display='block';ll.innerHTML=list.length?list.slice(0,60).map(function(x){var on=L.indexOf(x[1])>=0,ex=MU.dblEx.indexOf(x[0])>=0;
-      return '<div class="it" data-lump="'+esc(x[1])+'"'+(on?' style="background:var(--pri-soft)"':'')+'><div><b>'+(on?'✓ ':'')+esc(x[1])+'</b><span>'+esc(x[0])+(ex?' · 더블 제외':'')+'</span></div><div class="pr">캐시백 '+won(x[2])+'</div></div>';}).join(''):'<div class="msg">일치하는 일시불 모델이 없어요</div>';}
+  if(raw||LCAT){ll.style.display='block';ll.innerHTML=list.length?list.slice(0,60).map(function(x){var cntN=L.filter(function(n){return n===x[1];}).length,on=cntN>0,ex=MU.dblEx.indexOf(x[0])>=0;
+      return '<div class="it" data-lump="'+esc(x[1])+'"'+(on?' style="background:var(--pri-soft)"':'')+'><div><b>'+(on?'✓ ':'')+esc(x[1])+(cntN>1?' ×'+cntN:'')+'</b><span>'+esc(x[0])+(ex?' · 더블 제외':'')+'</span></div><div class="pr">캐시백 '+won(x[2])+'</div></div>';}).join(''):'<div class="msg">일치하는 일시불 모델이 없어요</div>';}
   else ll.style.display='none';
   var today=dblToday();
   $('#dblSel').innerHTML=[['auto','오늘 날짜로 자동 ('+(today?'더블 기간':'더블 아님')+')'],['on','더블 기간 판매'],['off','더블 아님']].map(function(x){return '<button class="chip sm '+(S.dbl===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('');
@@ -1000,6 +1008,9 @@ function renderLump(MC){
   if(MC.ok)h='<div class="info" style="margin-top:10px"><div class="t">다품목 캐시백 '+MC.nCat+'품목'+(MC.dbl?' · 🔥 더블 기간 2배':'')+'</div><div class="v">'+won(MC.total)+'</div><div class="t">'+MC.keep.map(function(e){return esc(e.name)+' '+won(e.pay)+(e.x2?' (×2)':'');}).join(' · ')+'</div></div>';
   else if(!MC.hasLump&&MC.E.length)h='<div class="warn" style="margin-top:10px">일시불 품목이 없어서 다품목 캐시백이 지급되지 않아요 (구독 + 구독 = 지급 불가). 일시불 품목을 1개 이상 넣어 주세요.</div>';
   else if(MC.hasLump&&MC.nCat<2)h='<div class="warn" style="margin-top:10px">다품목 캐시백은 <b>2품목 이상</b>이어야 해요. 다른 품목을 구독으로 담거나 일시불로 더 넣어 주세요.</div>';
+  if(MC.E.length)h+='<div class="scroll" style="margin-top:8px"><table class="tbl"><tr><th>모델</th><th>품목</th><th>구분</th><th>캐시백</th><th>지급</th></tr>'+MC.E.map(function(e){var k=MC.keep.indexOf(e)>=0;
+      return '<tr><td style="text-align:left"><b>'+esc(e.name)+'</b></td><td>'+esc(e.cat)+'</td><td>'+e.kind+'</td><td>'+won(e.amt)+(k&&e.x2?' ×2':'')+'</td><td>'+(!MC.ok?'<span style="color:var(--sub)">조건 미달</span>':k?'<b style="color:var(--ok)">'+won(e.pay)+'</b>':'<span style="color:#dc2626">같은 품목 중복 · 제외</span>')+'</td></tr>';}).join('')
+    +'<tr><td colspan="4" style="text-align:left"><b>합계</b> ('+MC.E.length+'개 → '+MC.nCat+'품목)</td><td><b style="color:var(--pri)">'+won(MC.total)+'</b></td></tr></table></div>';
   if(MC.dup)h+='<div class="note">같은 품목이 '+(MC.dup+1)+'개 이상이라 1품목으로 집계했어요 (캐시백 큰 모델 기준).</div>';
   h+='<div class="note">더블 기간: '+MU.dbl.map(function(p){return md(p[0])+'~'+md(p[1]);}).join(' · ')+' (김치냉장고 · 냉동고 · 세탁기 · 냉장고 · 건조기 제외) · 대상카드 '+esc(MU.cards||'')+' · 인도 기준 익월 반영 · 인수자 2명 이상 제외 · 더블 아닌 기간에 만든 전표를 더블 기간에 다시 등록하면 제외</div>';
   $('#mcbInfo').innerHTML=h;}
@@ -1007,7 +1018,7 @@ $('#lq').addEventListener('input',function(){render();});
 $('#lqClr').onclick=function(){$('#lq').value='';render();};
 $('#lumpCats').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;LCAT=LCAT===b.dataset.v?null:b.dataset.v;render();});
 $('#lumpList').addEventListener('click',function(e){var it=e.target.closest('[data-lump]');if(!it)return;var n=it.dataset.lump,L=S.lumps||(S.lumps=[]),k=L.indexOf(n);
-  if(k>=0){L.splice(k,1);toast(n+' 뺐어요');}else{L.push(n);fuLog('lumpitem');toast(n+' 일시불 품목으로 넣었어요');}render();});
+  L.push(n);fuLog('lumpitem');toast(n+' 담았어요'+(k>=0?' (같은 모델 '+L.filter(function(x){return x===n;}).length+'개)':'')+' · 빼려면 위 ✕');render();});
 $('#lumpSel').addEventListener('click',function(e){var b=e.target.closest('[data-ldel]');if(!b)return;S.lumps.splice(+b.dataset.ldel,1);render();});
 $('#dblSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.dbl=b.dataset.v;render();});
 
