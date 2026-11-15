@@ -754,6 +754,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sh-row .sh-tx b{font-size:14px;-webkit-line-clamp:1}
 .sh-row em{font-style:normal;font-weight:800;font-size:14px;white-space:nowrap}
 .sh-more{font-size:12px;opacity:.65;padding-left:4px}
+.sh-more1{display:inline-block;margin-top:6px;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--tp) 35%,transparent);color:#fff;border-radius:8px;padding:3px 8px}
 .sum .sh-head-line{border-top:1px solid rgba(255,255,255,.12)}
 #sHead+.cap{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
 /* ===== 사용성 개선 끝 ===== */
@@ -1346,13 +1347,11 @@ function sumHead(items,card,cs){
   var el=$('#sHead');if(!el)return;
   if(!items.length){el.innerHTML='<div class="sh-empty"><div class="sh-im b"><span>🛒</span></div><div><b>아직 담은 모델이 없어요</b><small>모델을 담으면 여기에 제품 사진과 계약 조건이 보여요</small></div></div>';return;}
   var cardTxt=S.multi&&S.mc&&S.mc.length?'💳 카드 여러 장':(card&&cs&&cs.tier?'💳 '+card.name+' · '+S.usage+'만↑':'💳 제휴카드 미적용');
-  if(items.length===1){var it=items[0];
-    el.innerHTML='<div class="sh-one">'+shThumb(it,1)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+'</small></div></div>'
-      +'<div class="sh-ch"><span>📅 '+it.y+'년 계약</span><span>🛠 '+esc(it.type)+'</span><span>'+(it.pre?'💰 선납 '+it.pre+'%':'💰 선납 없음')+'</span><span>'+esc(cardTxt)+'</span></div>';
-    return;}
-  var max=3,rows=items.slice(0,max).map(function(it){return '<div class="sh-row">'+shThumb(it,0)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+' · '+it.y+'년 · '+esc(it.type)+(it.pre?' · 선납 '+it.pre+'%':'')+'</small></div><em>'+won(it.mon2)+'</em></div>';}).join('');
-  el.innerHTML='<div class="sh-list">'+rows+(items.length>max?'<div class="sh-more">외 '+(items.length-max)+'개 모델 · 아래 \'담은 모델\'에서 전체 확인</div>':'')+'</div>'
-    +'<div class="sh-ch"><span>📦 '+items.length+'개 모델</span><span>'+esc(cardTxt)+'</span></div>';
+  /* 여러 개면 월 납부액이 가장 큰 모델을 대표로 하나만 보여줌 */
+  var it=items.reduce(function(a,x){return x.mon2>a.mon2?x:a;},items[0]),more=items.length-1;
+  el.innerHTML='<div class="sh-one">'+shThumb(it,1)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+'</small>'
+      +(more?'<span class="sh-more1">외 '+more+'개 모델 함께 구독</span>':'')+'</div></div>'
+    +'<div class="sh-ch"><span>📅 '+it.y+'년 계약</span><span>🛠 '+esc(it.type)+'</span><span>'+(it.pre?'💰 선납 '+it.pre+'%':'💰 선납 없음')+'</span><span>'+esc(cardTxt)+'</span></div>';
 }
 function infoThumb(code){var o=INFO[code];if(o&&o.st==='ok'&&o.img)return '<img class="thumb" src="'+esc(o.img)+'" alt="">';return '<div class="thumb"></div>';}
 function infoName(code){var o=INFO[code];if(!o)return '';if(o.st==='loading')return '<div class="pname" style="color:var(--sub)">제품 정보 불러오는 중…</div>';
