@@ -757,6 +757,14 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sh-more1{display:inline-block;margin-top:6px;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--tp) 35%,transparent);color:#fff;border-radius:8px;padding:3px 8px}
 .sum .sh-head-line{border-top:1px solid rgba(255,255,255,.12)}
 #sHead+.cap{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+
+/* 견적 캡처용: 이미지에는 버튼·펼치기 버튼을 빼고 보이는 내용만 */
+.card.sum.cap-mode{background:radial-gradient(120% 90% at 100% 0%,rgba(49,130,246,.45) 0%,rgba(49,130,246,0) 55%),#191F28!important;box-shadow:none!important;border-radius:24px}
+.cap-mode .btns,.cap-mode .stog,.cap-mode .uxd,.cap-mode .lumpin input::placeholder{display:none!important}
+.cap-mode .sh-more1{background:rgba(49,130,246,.35)}
+.cap-mode,.cap-mode *{letter-spacing:0!important;font-feature-settings:normal!important}
+.cap-mode .cap-val{font-size:15px;font-weight:800;white-space:nowrap}
+.cap-foot{display:flex;flex-direction:column;gap:2px;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.12);font-size:11.5px;opacity:.6}
 /* ===== 사용성 개선 끝 ===== */
 </style>
 </head>
@@ -2626,7 +2634,23 @@ function capDraw(){var d=capData();if(!d)return null;var W=760,P=40,F='"Malgun G
   var FH=y+90,o=document.createElement('canvas');o.width=W;o.height=FH;var ox=o.getContext('2d');
   ox.beginPath();ox.moveTo(36,0);ox.arcTo(W,0,W,FH,36);ox.arcTo(W,FH,0,FH,36);ox.arcTo(0,FH,0,0,36);ox.arcTo(0,0,W,0,36);ox.clip();ox.drawImage(c,0,0);
   return o;}
-function capQuote(){var c=capDraw();if(!c){toast('담은 모델이 없어요');return;}fuLog('capture');markAct('견적 캡처');
+/* 화면의 '맞춤 구독 견적' 카드를 그대로 이미지로 (실패하면 예전 방식으로 그림) */
+function capLib(){if(window.html2canvas)return Promise.resolve();return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=(/\/test\//.test(location.pathname)?'../':'')+'vendor/html2canvas.min.js?v=1.4.1';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+function capShot(){
+  var el=document.querySelector('.card.sum');if(!el)return Promise.reject('no');
+  var dt=new Date(),ds=dt.getFullYear()+'.'+(dt.getMonth()+1)+'.'+dt.getDate();
+  return capLib().then(function(){var w=el.offsetWidth;
+    return html2canvas(el,{scale:Math.min(3,Math.max(2,1000/w)),backgroundColor:null,useCORS:true,logging:false,imageTimeout:4000,
+      onclone:function(doc){var c=doc.querySelector('.card.sum');if(!c)return;c.classList.add('cap-mode');c.style.position='static';
+        var f=doc.createElement('div');f.className='cap-foot';f.innerHTML='<span>전자랜드 여수본점'+(EMP?' · 담당 '+esc(EMP):'')+' · '+ds+' 견적</span><span>※ 참고용 견적 · 최종 금액은 계약 시 확인</span>';c.appendChild(f);
+        [].forEach.call(c.querySelectorAll('.lumpin input'),function(ip){var sp=doc.createElement('b');sp.className='cap-val';sp.textContent=ip.value?ip.value+'원':'미입력';ip.replaceWith(sp);});
+        [].forEach.call(c.querySelectorAll('.sgrp'),function(g){if(g.querySelector('.lumpin')&&!g.querySelector('.lumpin .cap-val:not(:empty)')){}if(g.querySelector('.lumpin')&&![].some.call(g.querySelectorAll('.cap-val'),function(v){return v.textContent!=='미입력';}))g.style.display='none';});
+        [].forEach.call(c.querySelectorAll('img'),function(im){if(!im.complete||!im.naturalWidth){var sp=doc.createElement('span');sp.textContent='📦';im.replaceWith(sp);}});}});});}
+function capQuote(){var items=calcItems();if(!items.length){toast('담은 모델이 없어요');return;}
+  var b=$('#capBtn');if(b){b.disabled=true;b.dataset.t=b.innerHTML;b.innerHTML='📸 견적 이미지 만드는 중…';}
+  var done=function(c){if(b){b.disabled=false;b.innerHTML=b.dataset.t;}capSave(c);};
+  capShot().then(done,function(){done(capDraw());});}
+function capSave(c){if(!c){toast('담은 모델이 없어요');return;}fuLog('capture');markAct('견적 캡처');
   var dt=new Date(),name='구독견적_'+dt.getFullYear()+('0'+(dt.getMonth()+1)).slice(-2)+('0'+dt.getDate()).slice(-2)+'_'+('0'+dt.getHours()).slice(-2)+('0'+dt.getMinutes()).slice(-2)+'.png';
   c.toBlob(function(b){if(!b){toast('이미지를 만들지 못했어요');return;}
     var file=null;try{file=new File([b],name,{type:'image/png'});}catch(e){}
