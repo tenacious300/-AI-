@@ -640,7 +640,7 @@ body.preview{background:#e5e7eb;padding:0}
     <h2><span class="num">4</span>제휴카드</h2>
     <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(담은 모델 2개 이상 · 모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
-    <button class="btn line sm" id="cpOpen2" type="button" style="margin:-2px 0 10px;color:#0f766e;border-color:#99f6e4">💳 이번 달 제휴카드 정책 보기</button>
+    <button class="btn line sm" id="cpOpen2" type="button" style="margin:-2px 0 10px;color:#0f766e;border-color:#99f6e4">💳 카드 정책 보기</button>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
       <div class="chips" id="usage"></div>
@@ -734,8 +734,8 @@ body.preview{background:#e5e7eb;padding:0}
   <div class="drawer-c" id="winChips"></div>
   <div class="drawer-b" id="winBody"></div>
 </aside>
-<aside class="drawer" id="cpDrawer" aria-label="LG 제휴카드 정책">
-  <div class="drawer-h"><b id="cpTitle">💳 LG 제휴카드 정책</b><button class="dclose" aria-label="닫기">✕</button></div>
+<aside class="drawer" id="cpDrawer" aria-label="카드 정책">
+  <div class="drawer-h"><b id="cpTitle">💳 카드 정책</b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="drawer-b" id="cpBody"></div>
 </aside>
 <div id="printArea"></div>
@@ -1306,7 +1306,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.30',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.31',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
@@ -1398,7 +1398,6 @@ iaShow();
 /* ---------- 💳 제휴카드 정책 이미지 (관리자가 깃허브 cardpol/ 폴더에 올린 그림) ---------- */
 var CP=lsGet('lgCardPol2'),CP_BASE=window.TEST_MODE?'../cardpol/':'cardpol/';
 function cpRender(){var b=$('#cpBody'),o=CP;
-  $('#cpTitle').textContent='💳 '+(o&&o.title?o.title:'LG 제휴카드 정책');
   if(!o){b.innerHTML='<div class="empty" style="background:#fff">불러오는 중…</div>';return;}
   if(!o.imgs||!o.imgs.length){b.innerHTML='<div class="empty" style="background:#fff">아직 올라온 카드 정책 이미지가 없어요.<br><small>관리자 → 🅻 LG 단가 · 카드정책에서 올릴 수 있어요.</small></div>';return;}
   b.innerHTML='<div class="hint" style="margin:0">'+(o.at?esc(o.at)+' 업데이트 · ':'')+'그림을 누르면 크게 볼 수 있어요</div>'

@@ -890,10 +890,11 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.30',VER_DATE='2026.11.15';
+var VERSION='v8.31',VER_DATE='2026.11.15';
 var CHANGELOG=[
+  ['v8.31','11.15',['LG 카드 정책 이름을 달 표시 없이 \'카드 정책\'으로 통일 (관리자 제목 입력칸 없앰)']],
   ['v8.30','11.15',['💳 LG 제휴카드 정책 이미지를 구글 드라이브 대신 깃허브(cardpol/ 폴더)에 저장 · 직원 화면에서 훨씬 빨리 열려요','관리자: 처음 한 번 깃허브 토큰 등록 후 이미지 올리기 (올리고 1분쯤 뒤 반영)']],
-  ['v8.29','11.15',['🅻 LG 계산기 오른쪽 \'💳 카드 정책\' 탭 · 제휴카드 칸의 \'이번 달 제휴카드 정책 보기\'','관리자 🅻 LG 단가 · 카드정책 탭에서 정책 이미지를 올리면 바로 반영 (순서 바꾸기 · 삭제 · 모두 지우기)']],
+  ['v8.29','11.15',['🅻 LG 계산기 오른쪽 \'💳 카드 정책\' 탭 · 제휴카드 칸의 \'카드 정책 보기\'','관리자 🅻 LG 단가 · 카드정책 탭에서 정책 이미지를 올리면 바로 반영 (순서 바꾸기 · 삭제 · 모두 지우기)']],
   ['v8.28','11.15',['관리자 🧾 사번별 이용: 직원마다 삼성 · LG 둘 다 썼는지 (둘 다 / 삼성만 / LG만 / 미사용), 지점별 현황, 이름을 누르면 많이 쓴 기능, CSV','계산기에 들어오기만 한 날도 브랜드별로 기록']],
   ['v8.27','11.15',['🅻 LG: 신규 결합 · 기존 구독 · 소상공인으로 2개 이상 담으면 💳 카드 여러 장으로 나눠 결제 (카드별 전월실적 · 할인 한도 · 선납 캐시백 따로 계산, 견적서 · 복사 · 비교에도 반영)','📲 상단 앱 설치 버튼 (설치 창이 안 뜨는 브라우저는 아이폰 · 삼성 인터넷 · 카카오톡별 설치 방법 안내)']],
   ['v8.26','11.15',['🔥⚖️ 체감가 + 일시불 비교 견적서: 체감가 계산을 일시불 비교 안으로 합쳐 한 장에 깔끔하게 (중복 제거)','일시불 구매가를 못 찾은 모델이 있으면 입력칸으로 바로 이동 · 다 넣으면 인쇄 창이 다시 열려요']],
@@ -2545,12 +2546,11 @@ function cpaListGet(){return cpaGh('GET','cardpol/list.json').then(function(j){i
 function cpaListPut(pol,msg){return cpaListGet().then(function(cur){var d=new Date();pol.at=d.getFullYear()+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+('0'+d.getDate()).slice(-2)+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
   return cpaGh('PUT','cardpol/list.json',{message:msg||'LG 제휴카드 정책 목록 갱신',content:cpaB64(JSON.stringify(pol,null,1)),sha:cur.sha||undefined,branch:'main'}).then(function(){return pol;});});}
 function cpaImg(f){return 'https://raw.githubusercontent.com/'+GH_REPO+'/main/cardpol/'+encodeURIComponent(f);}
-function cpaHtml(){var o=CPA.pol,h='<div class="adm-sec" style="margin-top:22px;border-top:1px solid var(--line);padding-top:16px">💳 LG 제휴카드 정책 이미지 <small>LG 계산기 오른쪽 \'💳 카드 정책\' 탭에 보여요 · 깃허브에 저장</small></div>';
+function cpaHtml(){var o=CPA.pol,h='<div class="adm-sec" style="margin-top:22px;border-top:1px solid var(--line);padding-top:16px">💳 LG 카드 정책 이미지 <small>LG 계산기 오른쪽 \'💳 카드 정책\' 탭에 보여요 · 깃허브에 저장</small></div>';
   if(CPA.tok===null)return h+'<div class="empty" style="margin-top:8px">불러오는 중…</div>';
   if(!CPA.tok)return h+'<div class="adm-card" style="margin-top:8px"><b>처음 한 번만: 깃허브 토큰 등록</b><br><small>깃허브 → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token<br>· Repository access: <b>Only select repositories → tenacious300/-AI-</b><br>· Permissions → Repository permissions → <b>Contents: Read and write</b><br>· 만든 토큰(github_pat_로 시작)을 아래에 붙여 넣고 등록</small></div>'
     +'<div class="adm-form"><div class="full"><label>깃허브 토큰</label><input type="password" id="cpaTok" placeholder="github_pat_..." autocomplete="off" style="width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px"></div></div><button class="btn pri sm" id="cpaTokSave" style="margin-top:8px">토큰 확인 · 등록</button>'+(CPA.err?'<div class="warn" style="margin-top:8px">'+esc(CPA.err)+'</div>':'');
   if(!o)return h+(CPA.err?'<div class="warn" style="margin-top:8px">'+esc(CPA.err)+'</div>':'<div class="empty" style="margin-top:8px">불러오는 중…</div>');
-  h+='<div class="adm-form" style="margin-top:8px"><div class="full"><label>제목</label><input type="text" id="cpaTitle" maxlength="60" placeholder="예: 11월 LG 제휴카드 정책" value="'+esc(CPA.title!=null?CPA.title:o.title||'')+'"></div></div>';
   h+='<label class="file-drop" style="margin-top:8px">🖼 정책 이미지 올리기 (여러 장 가능)<br><small>JPG · PNG · 캡처 이미지 · 올리고 1분쯤 뒤 LG 계산기에 반영돼요</small><input type="file" id="cpaFile" accept="image/*" multiple></label>';
   if(CPA.busy)h+='<div class="hint" style="margin-top:6px">⏳ '+esc(CPA.busy)+'</div>';
   if(CPA.err)h+='<div class="warn" style="margin-top:6px">'+esc(CPA.err)+'</div>';
@@ -2559,8 +2559,8 @@ function cpaHtml(){var o=CPA.pol,h='<div class="adm-sec" style="margin-top:22px;
       return '<div style="border:1px solid var(--line);border-radius:10px;padding:6px;background:#fff"><a href="'+cpaImg(x.f)+'" target="_blank" rel="noopener"><img src="'+cpaImg(x.f)+'" alt="" loading="lazy" style="width:100%;height:150px;object-fit:contain;background:var(--soft);border-radius:6px"></a>'
         +'<div style="font-size:11.5px;color:var(--sub);margin:4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(i+1)+'. '+esc(x.name||x.f)+'</div>'
         +'<div style="display:flex;gap:4px"><button class="btn line sm" data-cpm="'+i+'|-1" '+(i?'':'disabled')+'>↑</button><button class="btn line sm" data-cpm="'+i+'|1" '+(i<o.imgs.length-1?'':'disabled')+'>↓</button><button class="btn line sm" data-cpd="'+i+'" style="margin-left:auto;color:#dc2626">삭제</button></div></div>';}).join('')+'</div>';
-  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn pri sm" id="cpaSave">제목 저장</button>'+(o.imgs.length?'<button class="btn line sm" id="cpaClear" style="color:#dc2626">🗑 모두 지우기 (새 달 정책 올리기 전에)</button>':'')+'<button class="btn line sm" id="cpaTokOff" style="margin-left:auto">토큰 다시 등록</button></div>';
-  h+='<div class="note">매달 바꿀 때: <b>모두 지우기</b> → 제목 바꾸기 → 새 이미지 올리기. 이미지는 깃허브 저장소 <b>cardpol/</b> 폴더에 저장되고, 깃허브 페이지가 다시 만들어지는 1분쯤 뒤 직원 화면에 보여요.</div>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'+(o.imgs.length?'<button class="btn line sm" id="cpaClear" style="color:#dc2626">🗑 모두 지우기 (새 달 정책 올리기 전에)</button>':'')+'<button class="btn line sm" id="cpaTokOff" style="margin-left:auto">토큰 다시 등록</button></div>';
+  h+='<div class="note">매달 바꿀 때: <b>모두 지우기</b> → 새 이미지 올리기. 이미지는 깃허브 저장소 <b>cardpol/</b> 폴더에 저장되고, 깃허브 페이지가 다시 만들어지는 1분쯤 뒤 직원 화면에 보여요.</div>';
   return h;}
 function cpaLoad(){CPA.err='';gsr('adminGhToken',{pw:ADM.pw},function(r){CPA.tok=r&&r.ok?r.token||'':'';if(CPA.tok)cpaRefresh();else if(ADM.tab==='lg')admRender();},function(){CPA.tok='';CPA.err='서버에서 토큰을 불러오지 못했어요.';if(ADM.tab==='lg')admRender();});}
 function cpaRefresh(){cpaListGet().then(function(x){CPA.pol=x.pol;CPA.err='';if(ADM.tab==='lg')admRender();}).catch(function(e){CPA.pol=null;CPA.err='깃허브 연결 실패: '+e.message+' (토큰 권한 · 만료 확인)';if(ADM.tab==='lg')admRender();});}
@@ -2568,7 +2568,7 @@ function cpaDone(p,msg){CPA.busy='';CPA.err='';if(p)CPA.pol=p;CPA.title=null;adm
 function cpaFail(e){CPA.busy='';CPA.err='깃허브에 저장하지 못했어요: '+(e&&e.message||e);admRender();}
 function cpaGuard(){if(window.TEST_MODE){toast('테스트 버전에서는 실제 데이터를 바꾸지 않아요');return false;}return true;}
 function cpaSaveList(imgs,msg,del){if(!cpaGuard())return;var t=$('#cpaTitle');CPA.title=t?t.value:CPA.title;CPA.busy='깃허브에 저장하는 중…';admRender();
-  var pol={title:CPA.title!=null?CPA.title:CPA.pol.title,at:'',imgs:imgs};
+  var pol={title:'',at:'',imgs:imgs};
   cpaListPut(pol,'LG 제휴카드 정책: '+msg).then(function(p){var dl=(del||[]).slice(),go=function(){if(!dl.length){cpaDone(p,msg+' · 1분쯤 뒤 반영돼요');return;}var f=dl.shift();
       cpaGh('GET','cardpol/'+encodeURIComponent(f)).then(function(j){return j?cpaGh('DELETE','cardpol/'+encodeURIComponent(f),{message:'LG 제휴카드 정책 이미지 삭제',sha:j.sha,branch:'main'}):null;}).then(go,go);};go();}).catch(cpaFail);}
 function cpaShrink(file,cb){var fr=new FileReader();fr.onload=function(){var img=new Image();img.onload=function(){var mw=1800,w=img.width,h=img.height,k=Math.min(1,mw/w);
@@ -2590,7 +2590,6 @@ function cpaBind(){
     next();};
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cpm]'),function(b){b.onclick=function(){var p=b.dataset.cpm.split('|'),i=+p[0],j=i+(+p[1]),a=CPA.pol.imgs.slice(),t=a[i];a[i]=a[j];a[j]=t;cpaSaveList(a,'순서를 바꿨어요');};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-cpd]'),function(b){b.onclick=function(){if(!confirm('이 이미지를 지울까요?'))return;var i=+b.dataset.cpd;cpaSaveList(CPA.pol.imgs.filter(function(x,k){return k!==i;}),'지웠어요',[CPA.pol.imgs[i].f]);};});
-  var sv=$('#cpaSave');if(sv)sv.onclick=function(){cpaSaveList(CPA.pol.imgs.slice(),'제목을 저장했어요');};
   var cl=$('#cpaClear');if(cl)cl.onclick=function(){if(!confirm('올려 둔 카드 정책 이미지를 모두 지울까요?'))return;cpaSaveList([],'모두 지웠어요',CPA.pol.imgs.map(function(x){return x.f;}));};
 }
 function admLgBind(){
