@@ -20,8 +20,10 @@
 <meta property="og:locale" content="ko_KR">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="../manifest.webmanifest">
-<meta name="theme-color" content="#0f1d45">
+<meta name="theme-color" content="#F2F4F6">
 <link rel="apple-touch-icon" href="../icons/icon-192.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <style>
 :root{
   --bg:#f3f5f9;--card:#fff;--ink:#111827;--sub:#5f6b7c;--line:#e2e7ef;--soft:#f1f4f9;
@@ -586,6 +588,123 @@ body.preview{background:#e5e7eb;padding:0}
 .cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
 .cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
 .cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
+/* ===== 새 디자인: 트렌드 테마 (토스 스타일 · 벤토 카드 · 반투명 상단바) =====
+   기존 스타일 위에 덮어쓰는 묶음입니다. 이 블록만 지우면 이전 디자인으로 돌아갑니다. */
+:root{
+  --tp:#F2552C;--tp-d:#C93A16;--tp-soft:#FFEEE8;
+  --bg:#F2F4F6;--card:#FFFFFF;--ink:#191F28;--sub:#6B7684;--line:#E5E8EB;--soft:#F2F4F6;
+  --pri:var(--tp);--pri-d:var(--tp-d);--pri-soft:var(--tp-soft);
+  --acc:#F04452;--acc-soft:#FFEEF0;--ok:#0BA360;--ok-soft:#E5F8EF;
+  --navy:#191F28;--r:20px;
+  --sh:0 1px 2px rgba(0,23,51,.04),0 4px 16px rgba(0,23,51,.05);
+  --sh2:0 8px 28px rgba(0,23,51,.10);
+}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;letter-spacing:-.2px;font-feature-settings:"tnum"}
+::selection{background:var(--tp-soft);color:var(--tp-d)}
+
+/* 반투명 상단바 (흐림 효과) */
+.top{background:rgba(255,255,255,.78);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);color:var(--ink);border-bottom:1px solid rgba(0,23,51,.06)}
+.top h1{font-weight:800;letter-spacing:-.5px}
+.bsw{background:#F2F4F6}
+.bsw button{color:#8B95A1}.bsw button:hover{color:var(--ink)}
+.bsw button.on{background:#fff;box-shadow:0 1px 4px rgba(0,23,51,.12)}
+.top .per{background:#F2F4F6;color:#4E5968}
+.top .rst,.me,.live{background:#F2F4F6;border:0;color:#4E5968}
+.live{color:#4E5968}.me:hover,.top .rst:hover{background:#E8EBED}
+.me.ib{background:var(--ok-soft);color:#087A48;border:0}.me.ib:hover{background:#D6F2E4}
+.me.lo{background:var(--acc-soft);color:#D22030;border:0}.me.lo:hover{background:#FFE0E3}
+.ver{background:var(--ink);color:#fff;border-radius:8px}.ver.adm:hover{background:#333D4B}
+
+/* 카드: 테두리 없이 흰 카드 + 은은한 그림자 */
+.card{border:0;border-radius:var(--r);box-shadow:var(--sh);padding:22px}
+@media(max-width:520px){.card{padding:18px;border-radius:18px}}
+.card h2{font-size:19px;font-weight:800;letter-spacing:-.6px}
+.num{background:var(--tp-soft);color:var(--tp);border-radius:8px;font-weight:900}
+.lbl{color:#4E5968}
+
+/* 칩: 회색 알약 → 선택 시 브랜드색 */
+.chip,.rrow .rc,.fav,.calq button,.tb .pl{border:0;background:#F2F4F6;border-radius:12px;font-weight:600;color:#333D4B;transition:transform .12s,background .15s}
+.chip:hover{background:#E8EBED}
+.chip:active,.btn:active,.cx-ap:active{transform:scale(.97)}
+.chip.on{background:var(--tp);color:#fff}
+.catgrid .chip{border-radius:14px;min-height:46px}
+
+/* 입력칸 */
+input[type=text],select,.form-row textarea,.nt-ta,.adm-form input[type=date],.adm-tool input{border:0;background:#F2F4F6;border-radius:14px}
+input:focus,select:focus,textarea:focus{outline:0;background:#fff;box-shadow:0 0 0 2px var(--tp)}
+.list{border:0;border-radius:16px;box-shadow:var(--sh2);background:#fff}
+.list .it{border-bottom-color:#F2F4F6}
+.picked{border:0;background:var(--tp-soft);border-radius:18px}
+.item,.cx,.nt2-card,.nt2-det,.nt2-ver,.uc,.exl .r{border:0;background:#F9FAFB;border-radius:18px}
+.cx{background:#fff;box-shadow:var(--sh)}
+.cx.sel{border:0;box-shadow:0 0 0 2px var(--tp),var(--sh2)}
+.item-g div,.info,.auto,.empty,.adm-card,.adm-kpi div,.split>div,.rs-diff div,.qsum{border-radius:14px}
+.item-g div{background:#fff}
+.price-row .p,.info .v,.bar .l b{font-weight:800;letter-spacing:-.8px}
+.tag{border-radius:8px;font-weight:700}
+.x{background:#F2F4F6}
+
+/* 버튼 */
+.btn{border-radius:16px;font-weight:700;transition:transform .12s,filter .15s}
+.btn.pri{background:var(--tp)}
+.btn.pri:hover{filter:brightness(1.06)}.btn.pri:active{background:var(--tp-d)}
+.btn.line{border:0;background:#F2F4F6;color:#333D4B}
+.btn.line:hover{background:#E8EBED}
+a.link{color:var(--tp)}
+.cx-ap{background:var(--tp);border-radius:10px}
+
+/* 합계(견적) 카드: 어두운 카드 + 브랜드색 빛 번짐 */
+.sum{background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--tp) 45%,transparent) 0%,transparent 55%),#191F28;border-radius:24px;box-shadow:0 12px 32px rgba(0,23,51,.18)}
+.sum .big,#sBig{font-size:36px;font-weight:900;letter-spacing:-1.2px}
+.sum .btns .btn{background:rgba(255,255,255,.1);border-radius:14px;font-weight:700}
+.sum .btns .btn:hover{background:rgba(255,255,255,.16)}
+.cap-btn{background:#fff!important;color:#191F28!important}
+.sgrp,.phase{background:rgba(255,255,255,.07);border-radius:14px}
+.sum-l .minus{color:#FF9B9B}.sum-l .plus{color:#6EE7B7}
+
+/* 하단 고정바 · 토스트 · 보관함 */
+.bar{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);border-top:1px solid rgba(0,23,51,.06);box-shadow:none}
+.bar .btn{border-radius:16px}
+.toast,.newver{background:#191F28;border-radius:14px}
+.fab{background:#191F28;border-radius:18px;box-shadow:0 8px 24px rgba(0,23,51,.25)}
+.instbar{background:#191F28;border-radius:18px}
+
+/* 첫 화면(로그인) */
+.gate{background:radial-gradient(80% 60% at 20% 10%,color-mix(in srgb,var(--tp) 35%,transparent),transparent 60%),radial-gradient(70% 60% at 90% 90%,rgba(124,58,237,.25),transparent 60%),#F2F4F6}
+.gate-box{border-radius:28px;box-shadow:0 20px 60px rgba(0,23,51,.12);padding:32px 24px}
+.gate-box h2{font-size:24px;font-weight:900;letter-spacing:-.8px}
+.gate-box .gate-logo{border-radius:16px}
+.brand-pick button{border-radius:18px;border-width:2px}
+
+/* 프로모션 배너 */
+.promo-bn{background:linear-gradient(100deg,var(--tp-d),var(--tp) 55%,#7C5CFC)}
+.promo-bn .pb-d{background:rgba(255,255,255,.2);color:#fff;border-radius:8px}
+.promo-bn button{color:var(--tp-d);border-radius:10px}
+
+/* 옆 탭 */
+.care-tab{border-radius:14px 0 0 14px;box-shadow:-4px 4px 14px rgba(0,23,51,.12)!important}
+.care-tab{background:var(--tp)}.care-tab:hover{background:var(--tp-d)}
+
+/* 팝업 · 서랍 */
+.modal{background:rgba(0,23,51,.4);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.modal-box,.ia{border-radius:24px;box-shadow:0 24px 60px rgba(0,23,51,.2)}
+.drawer{border-radius:24px 0 0 24px}
+.drawer-bg{-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+
+/* 카드혜택 비교 */
+.cx-hero{--cxa:#191F28;--cxb:color-mix(in srgb,var(--tp) 70%,#191F28);border-radius:22px}
+.cx-stats div{border-radius:14px}
+.cx-t tr.on td{background:var(--tp-soft);color:var(--tp-d)}
+.cx-rec{border:0;background:var(--tp-soft);border-radius:14px}
+.tb{border:0;border-radius:var(--r);box-shadow:var(--sh)}
+.tb .tabs,.seg{background:#F2F4F6;border-radius:12px}
+.tb .per button.on,.tb .more{color:var(--tp)}
+.loaded{background:var(--tp-soft);border:0;color:var(--tp-d);border-radius:14px}.loaded button{color:var(--tp)}
+.lpb{background:var(--tp-soft);color:var(--tp-d);border-radius:8px}
+.cmpchk{border-radius:10px}
+.qi,.wl-it{border-radius:18px;box-shadow:var(--sh)}
+input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
+/* ===== 새 디자인 끝 ===== */
 </style>
 </head>
 <body>
