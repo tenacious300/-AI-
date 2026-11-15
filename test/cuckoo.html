@@ -656,7 +656,7 @@ body.preview{background:#e5e7eb;padding:0}
   </section>
 
   <section class="card" id="secCard">
-    <h2><span class="num">5</span>제휴카드</h2>
+    <h2><span class="num" id="cardNum">5</span>제휴카드</h2>
     <div class="chips" id="cardSel"></div>
     <button class="btn line sm" id="cpOpen2" type="button" style="margin:-2px 0 10px;color:#0f766e;border-color:#99f6e4">💳 카드 혜택표 보기</button>
     <div id="cardBody">
@@ -827,9 +827,9 @@ function dblToday(){var t=todayStr();return MU.dbl.some(function(p){return t>=p[
 function dblOn(){return S.dbl==='on'||(S.dbl!=='off'&&dblToday());}
 function multiCB(subItems){
   var E=subItems.map(function(i){return {kind:'구독',cat:catN(i.cat),name:i.code,amt:i.cb0,ref:i};})
-    .concat((S.lumps||[]).map(function(n){var x=lumpOfName(n);return x?{kind:'일시불',cat:catN(x[0]),name:n,amt:x[2]}:null;}).filter(Boolean));
+    .concat((S.cust==='off'?[]:S.lumps||[]).map(function(n){var x=lumpOfName(n);return x?{kind:'일시불',cat:catN(x[0]),name:n,amt:x[2]}:null;}).filter(Boolean));
   var by={};E.forEach(function(e){var b=by[e.cat];if(!b||e.amt>b.amt)by[e.cat]=e;});
-  var keep=Object.keys(by).map(function(k){return by[k];}),hasLump=E.some(function(e){return e.kind==='일시불';}),ok=hasLump&&keep.length>=2,dbl=dblOn();
+  var keep=Object.keys(by).map(function(k){return by[k];}),hasLump=E.some(function(e){return e.kind==='일시불';}),ok=S.cust!=='off'&&hasLump&&keep.length>=2,dbl=dblOn();
   keep.forEach(function(e){e.x2=dbl&&MU.dblEx.indexOf(e.cat)<0;e.pay=ok?e.amt*(e.x2?2:1):0;});
   return {E:E,keep:keep,ok:ok,hasLump:hasLump,nCat:keep.length,dbl:dbl,total:keep.reduce(function(a,e){return a+e.pay;},0),
     lumpTot:keep.filter(function(e){return e.kind==='일시불';}).reduce(function(a,e){return a+e.pay;},0),dup:E.length-keep.length};}
@@ -842,10 +842,10 @@ function renderCond(n){
   Array.prototype.forEach.call(document.querySelectorAll('#custType .chip'),function(b){b.classList.toggle('on',b.dataset.v===S.cust);});
   $('#channel').innerHTML='<button class="chip on" data-v="">전자랜드 쿠쿠 '+esc((D.meta||{}).label||'')+'</button>';
   var msg;
-  if(S.cust==='off')msg='<b>패키지 할인 미적용</b> · 여러 대를 담아도 월 패키지 할인 없이 계산해요.';
+  if(S.cust==='off')msg='<b>단건 계산</b> · 여러 대를 담아도 월 패키지 할인 · 다품목 캐시백 없이 계산해요. (일시불 품목 메뉴는 숨겨져요)';
   else if(n>=2)msg='<b>패키지 할인 적용 중</b> · 구독 '+n+'대 → 모델마다 월 패키지 할인(대부분 2,000원)이 들어가요.';
   else msg='쿠쿠 제품을 <b>구독 2대 이상</b> 같이 하면 모델마다 <b>월 패키지 할인</b>(대부분 2,000원)이 자동으로 들어가요. 지금 '+n+'대 담음';
-  msg+='<br>💰 <b>다품목 캐시백</b>은 아래 <b>④ 일시불 품목</b>을 1개 이상 넣어야 지급돼요.';
+  if(S.cust!=='off')msg+='<br>💰 <b>다품목 캐시백</b>은 아래 <b>④ 일시불 품목</b>을 1개 이상 넣어야 지급돼요.';
   $('#autoMsg').innerHTML=msg;}
 $('#custType').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.cust=b.dataset.v;render();});
 
@@ -908,7 +908,7 @@ function renderPicked(){if(!S.sel)return;var m=BY[S.sel.code];if(!m){S.sel=null;
   var t='';
   if(c.hm)t+='<span class="tag g">🎁 처음 '+c.hm+'개월 반값</span>';
   if(p[R.pkg])t+='<span class="tag'+(on?'':' gr')+'">'+esc(pkgTxt(p))+(on?'':' (2대 이상)')+'</span>';
-  var cb0=subCB(code,p);if(cb0)t+='<span class="tag gr">💰 다품목 캐시백 '+won(cb0)+(dblOn()?' → 더블 '+won(cb0*2):'')+' (일시불 1개 이상 필요)</span>';
+  var cb0=S.cust==='off'?0:subCB(code,p);if(cb0)t+='<span class="tag gr">💰 다품목 캐시백 '+won(cb0)+(dblOn()?' → 더블 '+won(cb0*2):'')+' (일시불 1개 이상 필요)</span>';
   $('#pkPromo').innerHTML=t;}
 $('#terms').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.y=+b.dataset.v;renderPicked();});
 $('#types').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.care=+b.dataset.v;renderPicked();});
@@ -968,6 +968,7 @@ $('#polCard').innerHTML=CARDS.map(function(c){var pl=c.tiers.map(function(t){ret
 var LCAT=null;
 function lumpCats(){var o=[];MU.lump.forEach(function(x){if(o.indexOf(x[0])<0)o.push(x[0]);});return o;}
 function renderLump(MC){
+  var off=S.cust==='off';$('#secLump').style.display=off?'none':'';$('#cardNum').textContent=off?'4':'5';if(off)return;
   var L=S.lumps||[];$('#lumpCnt').textContent=L.length?L.length+'개':'';
   $('#lumpSel').innerHTML=L.length?'<div class="tags">'+L.map(function(n,i){var x=lumpOfName(n);return '<span class="tag" style="font-size:13px;padding:5px 10px">🛒 '+esc(n)+' <small>'+esc(x?x[0]:'')+' · '+won(x?x[2]:0)+'</small> <b data-ldel="'+i+'" style="cursor:pointer;margin-left:4px">✕</b></span>';}).join(' ')+'</div>'
     :'<div class="hint" style="margin:0">아직 고른 일시불 품목이 없어요. 아래에서 고객이 일시불로 같이 사는 품목을 골라 주세요.</div>';
@@ -1113,9 +1114,9 @@ function quoteText(){var items=calcItems(),t=totals(items),d=new Date(),me=meGet
     o.push('   월 '+won(i.mon2)+(i.hm?' (처음 '+i.hm+'개월 '+won(i.halfP)+')':'')+(i.cb?' · 다품목 캐시백 '+won(i.cb):''));});
   o.push('');o.push('▶ 월 납부액 합계 '+won(t.sumMon2)+(t.first!==t.sumMon2?' (반값 기간 '+won(t.first)+')':''));
   if(t.card&&t.cs.tier){o.push('▶ '+t.card.name+' (전월 '+S.usage+'만↑) 월 −'+won(t.firstCard));o.push('▶ 카드 적용 월 실 납부액 '+won(t.net));}
-  if(S.lumps&&S.lumps.length)o.push('▶ 일시불 품목: '+S.lumps.join(', '));
+  if(S.cust!=='off'&&S.lumps&&S.lumps.length)o.push('▶ 일시불 품목: '+S.lumps.join(', '));
   if(t.cb)o.push('▶ 다품목 캐시백 합계 '+won(t.cb)+(t.MC.dbl?' (더블 기간 2배)':''));
-  else if(t.n&&!t.MC.hasLump)o.push('※ 다품목 캐시백은 일시불 품목이 1개 이상 들어가야 지급돼요');
+  else if(t.n&&S.cust!=='off'&&!t.MC.hasLump)o.push('※ 다품목 캐시백은 일시불 품목이 1개 이상 들어가야 지급돼요');
   o.push('※ 반값 · 패키지 · 카드 혜택은 기간 한정이며, 실제 요금은 계약 시 확정됩니다.');
   if(me)o.push('담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' '));return o.join('\n');}
 $('#copyBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}var t=quoteText(),done=function(){toast('견적을 복사했어요');};
@@ -1136,7 +1137,7 @@ function buildPrint(mode){
       +'<td class="r"><b>'+won(i.mon2)+'</b></td></tr>';}).join('');
   var T=[['기본 구독료 합계 (월)',won(sumMon)],['할인 후 월 납부액',won(sumMon2)],['약정 · 패키지 · 반값 할인 총액','−'+won(sumDisc)]];
   if(card&&cs.tier){T.push([card.name+' ('+S.usage+'만↑) 월 할인','−'+won(f)]);T.push(['카드 할인 총액','−'+won(cardTot)]);}
-  if(S.lumps&&S.lumps.length)T.push(['일시불 품목 (다품목)',esc(S.lumps.join(', '))]);
+  if(S.cust!=='off'&&S.lumps&&S.lumps.length)T.push(['일시불 품목 (다품목)',esc(S.lumps.join(', '))]);
   if(cb)T.push(['다품목 캐시백'+(t.MC.dbl?' (더블 2배)':''),'+'+won(cb)]);
   T.push(['고객 총 혜택',won(sumDisc+cardTot+cb)]);
   var html='<div class="pq"><div class="hd"><div><h1>쿠쿠 구독 견적서</h1><small>전자랜드 쿠쿠 구독 '+esc(meta.label||'')+' 기준</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
