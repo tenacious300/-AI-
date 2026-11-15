@@ -575,6 +575,13 @@ body.preview{background:#e5e7eb;padding:0}
 .cx-h{flex-wrap:wrap;gap:10px}.cx-h .im{transform:scale(.86);transform-origin:left center;margin-right:-8px}.cx-h>div:nth-child(2){flex:1;min-width:0}
 .cx-r{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:8px;text-align:left;border-top:1px dashed var(--line);padding-top:8px;margin-left:0}.cx-r small{display:inline}.cx-r b{font-size:16px}
 .cx-t th,.cx-t td{padding:7px 6px;font-size:12px;white-space:nowrap}.cx-b{padding:10px}}
+.cx-nr{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.cx-ap{flex:none;border:0;background:var(--pri);color:#fff;font-weight:800;font-size:12.5px;border-radius:99px;padding:5px 14px;cursor:pointer;white-space:nowrap}.cx-ap:hover{filter:brightness(1.1)}
+.cx-ap.on{background:var(--ok-soft,#dcfce7);color:var(--ok,#047857);border:1px solid currentColor;display:inline-block}
+.cx-rec{border:1px dashed var(--pri);border-radius:14px;background:var(--pri-soft,#eef2ff);padding:10px 12px;margin:0 0 12px;font-size:13.5px}
+.cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
+.cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
+.cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
 </style>
 </head>
 <body>
@@ -985,28 +992,44 @@ var CXO={open:'',init:0};
 function cxFace(src,label,color,w){w=w||80;var h=Math.round(w*0.72);
   if(src)return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;justify-content:center;flex:none"><img src="'+src+'" alt="" loading="lazy" style="max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 3px 10px rgba(15,23,42,.2)" onerror="this.style.display=\'none\'"></div>';
   return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;flex:none"><div style="width:100%;height:'+Math.round(w*.63)+'px;border-radius:8px;background:linear-gradient(135deg,'+(color||'#334155')+',#0f172a);color:#fff;font-size:10.5px;font-weight:800;padding:6px;display:flex;align-items:flex-end;line-height:1.2;box-shadow:0 3px 10px rgba(15,23,42,.2)">'+esc(label)+'</div></div>';}
-/* o: {cards, items, n, u, promo(표시용), sel, sumMon2, sched(c), info(c)->{face,full,tags:[[글,클래스]],months,note,ars} } */
+function cxTier(c,u){var t=null;c.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
+/* 이 전월실적에서 혜택이 가장 큰 카드 (담은 모델 있으면 계약기간 할인 합계, 없으면 월 할인) */
+function cxBestAt(o,u){var b=null;o.cards.forEach(function(c){var t=cxTier(c,u);if(!t)return;var v,tot;
+    if(o.n){var r=o.sched(c,u);v=r.months&&r.months[0]?r.months[0].b+r.months[0].p:0;tot=r.baseSum+r.promoSum+(r.extra||0);}else{v=t[1]+(o.promo?t[2]:0);tot=v;}
+    if(!b||tot>b.tot||(tot===b.tot&&v>b.v))b={c:c,v:v,tot:tot};});return b;}
+function cxRec(o){var us=(o.usages||[]).slice().sort(function(a,b){return a-b;}),cur=cxBestAt(o,o.u),nm=function(c){return esc(o.info(c).full||c.name);};
+  var h='<div class="cx-rec">';
+  if(cur){h+='<div class="cx-rec-m"><span class="cx-rec-k">💡 전월 '+o.u+'만원↑ 추천</span><b>'+nm(cur.c)+'</b> 월 <b class="cx-rec-v">−'+won(cur.v)+'</b>'+(o.n?' <small>· 계약기간 '+won(cur.tot)+'</small>':'')
+      +(o.sel===cur.c.id?' <span class="cx-ap on">✓ 적용 중</span>':' <button class="cx-ap" data-cxs="'+cur.c.id+'">적용</button>')+'</div>';
+    for(var i=0;i<us.length;i++){if(us[i]<=o.u)continue;var b=cxBestAt(o,us[i]);if(b&&b.v>cur.v){h+='<div class="cx-up">↑ 전월 <a href="#" data-cxu="'+us[i]+'">'+us[i]+'만원 이상</a> 쓰면 '+nm(b.c)+' 월 −'+won(b.v)+' (+'+won(b.v-cur.v)+')</div>';break;}}}
+  else h+='<div class="cx-rec-m"><span class="cx-rec-k">💡 전월 '+o.u+'만원↑</span> 이 금액으로 할인되는 카드가 없어요. 금액을 올려 보세요.</div>';
+  h+='<details class="cx-all"><summary>금액대별 추천 카드 보기</summary><table class="cx-t" style="margin-top:8px"><tr><th>전월 실적</th><th>추천 카드</th><th>월 할인</th>'+(o.n?'<th>계약기간</th>':'')+'</tr>'
+    +us.map(function(u){var b=cxBestAt(o,u);return '<tr class="'+(u===o.u?'on':'')+'" data-cxu="'+u+'" style="cursor:pointer"><td>'+u+'만원↑</td><td>'+(b?nm(b.c):'-')+'</td><td>'+(b?'−'+won(b.v):'-')+'</td>'+(o.n?'<td>'+(b?won(b.tot):'-')+'</td>':'')+'</tr>';}).join('')+'</table><div class="note" style="margin-top:6px">줄을 누르면 그 금액대로 바뀌어요</div></details></div>';
+  return h;}
+/* o: {cards, usages, items, n, u, promo, sel, sumMon2, sched(c,u), info(c)->{face,full,tags,months,note}} */
 function cxHtml(o){
-  var list=o.cards.map(function(c){var r=o.sched(c),f=r.months&&r.months[0]?r.months[0].b+r.months[0].p:0;return {c:c,r:r,f:f,tot:r.baseSum+r.promoSum+(r.extra||0)};});
+  var list=o.cards.map(function(c){var r=o.sched(c,o.u),f=r.months&&r.months[0]?r.months[0].b+r.months[0].p:0;return {c:c,r:r,f:f,tot:r.baseSum+r.promoSum+(r.extra||0)};});
   var ranked=list.slice().sort(function(a,b){return b.tot-a.tot||b.f-a.f;}),best=ranked[0]&&ranked[0].tot>0?ranked[0].c.id:'';
   if(!CXO.init&&o.n){CXO.init=1;CXO.open=o.sel&&o.sel!=='none'?o.sel:best;}
   var maxM=Math.max.apply(null,o.cards.map(function(c){var t=c.tiers[c.tiers.length-1];return t[1]+(o.promo?t[2]:0);}));
-  var h='<div class="cx-hero"><div class="k">CARD BENEFIT</div><h3>'+(o.n?'담은 '+o.n+'개 모델 견적 기준<br>카드를 쓰면 월 최대 <span style="color:#fde68a">'+won(Math.max.apply(null,[0].concat(list.map(function(x){return x.f;}))))+'</span> 더 할인':'제휴카드로 매달 구독료 자동 할인')+'</h3>'
+  var h=cxRec(o)+'<div class="cx-hero"><div class="k">CARD BENEFIT</div><h3>'+(o.n?'담은 '+o.n+'개 모델 견적 기준<br>카드를 쓰면 월 최대 <span style="color:#fde68a">'+won(Math.max.apply(null,[0].concat(list.map(function(x){return x.f;}))))+'</span> 더 할인':'제휴카드로 매달 구독료 자동 할인')+'</h3>'
     +'<p>전월 카드 이용 <b>'+o.u+'만원 이상</b> 기준 · 이용금액을 바꾸면 순위가 다시 계산돼요</p>'
     +'<div class="cx-stats"><div><b>월 '+(maxM/10000).toFixed(1).replace('.0','')+'만원</b><span>최대 할인</span></div><div><b>'+o.cards.length+'곳</b><span>제휴 카드사</span></div><div><b>자동</b><span>청구 할인</span></div></div></div>';
   h+=ranked.map(function(x){var c=x.c,I=o.info(c),tr=x.r.tier,sel=o.sel===c.id,op=CXO.open===c.id||sel,tl=c.tiers[c.tiers.length-1];
     var tags=(I.tags||[]).map(function(t){return '<span class="cx-tag '+(t[1]||'')+'">'+t[0]+'</span>';}).join('');
-    var s='<div class="cx'+(sel?' sel':'')+'" data-cx="'+c.id+'"><div class="cx-h" data-cxo="'+c.id+'"><div class="im">'+I.face+'</div><div style="min-width:0"><div class="cx-n">'+(c.id===best&&o.n?'<span class="cx-best">BEST</span>':'')+esc(I.full||c.name)+'</div>'
+    var s='<div class="cx'+(sel?' sel':'')+'" data-cx="'+c.id+'"><div class="cx-h" data-cxo="'+c.id+'"><div class="im">'+I.face+'</div><div style="min-width:0;flex:1"><div class="cx-nr"><div class="cx-n">'+(c.id===best&&o.n?'<span class="cx-best">BEST</span>':'')+esc(I.full||c.name)+'</div>'
+      +'<button class="cx-ap'+(sel?' on':'')+'" data-cxs="'+c.id+'">'+(sel?'✓ 적용 중':'적용')+'</button></div>'
       +'<div class="cx-m">최대 <b>월 '+won(tl[1]+(o.promo?tl[2]:0))+'</b>'+(I.months?' · '+I.months:'')+'</div><div>'+tags+'</div></div>'
       +(o.n?'<div class="cx-r">'+(tr?'<small>내 견적 할인</small><b>−'+won(x.f)+'</b><small>계약기간 '+won(x.tot)+'</small>':'<small>'+o.u+'만원으로는</small><b style="font-size:13px;color:var(--sub)">할인 없음</b><small>'+c.tiers[0][0]+'만원↑부터</small>')+'</div>':'')+'</div>';
     if(op){s+='<div class="cx-b"><table class="cx-t"><tr><th>전월 실적</th><th>기본</th><th>추가 <small>(프로모션)</small></th><th>합계 / 월</th></tr>'
         +c.tiers.map(function(t){return '<tr class="'+(tr&&tr[0]===t[0]?'on':'')+'"><td>'+t[0]+'만원 이상</td><td>'+won(t[1])+'</td><td>'+(t[2]?(o.promo?'+'+won(t[2]):won(t[2])+' <small>미적용</small>'):'-')+'</td><td>'+won(t[1]+(o.promo?t[2]:0))+'</td></tr>';}).join('')+'</table>'
         +(o.n&&tr?'<div class="cx-q"><div><small>카드 적용 월 실 납부</small><b>'+won(Math.max(0,(x.r.months&&x.r.months[0]?x.r.months[0].pay:o.sumMon2)-x.f))+'</b></div><div><small>계약기간 카드 할인 합계</small><b style="color:var(--pri)">'+won(x.r.baseSum+x.r.promoSum)+'</b></div><div><small>추가 캐시백</small><b>'+(x.r.extra?won(x.r.extra):'-')+'</b></div></div>':'')
-        +(I.note?'<div class="note" style="margin-top:8px">'+I.note+'</div>':'')
-        +'<button class="btn '+(sel?'line':'pri')+' cx-go" data-cxs="'+c.id+'">'+(sel?'✓ 이 카드로 견적 적용 중 (해제)':'이 카드로 견적 적용 →')+'</button></div>';}
+        +(I.note?'<div class="note" style="margin-top:8px">'+I.note+'</div>':'')+'</div>';}
     return s+'</div>';}).join('');
   return h+'<div class="note" style="margin-top:10px">💡 순서는 지금 담은 모델 · 계약기간 · 전월 이용금액 기준 카드 할인 합계(추가 캐시백 포함)가 큰 순이에요. 카드사 정책은 바뀔 수 있어요.</div>';}
-function cxBind(onPick){$('#cardInfo').addEventListener('click',function(e){var s=e.target.closest('[data-cxs]');if(s){onPick(s.dataset.cxs);return;}var o=e.target.closest('[data-cxo]');if(o){CXO.open=CXO.open===o.dataset.cxo?'':o.dataset.cxo;render();}});}
+function cxBind(onPick,onUsage){$('#cardInfo').addEventListener('click',function(e){var s=e.target.closest('[data-cxs]');if(s){e.preventDefault();onPick(s.dataset.cxs);return;}
+  var u=e.target.closest('[data-cxu]');if(u){e.preventDefault();onUsage(+u.dataset.cxu);return;}
+  var o=e.target.closest('[data-cxo]');if(o){CXO.open=CXO.open===o.dataset.cxo?'':o.dataset.cxo;render();}});}
 
 function cardPromoLive(){var t=todayStr();return t>=CARD_META.from&&t<=CARD_META.to;}
 function tierOf(card,u){var t=null;card.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
@@ -1107,7 +1130,7 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
       +(S.promo&&!cardPromoLive()?'<div class="warn">신규발급 추가할인 기간('+md(CARD_META.from)+'~'+md(CARD_META.to)+')이 지나 기본 할인만 계산했어요.</div>':'');
   }else $('#cardInfo').innerHTML='';
   if(window.TEST_MODE){
-    $('#cardInfo').innerHTML=cxHtml({cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,sched:function(c){return cardSchedule(c,items,S.usage,S.promo);},
+    $('#cardInfo').innerHTML=cxHtml({cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){return {face:cxFace(c.img?CARD_IMG+c.img+'.png':'',c.name,'#334155',80),full:c.name,months:c.baseM+'개월',
         tags:[c.rank?['추천 '+c.rank+'위','easy']:null,['연회비 '+(c.fee||'-')]].filter(Boolean),note:'발급 ARS '+esc(c.ars||'-')+(c.extra?' · '+esc(c.extra):'')};}});
     $('#cardSel').innerHTML='';$('#cardSel').style.display='none';
@@ -1175,7 +1198,7 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
 }
 $('#cart').addEventListener('click',function(e){var b=e.target.closest('[data-del]');if(!b)return;S.cart.splice(+b.dataset.del,1);render();});
 $('#cart').addEventListener('change',function(e){var c=e.target.closest('[data-cmp]');if(c){S.cart[+c.dataset.cmp].cmp=c.checked;render();}});
-cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:ck-'+v);}render();});
+cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:ck-'+v);}render();},function(u){S.usage=u;render();});
 $('#cardSel').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.card=b.dataset.v;if(S.card!=='none')fuLog('card:ck-'+S.card);var c=cardById(S.card);if(c&&!tierOf(c,S.usage))S.usage=c.tiers[0][0];render();});
 $('#usage').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.usage=+b.dataset.v;render();});
 $('#promoOn').onchange=function(){S.promo=this.checked;render();};
