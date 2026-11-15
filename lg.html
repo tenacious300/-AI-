@@ -1298,7 +1298,7 @@ $('#winBody').addEventListener('click',function(e){var b=e.target.closest('[data
   setTimeout(function(){$('#picked').scrollIntoView({behavior:'smooth',block:'center'});},250);toast(b.dataset.pick+' 선택 · 담기를 눌러주세요');});
 
 /* ====== 실시간 접속자 · 인기 모델 (삼성 계산기와 같은 서버 · Firebase 사용) ====== */
-var LG_VER='v8.27',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
+var LG_VER='v8.28',EVQ=[],firstBeat=true,LASTIN=Date.now(),FB={on:false,started:false,me:null,gone:false};
 var SID=(function(){var v=null;try{v=sessionStorage.getItem('calcSid');}catch(e){}if(!v){v=Date.now().toString(36)+Math.random().toString(36).slice(2,8);try{sessionStorage.setItem('calcSid',v);}catch(e){}}return v;})();
 var DID=(function(){var v=null;try{v=localStorage.getItem('calcDid');}catch(e){}if(!v){var m=/(?:^|; )calcDid=([a-z0-9]+)/.exec(document.cookie);if(m)v=m[1];}
   if(!v)v=(Math.random().toString(36).slice(2,6)+Date.now().toString(36).slice(-4)).toLowerCase();
@@ -1313,7 +1313,7 @@ function idleMin(){return Math.floor((Date.now()-LASTIN)/60000);}
 ['pointerdown','keydown','touchstart','wheel','scroll','input'].forEach(function(e){window.addEventListener(e,function(){LASTIN=Date.now();if(FB.gone)fbPresence(true);},{passive:true,capture:true});});
 function curAct(){if($('#cmpDrawer').classList.contains('on'))return 'LG · 비교하기';if($('#winDrawer').classList.contains('on'))return 'LG · 활성화 모델';if($('#picked').style.display==='block')return 'LG · 모델 선택 중';if($('#q').value.trim())return 'LG · 모델 검색 중';if(S.cart.length)return 'LG · 견적 작성 중';return 'LG · 대기';}
 function beat(){if(!EMP||!window.API_URL)return;window.__lastBeat=Date.now();
-  var evs=EVQ.splice(0,60),idl=idleMin(),fu=FU;FU={};if(firstBeat){fu['L_dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;}
+  var evs=EVQ.splice(0,60),idl=idleMin(),fu=FU;FU={};if(firstBeat){fu['L_dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;fu.L_open=1;}
   var info={fu:fu,act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:LG_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
   var refu=function(){Object.keys(fu).forEach(function(k){FU[k]=(FU[k]||0)+fu[k];});};
