@@ -739,6 +739,16 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sum-l .lump-g .lumpin{padding:8px 0;justify-content:flex-start}
 .sum-l .lp-vd{justify-content:flex-start;align-items:center}
 .sum-l .lp-bh{align-items:flex-end}.lp-bh small{display:block;margin-top:1px}
+/* 인쇄 견적서: 일시불 vs 구독 막대 비교 */
+.pq .pbars{display:flex;flex-direction:column;gap:6px;margin:8px 0 6px;padding:8px 12px;background:#F7F8FA;border-radius:8px;break-inside:avoid}
+.pq .pb{display:grid;grid-template-columns:96px 1fr 104px;align-items:center;gap:10px}
+.pq .pb span{font-size:12px;font-weight:700;color:#4E5968}
+.pq .pb b{font-size:13.5px;text-align:right;color:#191F28;white-space:nowrap}
+.pq .pt{height:11px;background:#E5E8EB;border-radius:99px;overflow:hidden}
+.pq .pt i{display:block;height:100%;border-radius:99px;min-width:6px}
+.pq .pt i.l{background:#8B95A1}.pq .pt i.s{background:var(--tp)}
+.pq .pdiff{font-size:12px;font-weight:800;text-align:right;margin-top:1px}
+.pq .pdiff.dn{color:#0BA360}.pq .pdiff.up{color:#E8590C}
 /* ===== 새 디자인 끝 ===== */
 </style>
 </head>
@@ -1421,6 +1431,10 @@ function buildPrint(mode){
       +'<tr class="lsum"><td>합계</td><td class="r sub"><b>'+won(totPay)+'</b></td><td class="r"><b>'+won(LP.L)+'</b></td></tr></table>'
       +'<div class="calc"><div>'+lr('구독 총 납부액',won(totPay))+(cardTot?lr('− 제휴카드 할인','−'+won(cardTot)):'')+(cb?lr('− 다품목 캐시백','−'+won(cb)):'')
         +lr('<b>= 구독 실부담</b>','<b>'+won(fT)+'</b>')+'</div><div>'+lr('일시불 구매가',won(LP.L))+'</div></div>'
+      +(function(L,T){var mx=Math.max(L,T)||1,d=T-L,w=function(v){return Math.max(2,Math.round(v/mx*100));};
+        return '<div class="pbars"><div class="pb"><span>일시불 구매가</span><div class="pt"><i class="l" style="width:'+w(L)+'%"></i></div><b>'+won(L)+'</b></div>'
+          +'<div class="pb"><span>구독 실부담</span><div class="pt"><i class="s" style="width:'+w(T)+'%"></i></div><b>'+won(T)+'</b></div>'
+          +'</div>';})(LP.L,fT)
       +(LP.diff<=0
         ?'<div class="verdict good">✅ 구독이 일시불보다 <b>'+won(-LP.diff)+'</b> 더 저렴해요 <small>(월 '+won(-LP.diffM)+' 절약 + '+yTxt+' 관리 · 무상 A/S)</small></div>'
         :'<div class="verdict">💡 월 <b>'+won(LP.diffM)+'</b> 차이로 <b>'+yTxt+' 관리 · 무상 A/S</b>까지 <small>(총 차액 '+won(LP.diff)+' · 목돈 없이 매달 나눠서)</small></div>')
