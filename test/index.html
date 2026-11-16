@@ -938,6 +938,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.sc-box{background:#fff;color:#111827;border-radius:20px;max-width:420px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.sc-t{font-size:18px;font-weight:900}.sc-sub{font-size:12.5px;color:#6b7280;margin:4px 0 10px}.sc-body{overflow:auto;flex:1}.sc-s{margin-top:10px}.sc-h{font-size:14px;font-weight:800;margin-bottom:4px}.sc-h small{color:#6b7280;font-weight:600}.sc-h.dn{color:#15803d}.sc-h.up{color:#dc2626}.sc-h.nw{color:#1d4ed8}.sc-h.gone{color:#6b7280}.sc-r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9}.sc-r b{font-weight:700;word-break:break-all}.sc-r span{white-space:nowrap;color:#374151}.sc-r i{font-style:normal;font-weight:800;margin-left:4px}.sc-r i.dn{color:#15803d}.sc-r i.up{color:#dc2626}.sc-box details summary{font-size:12.5px;color:#1d4ed8;cursor:pointer;padding:6px 0}.sc-ok{margin-top:12px;border:0;border-radius:12px;background:#3182f6;color:#fff;font-weight:800;font-size:15px;padding:13px;cursor:pointer}
 .rc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:600px){.rc-ov{align-items:center}}.rc-box{background:#fff;color:#111827;border-radius:20px;max-width:440px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:18px 16px 12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.rc-t{font-size:17px;font-weight:900;word-break:break-all}.rc-sub{font-size:12px;color:#6b7280;margin:3px 0 6px}.rc-body{overflow:auto;flex:1}.rc-h{font-size:13.5px;font-weight:800;margin:12px 0 4px;color:#1f2937}.rc-r{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9}.rc-r>div:first-child{flex:1;min-width:0}.rc-r b{font-size:13.5px;word-break:break-all}.rc-r small{display:block;font-size:11.5px;color:#6b7280;margin-top:1px}.rc-p{font-size:12.5px;text-align:right;white-space:nowrap}.rc-p i{display:block;font-style:normal;font-weight:800;font-size:12px}.rc-p i.up{color:#dc2626}.rc-p i.dn{color:#15803d}.rc-b{border:0;border-radius:10px;background:#3182f6;color:#fff;font-weight:800;font-size:13px;padding:8px 12px;cursor:pointer;white-space:nowrap}.rc-b.sw{background:#0f766e}.rc-b:disabled{background:#cbd5e1}.rc-b.big{width:100%;padding:13px;font-size:15px;margin-top:8px}.rc-sum{margin-top:10px;font-size:14px;text-align:center}.rc-sum b{color:#15803d}.rc-sum small{display:block;color:#6b7280;font-size:11.5px}.rc-off{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#4b5563;margin-top:10px}.rc-x{margin-top:8px;border:0;border-radius:12px;background:#F2F4F6;color:#374151;font-weight:800;font-size:14px;padding:12px;cursor:pointer}
 .rc-tag{display:inline-block;margin-top:3px;font-style:normal;font-size:11px;font-weight:800;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 6px}
+.rk-t{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden}.rk-t th{background:#f1f5f9;color:#475569;font-size:12px;font-weight:700;padding:8px 6px;text-align:left;position:sticky;top:0}.rk-t td{padding:9px 6px;border-top:1px solid #f1f5f9;vertical-align:top}.rk-t td.n{text-align:right;white-space:nowrap}.rk-no{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:8px;background:#e2e8f0;font-weight:900;font-size:13px}.rk-no.t3{background:#0f766e;color:#fff}.rk-nm{font-size:12.5px;color:#334155;line-height:1.35}.rk-cd{font-size:11.5px;color:#64748b;margin-top:2px}.rk-add{border:0;border-radius:8px;background:#3182f6;color:#fff;font-weight:800;font-size:12px;padding:6px 9px;cursor:pointer;white-space:nowrap}.rk-add:disabled{background:#cbd5e1}.rk-m small{display:block;color:#64748b;font-size:11px}
+.rk-mb{display:none;margin-top:6px}@media(max-width:600px){.rk-t .rk-pc{display:none}.rk-mb{display:block}.rk-t td,.rk-t th{padding:8px 4px}}
 </style>
 </head>
 <body>
@@ -974,7 +976,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
           <button class="chip" data-v="exist">기존 구독</button>
         </div>
       </div>
-      <div>
+      <div style="display:none"><!-- 구매 채널: 화면에서 숨김 (전자랜드 약 5% 포인트 계산은 그대로) -->
         <div class="lbl">구매 채널 (구독포인트)</div>
         <div class="chips" id="channel">
           <button class="chip on" data-v="5">전자랜드 <small>약 5%</small></button>
@@ -1157,6 +1159,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 <div class="side-tabs">
   <button class="care-tab" id="careTab">케어 가이드</button>
   <button class="care-tab c4" id="aiTab">🎯 혜택 TOP</button>
+  <button class="care-tab" id="rankTab" style="background:#0f766e">🛒 판매순위</button>
   <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
   <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab"><span id="winTabTxt">우승기념 모델</span></button>
@@ -1166,6 +1169,11 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <div class="drawer-h"><b>🎯 혜택 TOP 추천</b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="ai-top" id="aiTopBar"></div>
   <div class="drawer-b" id="aiBody" style="background:#f8fafc"></div>
+</aside>
+<aside class="drawer wide" id="rankDrawer" aria-label="삼성닷컴 판매순위">
+  <div class="drawer-h"><b>🛒 삼성닷컴 AI 구독 판매순위</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="ai-top" id="rankBar"></div>
+  <div class="drawer-b" id="rankBody" style="background:#f8fafc"></div>
 </aside>
 <aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
   <div class="drawer-h"><b>⚖️ 월 구독료 비교</b><button class="dclose" aria-label="닫기">✕</button></div>
@@ -1290,8 +1298,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.54',VER_DATE='2026.11.16';
+var VERSION='v8.55',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.55','11.16',['🛒 판매순위 버튼: 삼성닷컴 AI 구독 품목별 판매량순(최근 31일) · 모델명 · 판매가 · 월 구독료를 한눈에 보고 바로 담기','🏬 구매 채널(전자랜드 약 5%) 표시 삭제 · 구독포인트 5% 계산은 그대로']],
   ['v8.54','11.16',['🛒 삼성 추천에 삼성닷컴 AI 구독 판매량순(최근 31일) 반영: 판매 상위 모델을 먼저 보여주고 \'삼성닷컴 판매 n위\' 표시 · 매일 새벽 자동 갱신']],
   ['v8.53','11.16',['💡 삼성 추천: 구독료 할인 · 포인트 · 구독페스티벌 · 우승기념 추가판촉까지 반영한 체감 월 요금으로 비교, 판촉 모델 우선 · 🏆 표시','💡 LG 추천: 오늘 진행 중인 활성화 · 프로모션 할인까지 반영한 요금으로 비교, 프로모션 모델 우선 · 🔥 표시(종료일 포함)']],
   ['v8.52','11.16',['💡 추천 팝업: 모델을 담으면 ⬆ 조금 더 내면 한 단계 위 · ⬇ 비슷한데 더 저렴한 모델(바꾸기) · 🤝 함께 많이 담는 모델을 보여주고 담기 / 바꾸기 선택 (삼성 · LG · 쿠쿠)','💰 최저 조합 찾기: 케어 · 서비스는 그대로, 약정 기간을 바꿔 월 납부가 가장 적은 조합을 찾아 한 번에 적용','📈 쓸수록 바뀌는 추천: 인쇄 · 견적 기록(함께 담기), 최근 30일 인기, 추천을 실제로 고른 비율을 순위에 반영']],
@@ -2944,7 +2953,7 @@ function bestLoad(force){if(!HAS_GS)return;var d=BEST.days;if(!force&&BEST.data[
 var TB={tab:'hot'};
 function bestRender(){var el=$('#bestSec');if(!el)return;var r=BEST.data[BEST.days];
   if(TB.tab==='hot'&&HAS_GS===false)TB.tab='ai';
-  var h='<div class="tbh"><div class="tabs">'+(HAS_GS?'<button data-tbt="hot" class="'+(TB.tab==='hot'?'on':'')+'">🔥 많이 찾는</button>':'')+'<button data-tbt="ai" class="'+(TB.tab==='ai'?'on':'')+'">🎯 혜택 TOP</button></div>';
+  var h='<div class="tbh"><div class="tabs">'+(HAS_GS?'<button data-tbt="hot" class="'+(TB.tab==='hot'?'on':'')+'">🔥 많이 찾는</button>':'')+'<button data-tbt="ai" class="'+(TB.tab==='ai'?'on':'')+'">🎯 혜택 TOP</button><button data-rkopen="1" style="color:#0f766e">🛒 판매순위</button></div>';
   if(TB.tab==='hot'){
     h+='<div class="per">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button data-bd="'+x[0]+'" class="'+(BEST.days===x[0]?'on':'')+'">'+x[1]+'</button>';}).join('')+'</div><button class="more" data-ball="1">'+(BEST.all?'접기 ‹':'전체 ›')+'</button></div>';
     var list=r?r.list.filter(function(x){return byCode[x.code];}).slice(0,BEST.all?20:10):[];
@@ -2961,7 +2970,8 @@ function bestRender(){var el=$('#bestSec');if(!el)return;var r=BEST.data[BEST.da
   Array.prototype.forEach.call(el.querySelectorAll('[data-bd]'),function(b){b.onclick=function(){BEST.days=+b.dataset.bd;bestLoad();bestRender();};});
   var ba=el.querySelector('[data-ball]');if(ba)ba.onclick=function(){BEST.all=!BEST.all;bestRender();};
   Array.prototype.forEach.call(el.querySelectorAll('[data-bc]'),function(b){b.onclick=function(){fuLog('best');aiView(b.dataset.bc);};});
-  Array.prototype.forEach.call(el.querySelectorAll('[data-aiopen]'),function(b){b.onclick=function(){aiOpen(b.dataset.aiopen||null);};});}
+  Array.prototype.forEach.call(el.querySelectorAll('[data-aiopen]'),function(b){b.onclick=function(){aiOpen(b.dataset.aiopen||null);};});
+  Array.prototype.forEach.call(el.querySelectorAll('[data-rkopen]'),function(b){b.onclick=function(e){e.stopPropagation();$('#rankTab').onclick();};});}
 function hScroll(w){if(!w)return;var r=w.querySelector('.row');if(!r)return;
   var upd=function(){w.classList.toggle('cl',r.scrollLeft>4);w.classList.toggle('cr',r.scrollLeft+r.clientWidth<r.scrollWidth-4);};
   r.addEventListener('scroll',upd);setTimeout(upd,0);
@@ -3076,6 +3086,24 @@ function aiAdd(code){var m=byCode[code];if(!m)return;var c=catOf(m),Y=maxYears(c
   var p=ps.reduce(function(a,b){return a[2]<=b[2]?a:b;}),pm=promoOf(code);mvLog(code,'add');fuLog('add');fuLog('cust:'+S.cust);fuLog('term:max');fuLog('pre:0');
   S.cart.push({code:m[0],cat:c,sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!(pm.fin&&pm.win),cmp:true,pre:0});S.cmpY=null;fetchInfo(code);render();
   toast(code+' 담았어요 ('+S.cart.length+'개)');}
+/*RK*/
+/* 🛒 삼성닷컴 AI 구독 판매순위 창: 품목별 판매량순(최근 31일) · 모델명 · 판매가 · 월 구독료 (data/ss-rank.js · 매일 새벽 자동 갱신) */
+var RK={cat:null};
+function rankCats(){var R=window.SS_RANK;if(!R||!R.cats)return [];var seen={},o=[];D.cats.concat(Object.keys(R.cats)).forEach(function(c){if(seen[c]||!R.cats[c]||!R.cats[c].length)return;if(c==='건조기'&&R.cats['세탁기']&&R.cats['세탁기'].join()===R.cats['건조기'].join())return;seen[c]=1;o.push(c);});return o;}
+function rankRender(){var R=window.SS_RANK,cats=rankCats();
+  if(!cats.length){$('#rankBar').innerHTML='';$('#rankBody').innerHTML='<div class="empty" style="margin:16px">판매순위를 아직 받지 못했어요. 매일 새벽 3시 20분에 삼성닷컴에서 받아 와요.</div>';return;}
+  if(cats.indexOf(RK.cat)<0)RK.cat=cats[0];
+  $('#rankBar').innerHTML='<div class="chips" style="flex-wrap:wrap;margin:0">'+cats.map(function(c){return '<button class="chip sm '+(c===RK.cat?'on':'')+'" data-rkc="'+esc(c)+'">'+esc(c==='세탁기'&&R.cats['건조기']&&R.cats['세탁기'].join()===R.cats['건조기'].join()?'세탁기 · 건조기':c)+'</button>';}).join('')+'</div>';
+  var I=R.info||{},L=R.cats[RK.cat]||[],W=function(n){return n?Number(n).toLocaleString()+'원':'-';};
+  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">삼성닷컴 기준 '+esc(R.at||'')+' · 최근 31일 판매 수량 순위 (삼성이 매일 02시 갱신) · 판매가 · 월 구독료는 삼성닷컴 표시 금액</div>'
+    +'<table class="rk-t"><tr><th>순위</th><th>모델</th><th style="text-align:right">판매가</th><th style="text-align:right">월 구독료</th><th class="rk-pc"></th></tr>'
+    +L.map(function(c,i){var f=I[c]||[],inCalc=!!byCode[c];
+      var ab=inCalc?'<button class="rk-add" data-rka="'+esc(c)+'">담기</button>':'<small style="color:#94a3b8;font-size:11px">계산기 없음</small>';
+      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div><div class="rk-mb">'+ab+'</div></td><td class="n">'+W(f[1])+'</td><td class="n rk-m">'+(f[2]?'월 '+W(f[2])+(f[3]?'<small>'+f[3]+'년 · '+esc(f[4]||'')+'</small>':''):'-')+'</td>'
+        +'<td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
+  Array.prototype.forEach.call(document.querySelectorAll('#rankBar [data-rkc]'),function(b){b.onclick=function(){RK.cat=b.dataset.rkc;rankRender();$('#rankBody').scrollTop=0;};});
+  Array.prototype.forEach.call(document.querySelectorAll('#rankBody [data-rka]'),function(b){b.onclick=function(){aiAdd(b.dataset.rka);b.disabled=true;b.textContent='담았어요';fuLog('rank:add');};});}
+$('#rankTab').onclick=function(){fuLog('rank');drawerOpen('#rankDrawer');rankRender();markAct('판매순위');};
 $('#aiTab').onclick=function(){aiOpen(null);};
 setInterval(function(){if(!document.hidden)bestLoad(true);},300000);
 setTimeout(bestRender,0);
