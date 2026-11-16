@@ -936,6 +936,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 #pinBox input{width:100%;border:0;background:#F2F4F6;border-radius:14px;padding:11px 14px;min-height:54px;font-size:20px}
 .due-l{display:flex;flex-direction:column;gap:6px;margin-top:10px}.due{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fde68a;border-radius:10px;padding:7px 11px;font-size:13px;line-height:1.4}.due b{color:#fff;font-weight:800}.due em{font-style:normal;font-weight:900;color:#fbbf24;margin-left:2px}.due.hot{background:rgba(244,63,94,.16);border-color:rgba(251,113,133,.5);color:#fecdd3}.due.hot em{color:#fb7185}
 .sc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.sc-box{background:#fff;color:#111827;border-radius:20px;max-width:420px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.sc-t{font-size:18px;font-weight:900}.sc-sub{font-size:12.5px;color:#6b7280;margin:4px 0 10px}.sc-body{overflow:auto;flex:1}.sc-s{margin-top:10px}.sc-h{font-size:14px;font-weight:800;margin-bottom:4px}.sc-h small{color:#6b7280;font-weight:600}.sc-h.dn{color:#15803d}.sc-h.up{color:#dc2626}.sc-h.nw{color:#1d4ed8}.sc-h.gone{color:#6b7280}.sc-r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9}.sc-r b{font-weight:700;word-break:break-all}.sc-r span{white-space:nowrap;color:#374151}.sc-r i{font-style:normal;font-weight:800;margin-left:4px}.sc-r i.dn{color:#15803d}.sc-r i.up{color:#dc2626}.sc-box details summary{font-size:12.5px;color:#1d4ed8;cursor:pointer;padding:6px 0}.sc-ok{margin-top:12px;border:0;border-radius:12px;background:#3182f6;color:#fff;font-weight:800;font-size:15px;padding:13px;cursor:pointer}
+.rc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:600px){.rc-ov{align-items:center}}.rc-box{background:#fff;color:#111827;border-radius:20px;max-width:440px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:18px 16px 12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.rc-t{font-size:17px;font-weight:900;word-break:break-all}.rc-sub{font-size:12px;color:#6b7280;margin:3px 0 6px}.rc-body{overflow:auto;flex:1}.rc-h{font-size:13.5px;font-weight:800;margin:12px 0 4px;color:#1f2937}.rc-r{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9}.rc-r>div:first-child{flex:1;min-width:0}.rc-r b{font-size:13.5px;word-break:break-all}.rc-r small{display:block;font-size:11.5px;color:#6b7280;margin-top:1px}.rc-p{font-size:12.5px;text-align:right;white-space:nowrap}.rc-p i{display:block;font-style:normal;font-weight:800;font-size:12px}.rc-p i.up{color:#dc2626}.rc-p i.dn{color:#15803d}.rc-b{border:0;border-radius:10px;background:#3182f6;color:#fff;font-weight:800;font-size:13px;padding:8px 12px;cursor:pointer;white-space:nowrap}.rc-b.sw{background:#0f766e}.rc-b:disabled{background:#cbd5e1}.rc-b.big{width:100%;padding:13px;font-size:15px;margin-top:8px}.rc-sum{margin-top:10px;font-size:14px;text-align:center}.rc-sum b{color:#15803d}.rc-sum small{display:block;color:#6b7280;font-size:11.5px}.rc-off{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#4b5563;margin-top:10px}.rc-x{margin-top:8px;border:0;border-radius:12px;background:#F2F4F6;color:#374151;font-weight:800;font-size:14px;padding:12px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1116,6 +1117,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
       <button class="btn sm cap-btn" id="capBtn">📸 견적 캡처 <small>이미지 저장 · 카톡 전송</small></button>
       <button class="btn sm" id="saveBtn">💾 견적 보관</button>
       <button class="btn sm" id="printBtn">🖨 견적 인쇄</button>
+      <button class="btn sm" id="bestBtn">💰 최저 조합 찾기</button>
       <button class="btn sm" id="copyBtn">견적 복사</button>
       <button class="btn sm" id="resetBtn">초기화</button>
     </div>
@@ -3011,8 +3013,16 @@ function capQuote(){var items=calcItems();if(!items.length){toast('담은 모델
   var b=$('#capBtn');if(b){b.disabled=true;b.dataset.t=b.innerHTML;b.innerHTML='📸 견적 이미지 만드는 중…';}
   var done=function(c){if(b){b.disabled=false;b.innerHTML=b.dataset.t;}capSave(c);};
   capShot().then(done,function(){done(capDraw());});}
-window.PG={meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
+window.PG={call:gsr,meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
 $('#capBtn').onclick=capQuote;
+/* 💡 추천 팝업 · 💰 최저 조합 (common.js) */
+window.REC_PAGE={brand:'ss',all:function(){if(!REC_PAGE._a){REC_PAGE._a=MODELS.map(function(m){return {code:m[0],grp:catOf(m)+'|'+subOf(m),cat:catOf(m),price:minPrice(m)};});}return REC_PAGE._a;},
+  add:function(code){aiAdd(code);},cart:function(){return S.cart.map(function(x){return x.code;});},removeAt:function(i){S.cart.splice(i,1);S.cmpY=null;render();},
+  best:function(){var rows=[],ch=[];S.cart.forEach(function(x,i){var m=byCode[x.code];if(!m)return;var L=m[3].filter(function(p){return D.types[p[1]]===x.type;});if(!L.length)return;var b=L.reduce(function(a,p){return p[2]<a[2]?p:a;});
+    rows.push({code:x.code,from:x.y+'년 '+x.type+' · 월 '+recWon(x.mon),to:b[0]+'년 '+D.types[b[1]]+' · 월 '+recWon(b[2]),save:Math.max(0,x.mon-b[2])});if(b[2]<x.mon)ch.push([i,b]);});
+    return {rows:rows,apply:function(){ch.forEach(function(c){var x=S.cart[c[0]];x.y=c[1][0];x.type=D.types[c[1][1]];x.mon=c[1][2];});S.cmpY=null;render();}};}};
+(function(){var _add=$('#addBtn').onclick;$('#addBtn').onclick=function(){var n=S.cart.length,busy=REC.busy;_add.apply(this,arguments);if(!busy&&S.cart.length>n){var k=S.cart[S.cart.length-1].code;setTimeout(function(){recAfterAdd(k);},250);}};})();
+$('#bestBtn').onclick=recBest;setTimeout(recLoadPairs,2500);
 /* 📢 단가 바뀐 점 요약 (common.js) */
 setTimeout(function(){try{var mp={};MODELS.forEach(function(m){mp[m[0]]=minPrice(m);});snapCheck('ss','삼성',mp);}catch(e){}},1500);
 var AI={cache:null,key:'',cat:null,sort:'rate',win:false};

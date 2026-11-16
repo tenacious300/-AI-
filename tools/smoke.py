@@ -79,6 +79,13 @@ async def run():
                     await pg.click('#qList .it >> nth=0', timeout=5000)
                     await pg.wait_for_timeout(300)
                     await pg.click('#addBtn', timeout=5000); await pg.wait_for_timeout(600)
+                    await pg.wait_for_timeout(400)
+                    rec = await pg.is_visible('.rc-ov')
+                    if await pg.evaluate('!!window.REC_PAGE'): ok(rec, '💡 추천 팝업 뜸')
+                    if rec:
+                        await pg.click('.rc-x'); await pg.wait_for_timeout(300)
+                    for ov in ('.sc-ov .sc-ok',):
+                        if await pg.is_visible(ov): await pg.click(ov)
                     big = (await pg.inner_text('#sBig')).strip()
                     ok(big not in ('', '0원'), '모델 담기 → 견적 금액 ' + big)
                 except Exception as e:

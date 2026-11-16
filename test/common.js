@@ -64,3 +64,59 @@ function snapCheck(brand,name,map){
   document.body.appendChild(d);d.querySelector('.sc-ok').onclick=function(){d.remove();};
   try{PG.fuLog('pricediff');}catch(e){}
 }
+
+/* 💡 추천 팝업 (모델을 담으면 뜸 · 담기 / 바꾸기 / 괜찮아요)
+   - ⬆ 한 단계 위: 같은 품목에서 월 1만원 안쪽으로 더 내면 되는 모델
+   - ⬇ 더 저렴한: 같은 품목에서 조금 더 싼 모델 (바꾸기)
+   - 🤝 함께 담기: 인쇄 · 견적 기록에서 같이 담긴 모델 (기록이 없으면 같이 쓰면 좋은 품목)
+   페이지가 window.REC_PAGE 로 넘겨 줌: brand · all() → [{code,grp,cat,price}] · add(code) · cart() → [코드] · removeAt(i)
+   💰 최저 조합: REC_PAGE.best() → {rows:[{code,from,to,save}], apply()} */
+var REC={pairs:null,busy:false,off:false};
+try{REC.off=localStorage.getItem('recOff')==='1';}catch(e){}
+var REC_WITH={'냉장고':['김치냉장고','정수기'],'김치냉장고':['냉장고'],'세탁기':['건조기','에어드레서'],'건조기':['세탁기'],'TV':['오디오','사운드바'],'에어컨':['공기청정기','제습기'],'공기청정기':['에어컨','정수기'],'정수기':['공기청정기','비데'],'식기세척기':['전기레인지','정수기'],'전기레인지':['식기세척기','후드'],'청소기':['공기청정기'],'비데':['정수기'],'밥솥':['정수기','인덕션']};
+function recLoadPairs(){if(REC.pairs||!window.REC_PAGE)return;REC.pairs={};
+  try{gsrCommon('getPairs',REC_PAGE.brand,function(r){REC.pairs=(r&&r.pairs)||{};});}catch(e){}}
+/* 페이지마다 서버 호출 함수 이름이 달라서(gsr / api) 페이지가 PG.call 로 넘겨 줌 */
+function gsrCommon(fn,arg,cb){if(PG.call)PG.call(fn,arg,cb,function(){});}
+function recWon(n){return Number(n).toLocaleString()+'원';}
+function recFind(code){var A=REC_PAGE.all(),me=null;A.forEach(function(x){if(x.code===code)me=x;});if(!me)return null;
+  var cart=REC_PAGE.cart(),inCart=function(c){return cart.indexOf(c)>=0;};
+  var same=A.filter(function(x){return x.grp===me.grp&&x.code!==code&&!inCart(x.code)&&x.price>0;});
+  var up=same.filter(function(x){return x.price>me.price&&x.price-me.price<=10000;}).sort(function(a,b){return a.price-b.price;}).slice(0,2);
+  var dn=same.filter(function(x){return x.price<me.price&&x.price>=me.price*0.6;}).sort(function(a,b){return b.price-a.price;}).slice(0,2);
+  var withL=[],P=(REC.pairs||{})[code]||[];
+  P.forEach(function(p){if(withL.length>=2||inCart(p[0]))return;A.forEach(function(x){if(x.code===p[0])withL.push({x:x,n:p[1]});});});
+  if(!withL.length){var cats=[];Object.keys(REC_WITH).forEach(function(k){if(String(me.cat).indexOf(k)>=0)cats=cats.concat(REC_WITH[k]);});
+    cats.forEach(function(c){if(withL.length>=2)return;var L=A.filter(function(x){return String(x.cat).indexOf(c)>=0&&!inCart(x.code)&&x.price>0&&cart.every(function(k){var y=null;A.forEach(function(z){if(z.code===k)y=z;});return !y||String(y.cat).indexOf(c)<0;});}).sort(function(a,b){return a.price-b.price;});
+      if(L.length)withL.push({x:L[0],n:0,rule:c});});}
+  return {me:me,up:up,dn:dn,withL:withL};}
+function recAfterAdd(code){if(REC.off||REC.busy||!window.REC_PAGE)return;recLoadPairs();var r=recFind(code);if(!r)return;
+  if(!r.up.length&&!r.dn.length&&!r.withL.length)return;
+  var E=PG.esc,me=r.me,row=function(x,kind,note){var d=x.price-me.price;
+    var btn=kind==='swap'?'<button class="rc-b sw" data-swap="'+E(x.code)+'">바꾸기</button>':'<button class="rc-b" data-add="'+E(x.code)+'">담기</button>';
+    return '<div class="rc-r"><div><b>'+E(x.code)+'</b><small>'+E(x.cat)+(note?' · '+note:'')+'</small></div><div class="rc-p">월 '+recWon(x.price)+(kind==='with'?'':'<i class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+recWon(d)+'</i>')+'</div>'+btn+'</div>';};
+  var h='<div class="rc-box"><div class="rc-t">💡 '+E(me.code)+' 담았어요</div><div class="rc-sub">이런 모델도 함께 보여 드려요 · 요금은 모델별 가장 싼 월 요금 기준</div><div class="rc-body">';
+  if(r.up.length)h+='<div class="rc-h">⬆ 조금만 더 내면 한 단계 위</div>'+r.up.map(function(x){return row(x,'add');}).join('');
+  if(r.dn.length)h+='<div class="rc-h">⬇ 비슷한 모델, 더 저렴하게</div>'+r.dn.map(function(x){return row(x,'swap','방금 담은 모델과 바꿔요');}).join('');
+  if(r.withL.length)h+='<div class="rc-h">'+(r.withL.some(function(w){return w.n;})?'🤝 함께 많이 담는 모델':'🤝 같이 쓰면 좋은 품목')+'</div>'+r.withL.map(function(w){return row(w.x,'with',w.n?'같이 담긴 견적 '+w.n+'건':'같이 쓰면 좋은 품목');}).join('');
+  h+='</div><label class="rc-off"><input type="checkbox" id="rcOff"> 다음부터 담을 때 추천 안 보기</label><button class="rc-x">괜찮아요</button></div>';
+  var d=document.createElement('div');d.className='rc-ov';d.innerHTML=h;document.body.appendChild(d);
+  var close=function(){if(d.querySelector('#rcOff').checked){REC.off=true;try{localStorage.setItem('recOff','1');}catch(e){}PG.toast('추천을 껐어요 · 💰 최저 조합 버튼 옆에서 다시 켤 수 있어요');}d.remove();};
+  d.querySelector('.rc-x').onclick=close;d.onclick=function(e){if(e.target===d)close();};
+  d.querySelector('.rc-body').onclick=function(e){var b=e.target.closest('button');if(!b)return;REC.busy=true;
+    try{if(b.dataset.swap){var i=REC_PAGE.cart().lastIndexOf(me.code);if(i>=0)REC_PAGE.removeAt(i);REC_PAGE.add(b.dataset.swap);PG.fuLog('rec:swap');}
+      else{REC_PAGE.add(b.dataset.add);PG.fuLog('rec:add');}}finally{REC.busy=false;}
+    b.disabled=true;b.textContent=b.dataset.swap?'바꿨어요':'담았어요';if(b.dataset.swap)setTimeout(close,500);};
+  PG.fuLog('rec:show');}
+/* 💰 최저 조합 찾기: 담은 모델마다 (케어 · 서비스는 그대로) 월 납부가 가장 적은 약정을 찾아 보여 주고, 적용하면 한 번에 바꿈 */
+function recBest(){if(!window.REC_PAGE||!REC_PAGE.best)return;var b=REC_PAGE.best();if(!b||!b.rows.length){PG.toast('담은 모델이 없어요');return;}
+  var E=PG.esc,sv=b.rows.reduce(function(a,x){return a+x.save;},0);
+  var h='<div class="rc-box"><div class="rc-t">💰 최저 조합 찾기</div><div class="rc-sub">케어 · 서비스는 그대로 두고, 약정 기간을 바꿔 월 납부가 가장 적은 조합이에요 · 카드 · 패키지 할인은 화면에서 그대로 적용</div><div class="rc-body">'
+    +b.rows.map(function(x){return '<div class="rc-r"><div><b>'+E(x.code)+'</b><small>'+E(x.from)+' → <b>'+E(x.to)+'</b></small></div><div class="rc-p">'+(x.save>0?'<i class="dn">월 −'+recWon(x.save)+'</i>':'<i>지금이 최저</i>')+'</div></div>';}).join('')
+    +'</div>'+(sv>0?'<div class="rc-sum">모두 바꾸면 <b>월 '+recWon(sv)+'</b> 줄어요 <small>(약정 기간이 길어질 수 있어요)</small></div><button class="rc-b big" id="rcApply">이 조합으로 바꾸기</button>':'<div class="rc-sum">지금 담은 조합이 이미 가장 저렴해요</div>')
+    +'<label class="rc-off"><input type="checkbox" id="rcOn"'+(REC.off?'':' checked')+'> 모델 담을 때 추천 팝업 보기</label><button class="rc-x">닫기</button></div>';
+  var d=document.createElement('div');d.className='rc-ov';d.innerHTML=h;document.body.appendChild(d);
+  var close=function(){REC.off=!d.querySelector('#rcOn').checked;try{localStorage.setItem('recOff',REC.off?'1':'');}catch(e){}d.remove();};
+  d.querySelector('.rc-x').onclick=close;d.onclick=function(e){if(e.target===d)close();};
+  var ap=d.querySelector('#rcApply');if(ap)ap.onclick=function(){b.apply();PG.fuLog('rec:best');PG.toast('월 '+recWon(sv)+' 줄어드는 조합으로 바꿨어요');close();};
+  PG.fuLog('rec:bestshow');}

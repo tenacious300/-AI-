@@ -52,7 +52,7 @@ var API_FUNCS = {
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo, adminPinList: adminPinList,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
-  logQuote: logQuote, adminQuoteLog: adminQuoteLog,
+  logQuote: logQuote, getPairs: getPairs, adminQuoteLog: adminQuoteLog,
   getBanner: getBanner, adminBannerSet: adminBannerSet,
   sendFeedback: sendFeedback, myFeedback: myFeedback, adminFeedback: adminFeedback, adminFeedbackSet: adminFeedbackSet,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
@@ -1465,6 +1465,26 @@ function qlogSheet_() {
   return sh;
 }
 /** 직원 화면: 견적서를 인쇄할 때 한 줄 기록 */
+/** 함께 담기 추천: 인쇄 · 견적 기록에서 같은 견적에 같이 들어간 모델 쌍을 셈 → { pairs: { 모델: [[같이 담긴 모델, 횟수], …최대 5] } }
+    (모델 코드와 횟수만 · 사번 · 고객 정보 없음 · 6시간 캐시) */
+function getPairs(brand) {
+  var bn = QLOG_BRAND[brand]; if (!bn) return { pairs: {} };
+  var cache = CacheService.getScriptCache(), ck = 'pairs_' + brand, hit = cache.get(ck);
+  if (hit) return JSON.parse(hit);
+  var sh = qlogSheet_(), n = sh.getLastRow(), cnt = {};
+  if (n >= 2) sh.getRange(2, 1, n - 1, 9).getValues().forEach(function (r) {
+    if (String(r[2]) !== bn || String(r[8]) === '테스트') return;
+    var codes = String(r[5] || '').split(' / ').map(function (x) { return x.split(' (')[0].trim(); }).filter(String);
+    codes = codes.filter(function (c, i) { return codes.indexOf(c) === i; });
+    if (codes.length < 2) return;
+    codes.forEach(function (a) { codes.forEach(function (b) { if (a === b) return; var o = cnt[a] || (cnt[a] = {}); o[b] = (o[b] || 0) + 1; }); });
+  });
+  var out = {};
+  Object.keys(cnt).forEach(function (a) { out[a] = Object.keys(cnt[a]).map(function (b) { return [b, cnt[a][b]]; }).sort(function (x, y) { return y[1] - x[1]; }).slice(0, 5); });
+  var res = { pairs: out };
+  try { var t = JSON.stringify(res); if (t.length < 90000) cache.put(ck, t, 21600); } catch (e) {}
+  return res;
+}
 function logQuote(arg) {
   arg = arg || {};
   var items = Array.isArray(arg.items) ? arg.items.slice(0, 30) : [];
