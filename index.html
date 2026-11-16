@@ -841,6 +841,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 /* 견적 카드 상단 요약 */
 .shd{margin:8px 0 10px}
+.sh-line{font-size:13.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.07);border-radius:10px;padding:7px 11px}
+.sh-line b{font-weight:800;letter-spacing:.2px}.sh-line i{font-style:normal;opacity:.45;margin:0 7px}.sh-line0{opacity:.7;font-weight:600}
 .sh-im{width:44px;height:44px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;overflow:hidden}
 .sh-im.b{width:38px;height:38px;border-radius:9px}
 .sh-im img{width:100%;height:100%;object-fit:contain}
@@ -1493,7 +1495,7 @@ function cxBind(onPick,onUsage){$('#secCard').addEventListener('click',function(
 
 function tierOf(card,u){var t=null;card.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
 
-var S={win:false,cust:'single',ch:'5',card:'none',usage:100,promo:true,cart:[],cmpY:null,cat:null,sub:null,
+var S={lumpOn:true,win:false,cust:'single',ch:'5',card:'none',usage:100,promo:true,cart:[],cmpY:null,cat:null,sub:null,
   sel:{m:null,y:null,t:null,pre:0}};
 var MODELS=D.models;
 var byCode={};MODELS.forEach(function(m){byCode[m[0]]=m;});
@@ -1508,13 +1510,10 @@ function shThumb(it,big){var o=INFO[it.code];if(o&&o.st==='ok'&&o.img)return '<d
 function shName(it){var o=INFO[it.code];return (o&&o.st==='ok'&&o.name)?o.name:(it.cat+' · '+it.sub);}
 function sumHead(items,card,cs){
   var el=$('#sHead');if(!el)return;
-  if(!items.length){el.innerHTML='<div class="sh-empty"><div class="sh-im b"><span>🛒</span></div><div><b>아직 담은 모델이 없어요</b><small>모델을 담으면 여기에 제품 사진과 계약 조건이 보여요</small></div></div>';return;}
-  var cardTxt=S.multi&&S.mc&&S.mc.length?'💳 카드 여러 장':(card&&cs&&cs.tier?'💳 '+card.name+' · '+S.usage+'만↑':'💳 제휴카드 미적용');
-  /* 여러 개면 월 납부액이 가장 큰 모델을 대표로 하나만 보여줌 */
-  var it=items.reduce(function(a,x){return x.mon2>a.mon2?x:a;},items[0]),more=items.length-1;
-  el.innerHTML='<div class="sh-one">'+shThumb(it,1)+'<div class="sh-tx"><b>'+esc(shName(it))+'</b><small>'+esc(it.code)+'</small>'
-      +(more?'<span class="sh-more1">외 '+more+'개 모델 함께 구독</span>':'')+'</div></div>'
-    +'<div class="sh-ch"><span>📅 '+it.y+'년 계약</span><span>🛠 '+esc(it.type)+'</span><span>'+(it.pre?'💰 선납 '+it.pre+'%':'💰 선납 없음')+'</span><span>'+esc(cardTxt)+'</span></div>';
+  if(!items.length){el.innerHTML='<div class="sh-line sh-line0">🛒 아직 담은 모델이 없어요</div>';return;}
+  /* 모델명만 한 줄 (여러 개면 이어서, 넘치면 …) */
+  el.innerHTML='<div class="sh-line" title="'+esc(items.map(function(x){return x.code;}).join(', '))+'">'
+    +items.map(function(x){return '<b>'+esc(x.code)+'</b>';}).join('<i>·</i>')+'</div>';
 }
 function infoThumb(code){var o=INFO[code];if(o&&o.st==='ok'&&o.img)return '<img class="thumb" src="'+esc(o.img)+'" alt="">';return '<div class="thumb"></div>';}
 function infoName(code){var o=INFO[code];if(!o)return '';if(o.st==='loading')return '<div class="pname" style="color:var(--sub)">제품 정보 불러오는 중…</div>';
@@ -3404,7 +3403,7 @@ function loadQuote(q){
     var p=m[3].filter(function(p){return p[0]===c.y&&D.types[p[1]]===c.type;})[0];if(!p){miss.push(c.code);return;}
     if(c.m&&c.m!==p[2])chg.push(c.code+' '+won(c.m)+'→'+won(p[2]));
     S.cart.push({code:m[0],cat:catOf(m),sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!c.win,cmp:c.cmp!==false,pre:c.pre||0,pc:c.pc,lump:c.lump||0,lumpManual:c.lm===undefined?!!c.lump:!!c.lm});if(!CUST)fetchInfo(m[0]);});
-  S.pkgPrev=st.pkgPrev||0;S.cust=st.cust==='new'?'combo':(st.cust||'single');S._lastN=null;S.card=st.card||'none';S.usage=st.usage||100;S.promo=st.promo!==false;S.win=!!st.win;S.cmpY=null;S.multi=!!st.multi;S.mc=st.mc||[];S.mu=st.mu||{};S.lumpOn=!!st.lumpOn;
+  S.pkgPrev=st.pkgPrev||0;S.cust=st.cust==='new'?'combo':(st.cust||'single');S._lastN=null;S.card=st.card||'none';S.usage=st.usage||100;S.promo=st.promo!==false;S.win=!!st.win;S.cmpY=null;S.multi=!!st.multi;S.mc=st.mc||[];S.mu=st.mu||{};S.lumpOn=st.lumpOn!==false;
   setOn($('#custType'),S.cust);$('#promoOn').checked=S.promo;
   if(CUST){S.showFeel=!!st.feel;return;}
   S.loaded={id:q.id,name:q.name,phone:q.phone,memo:q.memo,call:st.call||''};showLoaded();
