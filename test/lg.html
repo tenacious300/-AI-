@@ -1372,7 +1372,7 @@ function renderPkg(){var p=PKG.filter(function(x){return x.id===PK.id;})[0];
   B.innerHTML=h;PK.items=items;PK.p=p;}
 $('#pkgPlan').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;PK.id=b.dataset.v;PK.sel={};PK.opt={};renderPkg();});
 $('#pkgBody').addEventListener('change',function(e){var d=e.target.dataset;PK.opt=PK.opt||{};if(d.i!=null){PK.sel[d.i]=e.target.value;PK.opt[d.i]={};renderPkg();}if(d.y!=null){PK.opt[d.y]={y:+e.target.value};renderPkg();}if(d.k!=null){PK.opt[d.k].k=e.target.value;renderPkg();}if(e.target.id==='pkPreOn'){PK.preOn=e.target.checked;renderPkg();}});
-$('#pkgBody').addEventListener('click',function(e){if(e.target.id!=='pkAdd')return;var pl=PK.p,n=0;(PK.items||[]).forEach(function(x){S.cart.push({code:x.code,term:x.r[R.term],ct:x.r[R.ct],cs:x.r[R.cs],cy:x.r[R.cy],preK:x.preK||'0',pk:1,pkRate:pl&&pl.rate||0,pkName:pl?pl.name:''});n++;});render();toast('패키지 모델 '+n+'개 담았어요');});
+$('#pkgBody').addEventListener('click',function(e){if(e.target.id!=='pkAdd')return;var pl=PK.p,n=0;S.cust='combo';(PK.items||[]).forEach(function(x){S.cart.push({code:x.code,term:x.r[R.term],ct:x.r[R.ct],cs:x.r[R.cs],cy:x.r[R.cy],preK:x.preK||'0',pk:1,pkRate:pl&&pl.rate||0,pkName:pl?pl.name:''});n++;});render();toast('패키지 모델 '+n+'개 담았어요 · 고객 조건: 신규 결합');});
 renderPkg();
 
 
