@@ -17,7 +17,7 @@ PAGES = ['index.html', 'lg.html', 'cuckoo.html']
 # 테스트 폴더에 같은 이름으로 따로 두는 파일 (그대로 복사)
 FILES = ['common.js', 'ck-parse.js', 'lg-parse.js', 'config.js',
          'data/price.js', 'data/promo.js', 'data/lg.js', 'data/lg-img.js',
-         'data/ck.js', 'data/ck-img.js', 'data/ck-multi.js']
+         'data/ck.js', 'data/ck-img.js', 'data/ck-multi.js', 'data/ss-rank.js']
 
 SW_PROD = "navigator.serviceWorker.register('sw.js').catch(function(){});"
 SW_TEST = "Promise.reject().catch(function(){});"

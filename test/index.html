@@ -1252,7 +1252,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 <script>
 (function(){var d=new Date(),day=''+d.getFullYear()+(d.getMonth()+1)+d.getDate();
-document.write('<script src="data/price.js?d='+day+'"><\/script><script src="data/promo.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script><script src="common.js?t='+Date.now()+'"><\/script>');})();
+document.write('<script src="data/ss-rank.js?d='+day+'"><\/script><script src="data/price.js?d='+day+'"><\/script><script src="data/promo.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script><script src="common.js?t='+Date.now()+'"><\/script>');})();
 </script>
 <script>
 (function(){
@@ -1290,8 +1290,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.53',VER_DATE='2026.11.16';
+var VERSION='v8.54',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.54','11.16',['🛒 삼성 추천에 삼성닷컴 AI 구독 판매량순(최근 31일) 반영: 판매 상위 모델을 먼저 보여주고 \'삼성닷컴 판매 n위\' 표시 · 매일 새벽 자동 갱신']],
   ['v8.53','11.16',['💡 삼성 추천: 구독료 할인 · 포인트 · 구독페스티벌 · 우승기념 추가판촉까지 반영한 체감 월 요금으로 비교, 판촉 모델 우선 · 🏆 표시','💡 LG 추천: 오늘 진행 중인 활성화 · 프로모션 할인까지 반영한 요금으로 비교, 프로모션 모델 우선 · 🔥 표시(종료일 포함)']],
   ['v8.52','11.16',['💡 추천 팝업: 모델을 담으면 ⬆ 조금 더 내면 한 단계 위 · ⬇ 비슷한데 더 저렴한 모델(바꾸기) · 🤝 함께 많이 담는 모델을 보여주고 담기 / 바꾸기 선택 (삼성 · LG · 쿠쿠)','💰 최저 조합 찾기: 케어 · 서비스는 그대로, 약정 기간을 바꿔 월 납부가 가장 적은 조합을 찾아 한 번에 적용','📈 쓸수록 바뀌는 추천: 인쇄 · 견적 기록(함께 담기), 최근 30일 인기, 추천을 실제로 고른 비율을 순위에 반영']],
   ['v8.51','11.16',['⏰ 프로모션 마감 알림: 담은 모델에 걸린 기간 혜택의 종료일 · D-day를 견적 카드와 캡처에 표시 (삼성 추가판촉 · LG 주간 활성화 · 쿠쿠 캐시백 2배)','📢 단가 바뀐 점 요약: 새 단가가 적용되면 내린 · 오른 · 새로 생긴 · 빠진 모델을 한 번 보여줌 (삼성 · LG · 쿠쿠)']],
@@ -3019,11 +3020,18 @@ function capQuote(){var items=calcItems();if(!items.length){toast('담은 모델
 window.PG={call:gsr,meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
 $('#capBtn').onclick=capQuote;
 /* 💡 추천 팝업 · 💰 최저 조합 (common.js) */
-window.REC_PAGE={brand:'ss',priceLabel:'요금은 구독료 할인 · 포인트 · 추가 판촉까지 반영한 체감 월 요금 (최장 약정 기준)',
+/* 🛒 삼성닷컴 AI 구독 판매량순 (data/ss-rank.js · 매일 03:20 자동 갱신) → { 모델: [순위, 품목 모델 수, 같은 시리즈로 맞춤 여부] }
+   계산기 모델이 삼성닷컴 목록에 그대로 없으면 색상만 다른 같은 시리즈(코드 끝 1~2자리만 다름)의 순위를 씀 */
+function ssRankMap(){var R=window.SS_RANK,o={};if(!R||!R.cats)return o;
+  MODELS.forEach(function(m){var L=R.cats[catOf(m)];if(!L||!L.length)return;var c=m[0],i=L.indexOf(c),sr=0;
+    if(i<0){for(var k=1;k<=2&&i<0;k++){if(c.length-k<8)break;var p=c.slice(0,-k);for(var j=0;j<L.length;j++){if(L[j].length===c.length&&L[j].slice(0,-k)===p){i=j;sr=1;break;}}}}
+    if(i>=0)o[c]=[i+1,L.length,sr];});return o;}
+window.REC_PAGE={brand:'ss',priceLabel:'요금은 구독료 할인 · 포인트 · 추가 판촉까지 반영한 체감 월 요금 (최장 약정 기준) · 삼성닷컴 판매량순 우선',
   /* 혜택 TOP과 같은 계산: 5% 구독료 할인 · 구독포인트 · 구독페스티벌 / 추가판촉(우승기념) 지원 개월을 모두 빼서 체감 월 요금으로 비교, 판촉 대상은 가산점 */
   all:function(){var key=promoLive()+'|'+Object.keys(PROMO).length;if(!REC_PAGE._a||REC_PAGE._k!==key){var T=aiTop(),F={},live=promoLive();T.cats.forEach(function(c){T.res[c].forEach(function(x){F[x.code]=x;});});
-    REC_PAGE._k=key;REC_PAGE._a=MODELS.map(function(m){var x=F[m[0]],pm=promoOf(m[0]),tag='',boost=0;
+    REC_PAGE._k=key;var RK=ssRankMap();REC_PAGE._a=MODELS.map(function(m){var x=F[m[0]],pm=promoOf(m[0]),tag='',boost=0,rk=RK[m[0]];
       if(live&&pm.fin){tag='🏆 '+PN+' 구독료 '+pm.fin+'개월';boost=2;}else if(pm.fest){tag='🎁 '+BN+' '+pm.fest+'개월';boost=1;}
+      if(rk){boost+=3*(1-(rk[0]-1)/rk[1]);tag=(tag?tag+' · ':'')+'🛒 삼성닷컴 판매 '+rk[0]+'위'+(rk[2]?'(같은 시리즈)':'');}
       return {code:m[0],grp:catOf(m)+'|'+subOf(m),cat:catOf(m),price:x?x.feel:minPrice(m),tag:tag,boost:boost};});}return REC_PAGE._a;},
   add:function(code){aiAdd(code);},cart:function(){return S.cart.map(function(x){return x.code;});},removeAt:function(i){S.cart.splice(i,1);S.cmpY=null;render();},
   best:function(){var rows=[],ch=[];S.cart.forEach(function(x,i){var m=byCode[x.code];if(!m)return;var L=m[3].filter(function(p){return D.types[p[1]]===x.type;});if(!L.length)return;var b=L.reduce(function(a,p){return p[2]<a[2]?p:a;});
