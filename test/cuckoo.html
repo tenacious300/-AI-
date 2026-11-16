@@ -840,6 +840,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sh-line{font-size:13.5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:rgba(255,255,255,.07);border-radius:10px;padding:7px 11px}
 .sh-line b{font-weight:800;letter-spacing:.2px}.sh-line i{font-style:normal;opacity:.45;margin:0 7px}.sh-line0{opacity:.7;font-weight:600}
 #sHead+.cap{border-top:1px solid rgba(255,255,255,.12);padding-top:12px}
+.due-l{display:flex;flex-direction:column;gap:6px;margin-top:10px}.due{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fde68a;border-radius:10px;padding:7px 11px;font-size:13px;line-height:1.4}.due b{color:#fff;font-weight:800}.due em{font-style:normal;font-weight:900;color:#fbbf24;margin-left:2px}.due.hot{background:rgba(244,63,94,.16);border-color:rgba(251,113,133,.5);color:#fecdd3}.due.hot em{color:#fb7185}
+.sc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.sc-box{background:#fff;color:#111827;border-radius:20px;max-width:420px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.sc-t{font-size:18px;font-weight:900}.sc-sub{font-size:12.5px;color:#6b7280;margin:4px 0 10px}.sc-body{overflow:auto;flex:1}.sc-s{margin-top:10px}.sc-h{font-size:14px;font-weight:800;margin-bottom:4px}.sc-h small{color:#6b7280;font-weight:600}.sc-h.dn{color:#15803d}.sc-h.up{color:#dc2626}.sc-h.nw{color:#1d4ed8}.sc-h.gone{color:#6b7280}.sc-r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9}.sc-r b{font-weight:700;word-break:break-all}.sc-r span{white-space:nowrap;color:#374151}.sc-r i{font-style:normal;font-weight:800;margin-left:4px}.sc-r i.dn{color:#15803d}.sc-r i.up{color:#dc2626}.sc-box details summary{font-size:12.5px;color:#1d4ed8;cursor:pointer;padding:6px 0}.sc-ok{margin-top:12px;border:0;border-radius:12px;background:#3182f6;color:#fff;font-weight:800;font-size:15px;padding:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -987,6 +989,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
     <div class="cap" id="sCap"></div>
     <div class="big" id="sBig">0원</div>
     <div class="cap" id="sSub"></div>
+    <div class="due-l" id="sDue" style="display:none"></div>
     <div class="sum-l" id="sList"></div>
     <div id="sPhase"></div>
     <div class="btns">
@@ -1398,6 +1401,7 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
   }else{$('#cardSel').style.display='';$('#cxRecBox').innerHTML='';}
 
   /* 요약 */
+  dueSet(S.cart.length&&dblToday()?MU.dbl.filter(function(p){var t=todayStr();return t>=p[0]&&t<=p[1];}).map(function(p){return {label:'다품목 캐시백 2배',end:p[1]};}):[]);
   sumHead();
   if(n){$('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액 (첫 달)';$('#sBig').textContent=won(net);
     $('#sSub').textContent='기본 구독료 월 '+won(sumMon)+(t.cb?' · 캐시백 '+won(t.cb):'');}
@@ -1547,6 +1551,8 @@ function capQuote(){if(!S.cart.length){toast('담은 모델이 없어요');retur
   capShot().then(done,function(){if(b){b.disabled=false;b.innerHTML=b.dataset.t;}toast('이미지를 만들지 못했어요. 다시 눌러 주세요');});}
 window.PG={meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
 $('#capBtn').onclick=capQuote;
+/* 📢 단가 바뀐 점 요약 (common.js) */
+setTimeout(function(){try{var mp={};D.m.forEach(function(m){var v=minMon(m);if(v!=null)mp[m[0]]=v;});snapCheck('ck','쿠쿠',mp);}catch(e){}},1500);
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
 $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};
 Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');var lm=b.dataset.pm==='lump';
@@ -1753,7 +1759,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.50';
+var VERSION='v8.51';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

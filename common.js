@@ -24,3 +24,43 @@ function capSave(c){if(!c){PG.toast('담은 모델이 없어요');return;}PG.fuL
     var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
     var msg='견적 이미지를 저장했어요';
     if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(function(){PG.toast(msg+' · 복사도 됐어요 (카톡에 Ctrl+V)');},function(){PG.toast(msg);});}else PG.toast(msg);},'image/png');}
+
+/* ⏰ 프로모션 마감 알림: 담은 모델에 걸린 기간 혜택의 종료일 · D-day 를 견적 카드(#sDue)에 표시 (캡처에도 나옴)
+   list: [{label:'혜택 이름', end:'2026-11-24'}] · 이미 끝난 것은 빼고, 같은 혜택은 한 번만, 빨리 끝나는 순 */
+function dueDays(end){var t=new Date(),a=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate()),p=String(end).split('-'),b=Date.UTC(+p[0],+p[1]-1,+p[2]);return Math.round((b-a)/864e5);}
+function dueText(end){var n=dueDays(end),p=String(end).split('-'),d=new Date(+p[0],+p[1]-1,+p[2]);var md=(+p[1])+'/'+(+p[2])+'('+'일월화수목금토'.charAt(d.getDay())+')';return {n:n,tag:n<=0?'오늘 종료':'D-'+n,md:md};}
+function dueSet(list){var el=document.getElementById('sDue');if(!el)return;var seen={},L=[];
+  (list||[]).forEach(function(x){if(!x||!x.end||!/^\d{4}-\d{2}-\d{2}$/.test(x.end))return;var k=x.label+'|'+x.end;if(seen[k])return;seen[k]=1;if(dueDays(x.end)<0)return;L.push(x);});
+  L.sort(function(a,b){return a.end<b.end?-1:a.end>b.end?1:0;});
+  if(!L.length){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';el.innerHTML=L.slice(0,4).map(function(x){var t=dueText(x.end);return '<div class="due'+(t.n<=2?' hot':'')+'">⏰ <b>'+PG.esc(x.label)+'</b> <em>'+t.tag+'</em> · '+t.md+(t.n<=0?'':' 종료')+'</div>';}).join('');}
+
+/* 📢 단가 바뀐 점 요약: 이 기기에 저장해 둔 지난 단가와 지금 단가를 비교해서, 바뀌었으면 한 번 보여 줌
+   - 처음 쓰는 기기는 조용히 저장만 (다음 단가 교체부터 보여 줌)
+   - map: { 모델코드: 대표 월 요금(가장 싼 요금) }, name: 화면에 쓸 브랜드 이름 */
+function snapCheck(brand,name,map){
+  if(document.querySelector('#gate.on')||document.querySelector('#termsPop.on')){setTimeout(function(){snapCheck(brand,name,map);},3000);return;}
+  var key='snap_'+brand,h=0,ks=Object.keys(map).sort();ks.forEach(function(k){var t=k+':'+map[k]+';';for(var i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))|0;});
+  var old=null;try{old=JSON.parse(localStorage.getItem(key)||'null');}catch(e){}
+  var save=function(){try{localStorage.setItem(key,JSON.stringify({h:h,m:map,at:new Date().toISOString().slice(0,10)}));}catch(e){}};
+  if(!old||!old.m){save();return;}
+  if(old.h===h)return;
+  var up=[],dn=[],nw=[],gone=[];
+  ks.forEach(function(k){var a=old.m[k],b=map[k];if(a==null)nw.push([k,b]);else if(b>a)up.push([k,a,b]);else if(b<a)dn.push([k,a,b]);});
+  Object.keys(old.m).forEach(function(k){if(map[k]==null)gone.push([k,old.m[k]]);});
+  save();
+  if(!up.length&&!dn.length&&!nw.length&&!gone.length)return;
+  up.sort(function(a,b){return (b[2]-b[1])-(a[2]-a[1]);});dn.sort(function(a,b){return (a[2]-a[1])-(b[2]-b[1]);});
+  var W=function(n){return Number(n).toLocaleString()+'원';},E=PG.esc;
+  var sec=function(title,cls,L,fmt){if(!L.length)return '';var row=function(x){return '<div class="sc-r"><b>'+E(x[0])+'</b><span>'+fmt(x)+'</span></div>';};
+    return '<div class="sc-s"><div class="sc-h '+cls+'">'+title+' <small>'+L.length+'개</small></div>'+L.slice(0,6).map(row).join('')+(L.length>6?'<details><summary>나머지 '+(L.length-6)+'개 보기</summary>'+L.slice(6).map(row).join('')+'</details>':'')+'</div>';};
+  var d=document.createElement('div');d.className='sc-ov';
+  d.innerHTML='<div class="sc-box"><div class="sc-t">📢 '+E(name)+' 단가가 바뀌었어요</div><div class="sc-sub">지난번 접속('+E(old.at||'')+') 이후 바뀐 모델이에요 · 모델별 가장 싼 월 요금 기준</div><div class="sc-body">'
+    +sec('⬇ 내린 모델','dn',dn,function(x){return W(x[1])+' → <b>'+W(x[2])+'</b> <i class="dn">'+W(x[2]-x[1])+'</i>';})
+    +sec('⬆ 오른 모델','up',up,function(x){return W(x[1])+' → <b>'+W(x[2])+'</b> <i class="up">+'+W(x[2]-x[1])+'</i>';})
+    +sec('🆕 새로 생긴 모델','nw',nw,function(x){return '월 '+W(x[1])+'부터';})
+    +sec('🚫 빠진 모델','gone',gone,function(x){return '전에는 월 '+W(x[1]);})
+    +'</div><button class="sc-ok">확인했어요</button></div>';
+  document.body.appendChild(d);d.querySelector('.sc-ok').onclick=function(){d.remove();};
+  try{PG.fuLog('pricediff');}catch(e){}
+}

@@ -931,6 +931,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .sum .lumpin{padding:6px 0}
 @media(min-width:1024px){.sum .lp-iw input{font-size:13px!important}}
 #pinBox input{width:100%;border:0;background:#F2F4F6;border-radius:14px;padding:11px 14px;min-height:54px;font-size:20px}
+.due-l{display:flex;flex-direction:column;gap:6px;margin-top:10px}.due{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fde68a;border-radius:10px;padding:7px 11px;font-size:13px;line-height:1.4}.due b{color:#fff;font-weight:800}.due em{font-style:normal;font-weight:900;color:#fbbf24;margin-left:2px}.due.hot{background:rgba(244,63,94,.16);border-color:rgba(251,113,133,.5);color:#fecdd3}.due.hot em{color:#fb7185}
+.sc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.sc-box{background:#fff;color:#111827;border-radius:20px;max-width:420px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.sc-t{font-size:18px;font-weight:900}.sc-sub{font-size:12.5px;color:#6b7280;margin:4px 0 10px}.sc-body{overflow:auto;flex:1}.sc-s{margin-top:10px}.sc-h{font-size:14px;font-weight:800;margin-bottom:4px}.sc-h small{color:#6b7280;font-weight:600}.sc-h.dn{color:#15803d}.sc-h.up{color:#dc2626}.sc-h.nw{color:#1d4ed8}.sc-h.gone{color:#6b7280}.sc-r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9}.sc-r b{font-weight:700;word-break:break-all}.sc-r span{white-space:nowrap;color:#374151}.sc-r i{font-style:normal;font-weight:800;margin-left:4px}.sc-r i.dn{color:#15803d}.sc-r i.up{color:#dc2626}.sc-box details summary{font-size:12.5px;color:#1d4ed8;cursor:pointer;padding:6px 0}.sc-ok{margin-top:12px;border:0;border-radius:12px;background:#3182f6;color:#fff;font-weight:800;font-size:15px;padding:13px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1104,6 +1106,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
     <div class="cap" id="sCap"></div>
     <div class="big" id="sBig">0원</div>
     <div class="cap" id="sSub"></div>
+    <div class="due-l" id="sDue" style="display:none"></div>
     <div class="sum-l" id="sList"></div>
     <div id="sPhase"></div>
     <div class="btns">
@@ -1281,8 +1284,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.50',VER_DATE='2026.11.16';
+var VERSION='v8.51',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.51','11.16',['⏰ 프로모션 마감 알림: 담은 모델에 걸린 기간 혜택의 종료일 · D-day를 견적 카드와 캡처에 표시 (삼성 추가판촉 · LG 주간 활성화 · 쿠쿠 캐시백 2배)','📢 단가 바뀐 점 요약: 새 단가가 적용되면 내린 · 오른 · 새로 생긴 · 빠진 모델을 한 번 보여줌 (삼성 · LG · 쿠쿠)']],
   ['v8.50','11.16',['🔐 직원 PIN 4자리 입장 (관리자 > 직원 명부에서 \'PIN 필수\' 켜기 · 끄기, PIN 초기화)','🔐 PIN 필수가 켜지면 사번 입력 화면에 안내 · 견적 보관함은 PIN으로 입장한 기기에서만 열림','✅ 관리자 약관 · PIN 탭: 🔐 PIN 설정 보기 추가 (지점별 설정률, 아직 안 정한 직원 목록 · CSV)','🛡 관리자 비밀번호 15분 안에 10번 틀리면 15분 잠금 · PIN 필수일 때 직원 이름 · 지점 정보 보호','🧰 세 계산기 공통 코드 정리 (견적 캡처) · 자동 점검 추가']],
   ['v8.49','11.16',['📋 이용 약관: 계산기를 새로 열 때마다 동의 팝업 · 동의 기록을 구글 시트 \'약관동의\'에 저장 (삼성 · LG · 쿠쿠)','✅ 관리자 약관 동의 탭 신설: 동의 · 미동의 인원, 지점별 동의율, 미동의 직원 목록 · CSV','🧾 관리자 사번별 이용에 \'약관 동의\' 칸 추가 (CSV 포함)','📸 LG · 쿠쿠 계산기에도 견적 캡처 추가 (견적 카드 맨 위에 담은 모델명 표시)','🏬 견적 캡처 아래 지점명을 로그인한 사번의 지점으로 표시 (예전엔 여수본점 고정)']],
   ['v8.48','11.16',['📋 로그인 후 이용 약관 팝업 · 동의해야 입장 (사번별 한 번)']],
@@ -1811,6 +1815,7 @@ function render(){
   var feelM=feelN?Math.round(feelT/feelN/10)*10:0,sameN=items.every(function(i){return i.N===feelN;});
   $('#sBig').classList.toggle('feel',!!(n&&S.showFeel));
   sumHead(items,card,cs);
+  dueSet(PMETA&&PMETA.end&&promoLive()&&S.cart.some(function(x){var p=promoOf(x.code);return p.fest||p.fin||p.win;})?[{label:PMETA.name||PN,end:PMETA.end}]:[]);
   if(n&&!S.showFeel){
     $('#sCap').textContent=card&&cs.tier?'카드 할인 후 월 실 납부액 (첫 달)':'할인 적용 후 월 납부액';$('#sBig').textContent=won(net);
     $('#sSub').textContent='정상 월 '+won(sumMon)+(sumP?' · 선납금 '+won(sumP)+' 별도':'');
@@ -3005,6 +3010,8 @@ function capQuote(){var items=calcItems();if(!items.length){toast('담은 모델
   capShot().then(done,function(){done(capDraw());});}
 window.PG={meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
 $('#capBtn').onclick=capQuote;
+/* 📢 단가 바뀐 점 요약 (common.js) */
+setTimeout(function(){try{var mp={};MODELS.forEach(function(m){mp[m[0]]=minPrice(m);});snapCheck('ss','삼성',mp);}catch(e){}},1500);
 var AI={cache:null,key:'',cat:null,sort:'rate',win:false};
 function aiTop(){var live=promoLive(),key=MODELS.length+'|'+Object.keys(PROMO).length+'|'+live;if(AI.cache&&AI.key===key)return AI.cache;
   var NOVS=['정수기','식기세척기','청소기','에어드레서','공기청정기'],out={};
