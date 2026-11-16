@@ -49,7 +49,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, adminPinReset: adminPinReset,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
@@ -154,7 +154,7 @@ function heartbeat(info) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(3000)) {
     // 혼잡할 때는 기록을 건너뛰고 마지막 접속자 수만 돌려줌
-    return { online: Number(cache.get('onlineN') || 0) || -1, nid: noticeId_() };
+    return { online: Number(cache.get('onlineN') || 0) || -1, nid: noticeId_(), pinReq: pinRequired_() };
   }
   var online = 0, isFirst = !!info.first, d = today_();
   try {
@@ -219,6 +219,7 @@ function heartbeat(info) {
     if (mraw) { var mm = JSON.parse(mraw); if (mm.id !== String(info.msgAck || '')) res.msg = mm; }
   } catch (e) {}
   if (isFirst) { try { res.dv = dataVersion_(); } catch (e) {} try { res.me = meInfo_(info.emp); } catch (e) {} }
+  res.pinReq = pinRequired_();
   return res;
 }
 
@@ -1228,8 +1229,9 @@ function rosterAllowed_(emp) {
 }
 /** 직원: 입장 전 사번 확인 */
 /* ---------- 직원 PIN (4자리) ----------
-   - 화면이 pinMode로 요청할 때만 PIN을 확인해요. 예전 화면(PIN 없음)은 그대로 들어와요.
-   - 스크립트 속성 PIN_REQUIRED=Y 로 바꾸면 PIN 없이 들어오는 요청과 토큰 없는 견적 보관함 요청을 막아요 (정식 적용 때).
+   - 관리자 화면 'PIN 필수'(스크립트 속성 PIN_REQUIRED=Y)를 켜야 PIN을 확인해요. 꺼져 있으면 지금처럼 사번만으로 입장.
+   - 테스트 화면은 꺼져 있어도 PIN을 확인해요 (pinMode:'test').
+   - 켜면 토큰 없는 견적 보관함 요청도 막아요. 화면은 heartbeat의 pinReq로 알아채고, 토큰 없는 기기는 PIN 입력 화면으로 보내요.
    - PIN은 원문이 아니라 해시로 견적 시트 파일의 'PIN' 탭에 저장. 사번당 5번 틀리면 30분 잠금. */
 var PIN_SHEET = 'PIN', PIN_MAX_FAIL = 5, PIN_LOCK_SEC = 1800;
 function pinRequired_() { return PropertiesService.getScriptProperties().getProperty('PIN_REQUIRED') === 'Y'; }
@@ -1296,6 +1298,20 @@ function pinCheck_(emp, arg) {
     return { ok: true, tok: pinIssue_(sh, row, emp) };
   } finally { try { lock.releaseLock(); } catch (e) {} }
 }
+/** 관리자: PIN 필수 켜기 · 끄기 (켜면 모든 화면에서 PIN 입장 · 토큰 없는 보관함 요청 차단) */
+function adminPinRequiredSet(arg) {
+  arg = arg || {};
+  if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  var props = PropertiesService.getScriptProperties();
+  if (arg.on) props.setProperty('PIN_REQUIRED', 'Y'); else props.deleteProperty('PIN_REQUIRED');
+  return { ok: true, on: pinRequired_() };
+}
+/** 관리자: PIN 상태 (필수 여부 · PIN 정한 인원) */
+function adminPinInfo(pw) {
+  if (!pwOk_(pw)) return { ok: false };
+  var sh = pinSheet_();
+  return { ok: true, on: pinRequired_(), n: Math.max(0, sh.getLastRow() - 1) };
+}
 /** 관리자: 직원 PIN 초기화 (다음 입장 때 새로 정함 · 기존 기기 토큰도 모두 무효) */
 function adminPinReset(arg) {
   arg = arg || {};
@@ -1311,7 +1327,7 @@ function checkEmp(arg) {
   var emp = typeof arg === 'object' && arg ? arg.emp : arg, did = typeof arg === 'object' && arg ? arg.did : '';
   if (isBlocked_(emp, did)) return { ok: false, reason: 'blocked' };
   if (!rosterAllowed_(emp)) { nrLog_(emp, 'r', typeof arg === 'object' ? arg : {}); return { ok: false, reason: 'roster' }; }
-  if ((typeof arg === 'object' && arg && arg.pinMode) || pinRequired_()) {
+  if ((typeof arg === 'object' && arg && arg.pinMode === 'test') || pinRequired_()) {
     if (!(typeof arg === 'object' && arg)) return { ok: false, reason: 'pin' };
     var pr = pinCheck_(cleanEmp_(emp), arg);
     if (!pr.ok) return pr;

@@ -1634,7 +1634,7 @@ function beat(){if(!EMP||!window.API_URL)return;window.__lastBeat=Date.now();var
   var refu=function(){EVQ=evs.concat(EVQ);Object.keys(fu).forEach(function(k){FU[k]=(FU[k]||0)+fu[k];});};
   var info={fu:fu,act:idl>=5?'idle:'+idl:curAct(),away:!!document.hidden||idl>=5,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return 'CK '+i.code;}).join(', '),ver:CK_VER,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
-  api('heartbeat',info,function(r){if(!r||r.online===-1)refu();
+  api('heartbeat',info,function(r){if(r&&r.pinReq&&EMP&&((lsGet('calcTok')||{}).emp!==EMP)){location.replace('./?brand=ck&gate=1');return;}if(!r||r.online===-1)refu();
     if(r&&r.blocked){if(r.reason==='roster'){try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(e){}}else lsPut('calcBlocked',1);location.href='./';return;}
     if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}
     if(r&&r.me!==undefined&&r.me)lsPut('calcMe',{emp:EMP,name:r.me.name,br:r.me.br,rank:r.me.rank});},function(){refu();if(!FB.on)$('#liveBtn').classList.add('off');});}
