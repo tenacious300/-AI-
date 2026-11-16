@@ -18,25 +18,29 @@ HEAD = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537
         'Accept': 'application/json, text/plain, */*', 'Referer': 'https://www.samsung.com/sec/refrigerators/all-refrigerators/?only-ai-subs',
         'X-Requested-With': 'XMLHttpRequest'}
 
-def fetch(no):
+def fetch(no, info):
     req = urllib.request.Request(URL.format(no), headers=HEAD)
     with urllib.request.urlopen(req, timeout=40) as r:
-        return [p.get('mdlCode') for p in (json.loads(r.read().decode('utf-8')).get('products') or []) if p.get('mdlCode')]
+        L = [p for p in (json.loads(r.read().decode('utf-8')).get('products') or []) if p.get('mdlCode')]
+    for p in L:   # 모델: [상품명, 판매가, 월 구독료(최저), 약정 년수, 서비스]
+        m = p.get('minAiscGoodsPriceInfo') or {}
+        info[p['mdlCode']] = [p.get('goodsNm') or '', int(p.get('salePrice') or 0), int(p.get('monSsbPrc') or 0), int(m.get('cntrPrd') or 0), m.get('svcTpCdNm') or '']
+    return [p['mdlCode'] for p in L]
 
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-    got, cache, fail = {}, {}, []
+    got, cache, fail, info = {}, {}, [], {}
     for cat, no in CATS.items():
         try:
-            if no not in cache: cache[no] = fetch(no)
+            if no not in cache: cache[no] = fetch(no, info)
             got[cat] = cache[no]
         except Exception as e:
             fail.append(cat); print('실패', cat, e)
     total = sum(len(v) for v in got.values())
     if total < 100:   # 거의 못 받았으면 기존 파일 유지
         print('받은 모델이 너무 적어요 (%d) → 기존 파일 유지' % total); sys.exit(1)
-    now = (datetime.datetime.utcnow() + datetime.timedelta(hours=9)).strftime('%Y-%m-%d %H:%M')
-    body = 'window.SS_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got}, ensure_ascii=False, separators=(',', ':')) + ';\n'
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
+    body = 'window.SS_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info}, ensure_ascii=False, separators=(',', ':')) + ';\n'
     head = '/* 삼성닷컴 AI 구독 품목별 판매량순 (최근 31일 판매 수량) · .github/scripts/ss_rank.py 가 매일 자동 갱신 */\n'
     for p in ('data/ss-rank.js', 'test/data/ss-rank.js'):
         with open(os.path.join(root, p), 'w', encoding='utf-8') as f: f.write(head + body)
