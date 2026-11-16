@@ -3,6 +3,24 @@ var ADMIN_PW = PropertiesService.getScriptProperties().getProperty('ADMIN_PW') |
 var ONLINE_SEC = 180;
 var LONG_IDLE_MIN = 30;             // 이 시간(분) 넘게 조작이 없으면 접속자 수에서 제외 (목록에는 💤로 표시)              // 마지막 신호 후 이 시간(초) 안이면 '접속 중'으로 계산 (신호 간격 75초)
 var TZ = 'Asia/Seoul';
+
+/* ---------- 관리자 비밀번호 잠금 ----------
+   15분 안에 10번 틀리면 15분 동안 모든 관리자 로그인을 막아요 (맞는 비밀번호도 거절).
+   틀린 시도는 스크립트 속성 'pwfail_log'에 최근 50건(시각 · 화면에서 보낸 기기 정보)만 남겨요. */
+var PW_MAX_FAIL = 10, PW_LOCK_SEC = 900;
+function pwLocked_() { return Number(CacheService.getScriptCache().get('pwfail') || 0) >= PW_MAX_FAIL; }
+function pwOk_(pw) {
+  var c = CacheService.getScriptCache(), n = Number(c.get('pwfail') || 0);
+  if (n >= PW_MAX_FAIL) return false;
+  if (String(pw) === ADMIN_PW) return true;
+  c.put('pwfail', String(n + 1), PW_LOCK_SEC);
+  try {
+    var props = PropertiesService.getScriptProperties(), L = JSON.parse(props.getProperty('pwfail_log') || '[]');
+    L.unshift(Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss') + (n + 1 >= PW_MAX_FAIL ? ' (잠김)' : ''));
+    props.setProperty('pwfail_log', JSON.stringify(L.slice(0, 50)));
+  } catch (e) {}
+  return false;
+}
 var CARE_FOLDER_NAME = '삼성AI구독_케어가이드';   // 구글 드라이브에 올린 케어 가이드 이미지 폴더 이름
 
 var NEW_SITE_URL = 'https://tenacious300.github.io/-AI-/';   // 계산기 새 주소 (깃허브)
@@ -117,7 +135,7 @@ function uaAdd_(cache, emp, sec, ev, fu) {
 /** 관리자 → 직원 개별 메시지 (다음 접속 신호 때 화면에 뜸) */
 function adminSendMsg(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var emp = cleanEmp_(arg.emp), text = cleanStr_(arg.text, 300);
   if (!emp || !text) return { ok: false };
   var m = { id: Utilities.getUuid().slice(0, 8), text: text, at: Utilities.formatDate(new Date(), TZ, 'HH:mm') };
@@ -228,7 +246,7 @@ function logEvent(arg) {
 function getP_(all, k) { return all[k] == null ? null : all[k]; }
 
 function adminStats(pw) {
-  if (String(pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(pw)) return pwLocked_() ? { ok: false, locked: true, msg: '비밀번호를 여러 번 틀려 15분 동안 관리자 로그인이 잠겼어요.' } : { ok: false };
   var cache = CacheService.getScriptCache();
   var map = readPresence_(cache);
   var props = PropertiesService.getScriptProperties();
@@ -504,7 +522,7 @@ function safeJson_(o) {
 
 /** 관리자: 현재 적용 데이터 정보 */
 function adminDataInfo(pw) {
-  if (String(pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(pw)) return { ok: false };
   var info = { ok: true, price: null, promo: null, lg: null, ck: null, ckm: null, history: [] };
   try { var p = readDataFile_('price'); if (p) info.price = JSON.parse(p).meta; } catch (e) {}
   try { var l = readDataFile_('lg'); if (l) info.lg = JSON.parse(l).meta; } catch (e) {}
@@ -524,7 +542,7 @@ function adminDataInfo(pw) {
 /** 관리자: 단가표(price) 또는 추가 판촉(promo) 저장. payload = JSON 문자열 {data, meta} */
 function adminSaveData(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
   var kind = kindOf_(arg.kind);
   var txt = String(arg.payload || '');
   try { JSON.parse(txt); } catch (e) { return { ok: false, msg: '데이터 형식이 올바르지 않아요.' }; }
@@ -546,7 +564,7 @@ function adminSaveData(arg) {
 /** 관리자: 업로드 데이터 해제 (단가표는 기본값으로, 판촉은 기본값/종료) */
 function adminResetData(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var kind = kindOf_(arg.kind);
   var folder = dataFolder_();
   var stamp = Utilities.formatDate(new Date(), TZ, 'yyyyMMddHHmm');
@@ -604,7 +622,7 @@ function shareCareImages() {
 /** 관리자: 전체 견적 목록 (모든 사번) */
 function adminListQuotes(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var sh = quoteSheet_();
   var n = sh.getLastRow(), out = [];
   if (n >= 2) {
@@ -621,7 +639,7 @@ function adminListQuotes(arg) {
 /** 관리자: 견적 삭제 (사번 상관없이) */
 function adminDeleteQuote(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var id = String(arg.id || '');
   var lock = LockService.getScriptLock();
   try { lock.waitLock(10000); } catch (e) { return { ok: false }; }
@@ -691,7 +709,7 @@ function ackNotice(arg) {
 }
 /** 관리자: 현재 공지 + 확인한 사람 목록 */
 function adminNotice(pw) {
-  if (String(pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(pw)) return { ok: false };
   var cur = readNotice_(), acks = [];
   if (cur) {
     var sh = noticeSheet_(), n = sh.getLastRow();
@@ -704,7 +722,7 @@ function adminNotice(pw) {
 /** 관리자: 새 공지 올리기 (이전 공지는 내려감) */
 function adminPostNotice(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var items = (arg.items || []).slice(0, 40).map(function (x) { return String(x).slice(0, 300); });
   var n = { id: 'n' + Date.now(), title: String(arg.title || '').slice(0, 60), body: String(arg.body || '').slice(0, 1000), items: items, at: Date.now() };
   while (n.items.length && Utilities.newBlob(JSON.stringify(n)).getBytes().length > 8500) n.items.pop();   // 저장소 한 칸 용량(9KB) 이내
@@ -716,7 +734,7 @@ function adminPostNotice(arg) {
 /** 관리자: 현재 공지 수정 (renotify면 새 공지로 다시 띄우고 확인 기록은 새로 시작) */
 function adminEditNotice(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var cur = readNotice_();
   if (!cur) return { ok: false, msg: '수정할 공지가 없어요.' };
   var items = (arg.items || []).slice(0, 40).map(function (x) { return String(x).slice(0, 300); });
@@ -730,7 +748,7 @@ function adminEditNotice(arg) {
 /** 관리자: 공지 내리기 */
 function adminClearNotice(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   PropertiesService.getScriptProperties().deleteProperty('notice');
   CacheService.getScriptCache().put('nid', '', 21600);
   return { ok: true };
@@ -776,7 +794,7 @@ function blockList_(b) {
 /** 관리자: 사번 / 기기 차단 */
 function adminBlock(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var emp = cleanEmp_(arg.emp), did = String(arg.did || '').slice(0, 16);
   if (!emp && !did) return { ok: false };
   var lock = LockService.getScriptLock();
@@ -793,7 +811,7 @@ function adminBlock(arg) {
 /** 관리자: 차단 해제 */
 function adminUnblock(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(10000)) return { ok: false };
   try {
@@ -888,7 +906,7 @@ function getBest(arg) {
 /** 관리자: 전체 모델 집계 */
 function adminBest(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var days = [1, 7, 30].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7;
   var rows = mvRank_(mvAgg_(mvDay_(days - 1), mvDay_(0)));
   var tot = [0, 0, 0, 0]; rows.forEach(function (r) { for (var j = 0; j < 4; j++) tot[j] += r[1 + j]; });
@@ -910,7 +928,7 @@ function minVer_() {
 /** 관리자: 이 버전보다 낮은 화면은 자동으로 새로고침 (v7.6 이상 화면에서 동작) */
 function adminSetMinVer(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var v = String(arg.ver || '').replace(/[^v0-9.]/g, '').slice(0, 10);
   var at = String(Date.now());
   PropertiesService.getScriptProperties().setProperty('minVer', v);
@@ -1050,7 +1068,7 @@ function fuDaily_(nDays, brand) {
 /** 관리자: 기능 사용 통계 */
 function adminFeatures(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var days = [1, 7, 30].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7, cur, prev, date = String(arg.date || '').replace(/[^0-9]/g, '');
   var brand = arg.brand === 'ss' || arg.brand === 'lg' || arg.brand === 'ck' ? arg.brand : '';
   if (date.length === 8) {   // 특정 날짜 하루 (이전 날과 비교)
@@ -1073,7 +1091,7 @@ function adminFeatures(arg) {
  *  반환 rows: emp → [삼성 이용일, 삼성 담은 날, 삼성 견적 낸 날, 삼성 마지막, LG 4칸, 쿠쿠 4칸('K_' 기능)] */
 function adminEmpUsage(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var days = [7, 30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 0;
   var from = days ? mvDay_(days - 1) : '00000000', to = mvDay_(0), U = {}, first = '';
   var QK = { print: 1, copy: 1, save: 1 };
@@ -1143,7 +1161,7 @@ function cardPolImage(arg) {
 /** 관리자: 이미지 한 장 올리기 (data: base64) → 목록 끝에 추가 */
 function adminCardPolicyUpload(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
   var m = /^data:(image\/(?:jpeg|png|webp));base64,(.+)$/.exec(String(arg.data || ''));
   if (!m) return { ok: false, msg: '이미지 파일만 올릴 수 있어요.' };
   var bytes = Utilities.base64Decode(m[2]);
@@ -1161,7 +1179,7 @@ function adminCardPolicyUpload(arg) {
 /** 관리자: 순서 바꾸기 · 빠진 이미지는 드라이브 휴지통으로 */
 function adminCardPolicySet(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
   var lock = LockService.getScriptLock();
   try { lock.waitLock(20000); } catch (e) { return { ok: false, msg: '잠시 후 다시 시도해 주세요.' }; }
   try {
@@ -1218,7 +1236,7 @@ function meInfo_(emp) {
 }
 /** 관리자: 명부 + 설정 */
 function adminRoster(pw) {
-  if (String(pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(pw)) return { ok: false };
   var t = readDataFile_('roster'), d = null;
   try { d = t ? JSON.parse(t) : null; } catch (e) { d = null; }
   return { ok: true, map: d ? d.map : {}, meta: d ? d.meta : null, mode: rosterMode_(), ex: rosterEx_() };
@@ -1226,7 +1244,7 @@ function adminRoster(pw) {
 /** 관리자: 명부 저장 (이전 명부는 백업) */
 function adminSaveRoster(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
   var map = arg.map || {}, n = Object.keys(map).length;
   if (!n || n > 5000) return { ok: false, msg: '명부 인원이 올바르지 않아요.' };
   var clean = {};
@@ -1250,7 +1268,7 @@ function adminSaveRoster(arg) {
 /** 관리자: 입장 방식 (strict = 명부 사번만, open = 누구나) */
 function adminRosterMode(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var m = arg.mode === 'open' ? 'open' : 'strict';
   PropertiesService.getScriptProperties().setProperty('rosterMode', m);
   CacheService.getScriptCache().put('rosterModeC', m, 21600);
@@ -1259,7 +1277,7 @@ function adminRosterMode(arg) {
 /** 관리자: 예외 허용 추가 / 해제 */
 function adminRosterEx(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var emp = cleanEmp_(arg.emp);
   if (!emp) return { ok: false };
   var lock = LockService.getScriptLock();
@@ -1351,7 +1369,7 @@ function logQuote(arg) {
 /** 관리자: 최근 인쇄 기록 (기간 · 최신순) */
 function adminQuoteLog(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var days = [1, 7, 30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 7;
   var from = Utilities.formatDate(new Date(Date.now() - (days - 1) * 86400000), TZ, 'yyyy-MM-dd');
   var sh = qlogSheet_(), n = sh.getLastRow(), out = [];
@@ -1412,14 +1430,14 @@ function myFeedback(arg) {
 /** 관리자: 전체 요청 */
 function adminFeedback(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var sh = fbSheet_(), L = fbAll_().reverse();
   return { ok: true, list: L.slice(0, 500), total: L.length, url: sh.getParent().getUrl() + '#gid=' + sh.getSheetId() };
 }
 /** 관리자: 상태 · 답변 저장 */
 function adminFeedbackSet(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var id = String(arg.id || ''), st = FB_STATUS.indexOf(arg.status) >= 0 ? arg.status : null;
   if (!id) return { ok: false };
   var lock = LockService.getScriptLock();
@@ -1462,7 +1480,7 @@ function getBanner(arg) {
 /** 관리자: 배너 저장 (테스트 화면에서 저장하면 테스트 화면에만 적용) */
 function adminBannerSet(arg) {
   arg = arg || {};
-  if (String(arg.pw) !== ADMIN_PW) return { ok: false };
+  if (!pwOk_(arg.pw)) return { ok: false };
   var b = BN_BRANDS.indexOf(arg.brand) >= 0 ? arg.brand : null;
   if (!b) return { ok: false };
   var c = bnClean_(arg.cfg);
