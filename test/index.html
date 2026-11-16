@@ -942,6 +942,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .rk-mb{display:none;margin-top:6px}@media(max-width:600px){.rk-t .rk-pc{display:none}.rk-mb{display:block}.rk-t td,.rk-t th{padding:8px 4px}}
 #rankDrawer{max-width:calc(100% - 44px)}
 @media(max-width:600px){.rk-t{font-size:12px;table-layout:fixed}.rk-t th:nth-child(1),.rk-t td:nth-child(1){width:34px}.rk-t th:nth-child(3),.rk-t td:nth-child(3){width:74px}.rk-t th:nth-child(4),.rk-t td:nth-child(4){width:82px}.rk-t td.n{white-space:normal;word-break:keep-all}.rk-nm{font-size:12px;word-break:break-all}.rk-no{min-width:22px;height:22px;font-size:12px}}
+.tb .tabs{padding:4px}.tb .tabs button,.tb .tabs button[data-tbt]{font-size:15px!important;padding:8px 16px!important;min-height:42px}
 </style>
 </head>
 <body>
@@ -1160,8 +1161,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 </aside>
 <div class="side-tabs">
   <button class="care-tab" id="careTab">케어 가이드</button>
-  <button class="care-tab c4" id="aiTab">🎯 혜택 TOP</button>
-  <button class="care-tab" id="rankTab" style="background:#0f766e">🛒 판매순위</button>
+  <button class="care-tab c4" id="aiTab" style="display:none">🎯 혜택 TOP</button>
+  <button class="care-tab" id="rankTab" style="background:#0f766e">🛒 구독 판매순위</button>
   <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
   <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab"><span id="winTabTxt">우승기념 모델</span></button>
@@ -1300,8 +1301,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.57',VER_DATE='2026.11.16';
+var VERSION='v8.58',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.58','11.17',['🛒 삼성: 위쪽 탭을 \'🔥 많이 찾는 · 🛒 구독 판매순위\'로 바꾸고 크게 · 혜택 TOP 버튼 삭제 · 판매순위 탭에 품목별 1위','🛒 LG: 구독 판매순위 추가 (LG닷컴 베스트 랭킹 · 가전 구독 품목별) · LG닷컴 월 구독료와 전자랜드 월 구독료 함께 표시 · 바로 담기 · 추천에 순위 반영']],
   ['v8.57','11.16',['🛒 판매순위 창: ✕ 버튼 · 창 바깥(계산기 화면)을 누르면 닫히도록 수정, 휴대폰에서 표가 잘리지 않게 정리']],
   ['v8.56','11.16',['🛒 판매순위 창: 판매가는 삼성닷컴, 월 구독료는 전자랜드 단가표 금액(최장 약정 · 담기와 같은 조건)으로 표시']],
   ['v8.55','11.16',['🛒 판매순위 버튼: 삼성닷컴 AI 구독 품목별 판매량순(최근 31일) · 모델명 · 판매가 · 월 구독료를 한눈에 보고 바로 담기','🏬 구매 채널(전자랜드 약 5%) 표시 삭제 · 구독포인트 5% 계산은 그대로']],
@@ -2956,14 +2958,20 @@ function bestLoad(force){if(!HAS_GS)return;var d=BEST.days;if(!force&&BEST.data[
   gsr('getBest',{days:d},function(r){if(r&&r.list){r.ts=Date.now();BEST.data[d]=r;bestRender();}});}
 var TB={tab:'hot'};
 function bestRender(){var el=$('#bestSec');if(!el)return;var r=BEST.data[BEST.days];
-  if(TB.tab==='hot'&&HAS_GS===false)TB.tab='ai';
-  var h='<div class="tbh"><div class="tabs">'+(HAS_GS?'<button data-tbt="hot" class="'+(TB.tab==='hot'?'on':'')+'">🔥 많이 찾는</button>':'')+'<button data-tbt="ai" class="'+(TB.tab==='ai'?'on':'')+'">🎯 혜택 TOP</button><button data-rkopen="1" style="color:#0f766e">🛒 판매순위</button></div>';
+  if(TB.tab!=='rank'&&(TB.tab!=='hot'||HAS_GS===false))TB.tab=HAS_GS===false?'rank':'hot';
+  var h='<div class="tbh"><div class="tabs">'+(HAS_GS?'<button data-tbt="hot" class="'+(TB.tab==='hot'?'on':'')+'">🔥 많이 찾는</button>':'')+'<button data-tbt="rank" class="'+(TB.tab==='rank'?'on':'')+'">🛒 구독 판매순위</button></div>';
   if(TB.tab==='hot'){
     h+='<div class="per">'+[[1,'오늘'],[7,'7일'],[30,'30일']].map(function(x){return '<button data-bd="'+x[0]+'" class="'+(BEST.days===x[0]?'on':'')+'">'+x[1]+'</button>';}).join('')+'</div><button class="more" data-ball="1">'+(BEST.all?'접기 ‹':'전체 ›')+'</button></div>';
     var list=r?r.list.filter(function(x){return byCode[x.code];}).slice(0,BEST.all?20:10):[];
     var mv=function(x,i){if(!x.prev)return '<em style="color:#16a34a">NEW</em>';var d=x.prev-(i+1);return d>0?'<em style="color:#dc2626">▲'+d+'</em>':d<0?'<em style="color:#2563eb">▼'+(-d)+'</em>':'';};
     h+=!r?'<div class="empty2">불러오는 중…</div>':!list.length?'<div class="empty2">아직 집계된 조회가 없어요. 모델을 찾아보면 순위가 쌓여요 (5분마다 갱신)</div>'
       :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row'+(BEST.all?' all':'')+'">'+list.map(function(x,i){return '<button class="pl'+(i<3?' t':'')+'" data-bc="'+esc(x.code)+'"><i>'+(i+1)+'</i><b>'+esc(x.code)+'</b><s>'+esc(catOf(byCode[x.code]))+' · '+x.view+'회</s>'+mv(x,i)+'</button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
+  }else if(TB.tab==='rank'){
+    /* 🛒 구독 판매순위: 품목별 삼성닷컴 판매 1위 (누르면 그 품목 순위 창) */
+    var RC=rankCats(),SR=window.SS_RANK;
+    h+='<div class="per"><span>품목별 1위 · 삼성닷컴 최근 31일 판매량</span></div><button class="more" data-rkopen="">품목별 순위 ›</button></div>';
+    h+=!RC.length?'<div class="empty2">판매순위를 아직 받지 못했어요 (매일 새벽 갱신)</div>'
+      :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row">'+RC.map(function(c){var k=SR.cats[c][0],f=(SR.info||{})[k]||[],q=rankMon(k);return '<button class="pl ai" data-rkopen="'+esc(c)+'"><i>'+esc(c==='세탁기'&&SR.cats['건조기']&&SR.cats['세탁기'].join()===SR.cats['건조기'].join()?'세탁기·건조기':c)+'</i><b>'+esc(k)+'</b><s>'+(q?'월 '+won(q.mon):esc(String(f[0]||'').slice(0,14)))+'</s></button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
   }else{
     var T=aiTop();
     h+='<div class="per"><span>품목별 1위 · 최장 계약 기준</span></div><button class="more" data-aiopen="">품목별 TOP3 ›</button></div>';
@@ -2975,7 +2983,7 @@ function bestRender(){var el=$('#bestSec');if(!el)return;var r=BEST.data[BEST.da
   var ba=el.querySelector('[data-ball]');if(ba)ba.onclick=function(){BEST.all=!BEST.all;bestRender();};
   Array.prototype.forEach.call(el.querySelectorAll('[data-bc]'),function(b){b.onclick=function(){fuLog('best');aiView(b.dataset.bc);};});
   Array.prototype.forEach.call(el.querySelectorAll('[data-aiopen]'),function(b){b.onclick=function(){aiOpen(b.dataset.aiopen||null);};});
-  Array.prototype.forEach.call(el.querySelectorAll('[data-rkopen]'),function(b){b.onclick=function(e){e.stopPropagation();$('#rankTab').onclick();};});}
+  Array.prototype.forEach.call(el.querySelectorAll('[data-rkopen]'),function(b){b.onclick=function(e){e.stopPropagation();if(b.dataset.rkopen)RK.cat=b.dataset.rkopen;$('#rankTab').onclick();};});}
 function hScroll(w){if(!w)return;var r=w.querySelector('.row');if(!r)return;
   var upd=function(){w.classList.toggle('cl',r.scrollLeft>4);w.classList.toggle('cr',r.scrollLeft+r.clientWidth<r.scrollWidth-4);};
   r.addEventListener('scroll',upd);setTimeout(upd,0);
