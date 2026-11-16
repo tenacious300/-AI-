@@ -1742,7 +1742,7 @@ function render(){
   }else pb.style.display='none';
 
   $('#cardSel').innerHTML=['<button class="chip '+(S.card==='none'?'on':'')+'" data-v="none">사용 안 함</button>'].concat(CARDS.map(function(c){return '<button class="chip '+(S.card===c.id?'on':'')+'" data-v="'+c.id+'">'+c.name+'</button>';})).join('');
-  $('#usage').innerHTML=USAGES.map(function(u){return '<button class="chip sm '+(S.usage===u?'on':'')+'" data-v="'+u+'">'+u+'만↑</button>';}).join('');
+  $('#usage').innerHTML=USAGES.filter(function(u){return u<=100;}).map(function(u){var on=u===100?S.usage>=100:S.usage===u;return '<button class="chip sm '+(on?'on':'')+'" data-v="'+u+'">'+(u===100?'100만 이상':u+'만↑')+'</button>';}).join('');
   var card=CARDS.filter(function(c){return c.id===S.card;})[0];
   $('#cardBody').style.display='block';
   var cs=null,sumMon2=items.reduce(function(a,i){return a+i.mon2;},0);
