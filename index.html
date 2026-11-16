@@ -448,6 +448,7 @@ body.preview{background:#e5e7eb;padding:0}
 .ack-bar{height:10px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:8px 0}.ack-bar i{display:block;height:100%;background:#22c55e}
 .ack-chip{display:inline-block;padding:3px 9px;border-radius:99px;background:#fee2e2;color:#991b1b;font-size:12px;margin:3px 4px 0 0}
 .nt-ta{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
+.emp-chrome{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;margin:-4px 0 10px;text-align:center}.emp-chrome b{font-weight:800}
 .emp-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;line-height:1.5;margin:4px 0 10px;text-align:center}
 .pm-opt.sel{border-color:#dc2626!important;background:#fef2f2!important;box-shadow:0 0 0 2px #fecaca}
 .sus{background:#fef2f2}
@@ -1191,6 +1192,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <input type="text" id="empIn" placeholder="사번 입력" autocomplete="off" maxlength="15" inputmode="numeric" enterkeyhint="go">
   <div class="err" id="empErr"></div>
   <div class="emp-warn">⚠️ 비정상 사번 입력 시 추후 접속 불가</div>
+  <div class="emp-chrome">🌐 <b>크롬(Chrome)</b> 접속을 권장해요</div>
   <div class="brand-pick" id="brandPick"><button data-b="ss">삼성<small>AI 구독</small></button><button data-b="lg">LG<small>가전구독</small></button><button data-b="ck">쿠쿠<small>렌탈 · 구독</small></button></div>
   <button class="btn pri block" id="empGo">입장하기</button>
   <label><input type="checkbox" id="empKeep" checked> 이 기기에서 사번 기억하기</label>
@@ -1271,8 +1273,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.45',VER_DATE='2026.11.16';
+var VERSION='v8.46',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.46','11.16',['🌐 사번 입력 화면에 크롬 접속 권장 안내','🧾 관리자 사번별 이용: 이용일 옆에 기능 · 담기 · 견적 횟수 (11/16부터 집계)']],
   ['v8.45','11.16',['🧾 맞춤 구독 견적: 제품 사진·구독 조건 대신 모델명 한 줄','⚖️ 일시불 구매 비교가 처음부터 열림 (글씨·입력칸 작게)','🖥 PC에서 견적 칸을 한 화면에 · 버튼은 아래 고정']],
   ['v8.44','11.16',['💳 \'카드 여러 장 나눠 결제\'를 제휴카드 제목 옆 버튼으로 옮김 (삼성 · LG)']],
   ['v8.43','11.16',['💳 제휴카드 화면 새 단장 (삼성 · LG · 쿠쿠): 카드 이미지 + 내 견적 기준 할인 큰 순 정렬 · BEST · 카드 이름 옆 적용 버튼 · 전월 실적 구간표','💡 전월 이용금액을 고르면 그 금액대 추천 카드가 자동 적용 · 금액을 올리면 얼마나 더 할인되는지 안내 · 금액대별 추천표','카드 정책 · 혜택 비교 버튼을 제휴카드 제목 옆으로 · 삼성 제휴카드 이미지 추가']],
