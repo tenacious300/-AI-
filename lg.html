@@ -873,6 +873,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .tb .tabs{padding:4px}.tb .tabs button{font-size:15px!important;padding:8px 16px!important;min-height:42px}
 .tbh .rk-all{margin-left:4px!important;order:0;font-weight:800;color:#0f766e;white-space:nowrap}.tbh .rk-all+.per{margin-left:auto}
 @media(max-width:600px){.tbh .rk-all{white-space:normal!important;font-size:12px!important;line-height:1.25;width:76px;text-align:left;padding:2px 4px!important;flex:none}.tbh .rk-all+.per{display:none}}
+@media(max-width:600px){.rk-t .rk-pc{display:table-cell!important;width:52px}.rk-t td.rk-pc .rk-add{padding:6px 7px}}
 </style>
 </head>
 <body>
@@ -1947,7 +1948,7 @@ function rankRender(){var R=window.LG_RANK,cats=rankCats();
     +'<table class="rk-t"><tr><th>순위</th><th>모델</th><th style="text-align:right">LG닷컴<br><small style="font-weight:500">월 구독료</small></th><th style="text-align:right">월 구독료<br><small style="font-weight:500">전자랜드</small></th><th class="rk-pc"></th></tr>'
     +L.map(function(c,i){var f=I[c]||[],cc=lgCode(c),q=cc?rankMon(cc):null;
       var ab=cc?'<button class="rk-add" data-rka="'+esc(cc)+'">담기</button>':'<small style="color:#94a3b8;font-size:11px">계산기 없음</small>';
-      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div><div class="rk-mb">'+ab+'</div></td><td class="n">'+(f[2]?'월 '+W(f[2]):'-')+(f[1]&&f[1]!==f[2]?'<small style="display:block;color:#94a3b8;text-decoration:line-through">'+W(f[1])+'</small>':'')+'</td><td class="n">'+(q?'월 '+W(q):'-')+'</td><td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
+      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div></td><td class="n">'+(f[2]?'월 '+W(f[2]):'-')+(f[1]&&f[1]!==f[2]?'<small style="display:block;color:#94a3b8;text-decoration:line-through">'+W(f[1])+'</small>':'')+'</td><td class="n">'+(q?'월 '+W(q):'-')+'</td><td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
   Array.prototype.forEach.call(document.querySelectorAll('#rankBar [data-rkc]'),function(b){b.onclick=function(){RK.cat=b.dataset.rkc;rankRender();$('#rankBody').scrollTop=0;};});
   Array.prototype.forEach.call(document.querySelectorAll('#rankBody [data-rka]'),function(b){b.onclick=function(){REC.busy=true;try{pickModel(b.dataset.rka);$('#addBtn').onclick();}finally{REC.busy=false;}b.disabled=true;b.textContent='담았어요';fuLog('rank:add');};});}
 var INST=null;
