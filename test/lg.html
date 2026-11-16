@@ -1284,8 +1284,8 @@ $('#addBtn').onclick=function(){if(!S.sel)return;var m=BY[S.sel.code],p=selRow(m
 
 /* ====== 계산 ====== */
 function calcItems(){var out=[];S.cart=S.cart.filter(function(it){var m=BY[it.code];if(!m)return false;
-    var r=candRows(m).filter(function(r){return r[R.term]===it.term&&r[R.ct]===it.ct&&r[R.cs]===it.cs&&r[R.cy]===it.cy;})[0];if(!r)return false;
-    var po=preOptsOf(r);if(it.preK&&it.preK[0]==='p'){var pa=+it.preK.slice(1);po=po.concat([[it.preK,'패키지 '+(pa/10000)+'만원',pa]]);}var o=po.filter(function(x){return x[0]===it.preK;})[0]||po[0],c=calc(it.code,r.slice(),o[2]);if(it.pkRate){var pd=Math.floor(c.monP*it.pkRate/100/100)*100;c.monP-=pd;c.halfP=Math.max(0,c.halfP-pd);c.preCut+=pd;c.total=c.pre+(c.hm?c.halfP*c.hm+c.monP*(c.term-c.hm):c.monP*c.term);c.pkd=pd;}var a=actInfo(it.code),bdn=D.bd[r[R.bd]],parts=[];
+    var r=(it.pk?pkRows(it.code):candRows(m)).filter(function(r){return r[R.term]===it.term&&r[R.ct]===it.ct&&r[R.cs]===it.cs&&r[R.cy]===it.cy;})[0];if(!r)return false;
+    var po=preOptsOf(r);if(it.preK&&it.preK[0]==='p'){var pa=+it.preK.slice(1);po=po.concat([[it.preK,'패키지 '+(pa/10000)+'만원',pa]]);}var o=po.filter(function(x){return x[0]===it.preK;})[0]||po[0],c=calc(it.code,r.slice(),o[2]);if(it.pkRate){var pd=Math.round(r[R.base]*it.pkRate/100/100)*100;c.monP-=pd;c.halfP=Math.max(0,c.halfP-pd);c.preCut+=pd;c.total=c.pre+(c.hm?c.halfP*c.hm+c.monP*(c.term-c.hm):c.monP*c.term);c.pkd=pd;}var a=actInfo(it.code),bdn=D.bd[r[R.bd]],parts=[];
     if(isSb(r))parts.push(['소상공인 '+D.sb[r[R.sb]]+' '+r[R.rate]+'%','']);else if(bdn!=='결합없음')parts.push([bdn+' '+r[R.rate]+'%','']);else if(S.cust!=='single')parts.push(['기본요금','gr']);
     var promo=(isSb(r)?0:r[R.act])+c.extra;if(promo)parts.push(['활성화 −'+won(promo),'o']);
     if(c.pre)parts.push(['선납 '+o[1]+' −'+won(c.preCut-(c.pkd||0)),'o']);if(c.pkd)parts.push(['💍 '+(it.pkName||'패키지')+' '+it.pkRate+'% −'+won(c.pkd),'o']);
@@ -1301,27 +1301,27 @@ var PKG=[
  {id:'w99',name:'웨딩 99플랜',rate:3.3,pre:10500000,cb:600000,ref:'선납 1,050만 · 월 9.9만',slots:[['TV',['OLED77C6FL','OLED77C6FS','OLED77C6FW']],['냉장고',['M876GBB232']],['세탁기',['FC2521SX6C.']]]},
  {id:'w77',name:'웨딩 77플랜',rate:3.8,pre:8200000,cb:300000,ref:'선납 820만 · 월 7.7만',slots:[['TV',['OLED77B6XS','OLED77B6XW']],['냉장고',['H876GBB111']],['세탁기',['W2520WHM.AKOR']]]},
  {id:'w66',name:'웨딩 66플랜',rate:3.6,pre:6800000,cb:100000,ref:'선납 680만 · 월 6.6만',slots:[['TV',['OLED65B6XS','OLED65B6XW']],['냉장고',['T876MEE1S1']],['세탁기',['W2520WHM.AKOR']]]},
- {id:'bpR',name:'BEST-PICK + 로봇청소기',rate:0,pre:0,cb:200000,best:1,slots:[['로봇청소기',['B95AWBH','B95AWBTH','N95THO','N95TWU','N95THU']]]},
- {id:'bpK',name:'BEST-PICK + 김치냉장고',rate:0,pre:0,cb:600000,best:1,noSbm:1,slots:[['김치냉장고',['Z386GBB241','Z484GBB152','Z495GBB251']]]}];
+ {id:'bpR',name:'BEST-PICK + 로봇청소기',rate:3,pre:1,cb:200000,best:1,slots:[['로봇청소기',['B95AWBH','B95AWBTH','N95THO','N95TWU','N95THU']]]},
+ {id:'bpK',name:'BEST-PICK + 김치냉장고',rate:3,pre:1,cb:600000,best:1,noSbm:1,slots:[['김치냉장고',['Z386GBB241','Z484GBB152','Z495GBB251']]]}];
 var BP=[['TV',['OLED77C6FL','OLED77C6FS','OLED77C6FW','OLED65C6FS','OLED65C6FW','OLED77B6XS','OLED77B6XW','OLED65B6XS','OLED65B6XW','85QNED82BKS','85QNED82BKW','32LX6BKGA']],
  ['냉장고',['M876GBB232','G646GBB031','G646GBB032','H876GBB111','T876MEE1S1','D646GBB081','D646GBB021']],
  ['세탁기',['FC2521SX6C','FC2521SX6CX','FH25EAX','FH25EAF','FH25EA.','WA2525VMP6R','WA2525GEP6R','W2520WHM']]];
 var PK={id:'',sel:{},preOn:true};
 function pkCodes(pfx){var o=[];pfx.forEach(function(p){D.m.forEach(function(m){if(m[0].indexOf(p)===0&&o.indexOf(m[0])<0)o.push(m[0]);});});return o;}
-function pkRows(code){var m=BY[code];return m?candRows(m):[];}
+function pkRows(code){var m=BY[code];if(!m)return [];var g={},o=[];m[2].forEach(function(r){if(isSb(r))return;var k=r[R.term]+'|'+r[R.ct]+'|'+r[R.cs]+'|'+r[R.cy];if(!g[k]){g[k]=[];o.push(k);}g[k].push(r);});
+  return o.map(function(k){var L=g[k];return L.filter(function(r){return D.bd[r[R.bd]]==='신규결합';})[0]||L.filter(function(r){return D.bd[r[R.bd]]==='결합없음';})[0]||L[0];});}
 function pkRow(code,o){var rows=pkRows(code);if(!rows.length)return null;o=o||{};
   var ys=uniq(rows.map(function(r){return r[R.term];}));if(ys.indexOf(o.y)<0)o.y=Math.max.apply(null,ys);
   var L=rows.filter(function(r){return r[R.term]===o.y;}).sort(function(x,y){return monOf(code,x)-monOf(code,y);});
   var k=function(r){return r[R.ct]+'_'+r[R.cs]+'_'+r[R.cy];};var r=L.filter(function(r){return k(r)===o.k;})[0]||L[0];o.k=k(r);return r;}
-function pkSplit(items,P){var sum=0,left=P;items.forEach(function(x){sum+=x.mo;});
-  items.forEach(function(x,i){x.pre=P?(i===items.length-1?left:Math.round(P*x.mo/sum/10000)*10000):0;left-=x.pre;});}
-function pkCalc(x,rate){var c=calc(x.code,x.r.slice(),x.pre),pd=rate?Math.floor(c.monP*rate/100/100)*100:0;c.monP-=pd;c.halfP=Math.max(0,c.halfP-pd);
+function pkSplit(items,on){items.forEach(function(x){var po=preOptsOf(x.r),o=on?(po.filter(function(q){return q[0]==='50';})[0]||po.filter(function(q){return q[0]!=='0'&&q[0][0]!=='f';}).pop()):null;x.preK=o?o[0]:'0';x.pre=o?o[2]:0;});}
+function pkCalc(x,rate){var c=calc(x.code,x.r.slice(),x.pre),pd=rate?Math.round(x.r[R.base]*rate/100/100)*100:0;c.monP-=pd;c.halfP=Math.max(0,c.halfP-pd);
   c.total=c.pre+(c.hm?c.halfP*c.hm+c.monP*(c.term-c.hm):c.monP*c.term);c.pd=pd;return c;}
 function renderPkg(){var p=PKG.filter(function(x){return x.id===PK.id;})[0];
   $('#pkgPlan').innerHTML='<button class="chip sm '+(!PK.id?'on':'')+'" data-v="">선택 안 함</button>'+PKG.map(function(x){return '<button class="chip sm '+(x.id===PK.id?'on':'')+'" data-v="'+x.id+'">'+x.name+' <small>+'+(x.cb/10000)+'만 캐시백</small></button>';}).join('');
   var B=$('#pkgBody');if(!p){B.innerHTML='';return;}PK.opt=PK.opt||{};
   var slots=(p.best?BP.map(function(s){return [s[0],s[1].filter(function(c){return !(p.noSbm&&c==='32LX6BKGA');})];}):[]).concat(p.slots);
-  var h='<div class="note" style="margin:8px 0">'+(p.best?'TV·냉장고·세탁기 가이드 모델 각 1대 + '+slots[slots.length-1][0]+' 구독 시 캐시백'+(p.noSbm?' (스바미2 Max 제외)':''):'정해진 모델 3종 + 선납 · 패키지 추가 요금할인 '+p.rate+'%')+'</div>',items=[];
+  var h='<div class="note" style="margin:8px 0">'+(p.best?'TV·냉장고·세탁기 가이드 모델 각 1대 + '+slots[slots.length-1][0]+' 구독 시 캐시백 · 가변형 패키지 할인 3%'+(p.noSbm?' (스바미2 Max 제외)':''):'정해진 모델 3종 · 신규결합 + 패키지 할인 '+p.rate+'%')+'</div>',items=[];
   slots.forEach(function(s,i){var cs=pkCodes(s[1]);var cur=PK.sel[i];if(cs.indexOf(cur)<0){cur=PK.sel[i]=cs[0];PK.opt[i]={};}
     var o=PK.opt[i]=PK.opt[i]||{},r=cur&&pkRow(cur,o);if(r)items.push({i:i,code:cur,r:r,mo:monOf(cur,r)});
     h+='<div class="ps"><b>'+s[0]+'</b><select data-i="'+i+'">'+cs.map(function(c){return '<option'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('')+'</select><span class="pr" id="pkm'+i+'">'+(r?'':'단가 없음')+'</span></div>';
@@ -1330,15 +1330,15 @@ function renderPkg(){var p=PKG.filter(function(x){return x.id===PK.id;})[0];
       h+='<div style="display:grid;grid-template-columns:72px 1fr 1.6fr;gap:6px;margin:-2px 0 8px"><span></span>'
         +'<select data-y="'+i+'">'+ys.map(function(y){return '<option value="'+y+'"'+(y===o.y?' selected':'')+'>'+(y/12)+'년'+(y===mx?' (최장)':'')+'</option>';}).join('')+'</select>'
         +'<select data-k="'+i+'">'+ty.map(function(x){var k=x[R.ct]+'_'+x[R.cs]+'_'+x[R.cy];return '<option value="'+k+'"'+(k===o.k?' selected':'')+'>'+esc(typeName(x))+' · '+won(monOf(cur,x))+'</option>';}).join('')+'</select></div>';}});
-  var P=p.pre&&PK.preOn?p.pre:0;pkSplit(items,P);
+  var P=0;pkSplit(items,p.pre&&PK.preOn);items.forEach(function(x){P+=x.pre;});
   var sum=0,mon=0,tot=0,cut=0,pdS=0,mix=uniq(items.map(function(x){return x.r[R.term];})).length>1;
   items.forEach(function(x){var c=pkCalc(x,p.rate);x.c=c;sum+=x.mo;mon+=c.monP;tot+=c.total;pdS+=c.pd;});
   h=h.replace(/<span class="pr" id="pkm(\d+)"><\/span>/g,function(z,i){var x=items.filter(function(t){return t.i==i;})[0];return '<span class="pr">월 '+won(x.mo)+'</span>';});
   h+='<div class="pkres">';
-  if(p.pre)h+='<label class="switch" style="margin-bottom:6px"><input type="checkbox" id="pkPreOn"'+(PK.preOn?' checked':'')+'> 패키지 선납 '+won(p.pre)+' 적용</label>';
-  h+='<div class="row"><span>모델 월 요금 합계</span><span>'+won(sum)+'</span></div>';
-  if(P)h+='<div class="row mi"><span>선납 '+won(P)+' 차감 (모델별 배분)</span><span>−'+won(sum-mon-pdS)+'</span></div>';
-  if(p.rate)h+='<div class="row mi"><span>패키지 추가 요금할인 '+p.rate+'%</span><span>−'+won(pdS)+'</span></div>';
+  if(p.pre)h+='<label class="switch" style="margin-bottom:6px"><input type="checkbox" id="pkPreOn"'+(PK.preOn?' checked':'')+'> 선납 50% 적용 (모델별 정률)</label>';
+  h+='<div class="row"><span>모델 월 요금 합계 (신규결합)</span><span>'+won(sum)+'</span></div>';
+  if(P)h+='<div class="row mi"><span>선납 50% 총 '+won(P)+' 차감</span><span>−'+won(sum-mon-pdS)+'</span></div>';
+  if(p.rate)h+='<div class="row mi"><span>패키지 할인 (정상가의 '+p.rate+'%)</span><span>−'+won(pdS)+'</span></div>';
   h+='<div class="big">월 '+won(mon)+'</div>';
   h+='<div class="row" style="font-size:12.5px;color:var(--sub)"><span>총 납부 (선납 포함)</span><span>'+won(tot)+'</span></div>';
   if(mix)h+='<div class="row" style="font-size:12px;color:#b45309"><span>⚠ 모델마다 계약 기간이 달라요</span><span></span></div>';
@@ -1348,7 +1348,7 @@ function renderPkg(){var p=PKG.filter(function(x){return x.id===PK.id;})[0];
   B.innerHTML=h;PK.items=items;PK.p=p;}
 $('#pkgPlan').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;PK.id=b.dataset.v;PK.sel={};PK.opt={};renderPkg();});
 $('#pkgBody').addEventListener('change',function(e){var d=e.target.dataset;PK.opt=PK.opt||{};if(d.i!=null){PK.sel[d.i]=e.target.value;PK.opt[d.i]={};renderPkg();}if(d.y!=null){PK.opt[d.y]={y:+e.target.value};renderPkg();}if(d.k!=null){PK.opt[d.k].k=e.target.value;renderPkg();}if(e.target.id==='pkPreOn'){PK.preOn=e.target.checked;renderPkg();}});
-$('#pkgBody').addEventListener('click',function(e){if(e.target.id!=='pkAdd')return;var pl=PK.p,n=0;(PK.items||[]).forEach(function(x){S.cart.push({code:x.code,term:x.r[R.term],ct:x.r[R.ct],cs:x.r[R.cs],cy:x.r[R.cy],preK:x.pre?'p'+x.pre:'0',pkRate:pl&&pl.rate||0,pkName:pl?pl.name:''});n++;});render();toast('패키지 모델 '+n+'개 담았어요');});
+$('#pkgBody').addEventListener('click',function(e){if(e.target.id!=='pkAdd')return;var pl=PK.p,n=0;(PK.items||[]).forEach(function(x){S.cart.push({code:x.code,term:x.r[R.term],ct:x.r[R.ct],cs:x.r[R.cs],cy:x.r[R.cy],preK:x.preK||'0',pk:1,pkRate:pl&&pl.rate||0,pkName:pl?pl.name:''});n++;});render();toast('패키지 모델 '+n+'개 담았어요');});
 renderPkg();
 
 
