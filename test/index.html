@@ -1742,7 +1742,9 @@ function render(){
   }else pb.style.display='none';
 
   $('#cardSel').innerHTML=['<button class="chip '+(S.card==='none'?'on':'')+'" data-v="none">사용 안 함</button>'].concat(CARDS.map(function(c){return '<button class="chip '+(S.card===c.id?'on':'')+'" data-v="'+c.id+'">'+c.name+'</button>';})).join('');
-  $('#usage').innerHTML=USAGES.filter(function(u){return u<=100;}).map(function(u){var on=u===100?S.usage>=100:S.usage===u;return '<button class="chip sm '+(on?'on':'')+'" data-v="'+u+'">'+(u===100?'100만 이상':u+'만↑')+'</button>';}).join('');
+  var hiU=S.usage>100,uOp=hiU||window.U_OPEN;$('#usage').innerHTML=USAGES.filter(function(u){return u<=100;}).map(function(u){return '<button class="chip sm '+(S.usage===u?'on':'')+'" data-v="'+u+'">'+u+'만↑</button>';}).join('')
+    +'<button class="chip sm '+(hiU?'on':'')+'" data-v="more">100만 이상 '+(hiU?'('+S.usage+'만↑) ':'')+(uOp?'▴':'▾')+'</button>'
+    +(uOp?'<div style="flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;padding:8px;background:#f8fafc;border-radius:12px">'+USAGES.filter(function(u){return u>100;}).map(function(u){return '<button class="chip sm '+(S.usage===u?'on':'')+'" data-v="'+u+'">'+u+'만↑</button>';}).join('')+'</div>':'');
   var card=CARDS.filter(function(c){return c.id===S.card;})[0];
   $('#cardBody').style.display='block';
   var cs=null,sumMon2=items.reduce(function(a,i){return a+i.mon2;},0);
@@ -1953,7 +1955,7 @@ S.multi=false;S.mc=[];S.mu={};
 $('#multiOn').onchange=function(){S.multi=this.checked;if(S.multi)fuLog('multi');if(S.multi&&!S.mc.length&&S.card!=='none')S.mc=[S.card];render();};
 $('#cardInfo').addEventListener('change',function(e){var t=e.target;if(t.dataset.mu){S.mu[t.dataset.mu]=+t.value;render();}
   if(t.dataset.asg!=null){S.cart[+t.dataset.asg].pc=t.checked?t.dataset.card:'none';render();}});
-onChip($('#usage'),function(v){S.usage=+v;CXO.auto=1;render();});
+onChip($('#usage'),function(v){if(v==='more'){window.U_OPEN=!window.U_OPEN;render();return;}S.usage=+v;CXO.auto=1;render();});
 onChip($('#cmpTerm'),function(v){S.cmpY=+v;render();});
 $('#cpOpen2').onclick=function(){var f=$('#cmpFold');f.open=true;f.scrollIntoView({behavior:'smooth',block:'start'});};
 cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:'+v);}render();},function(u){S.usage=u;CXO.auto=1;render();});
