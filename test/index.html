@@ -186,6 +186,9 @@ a.link{color:var(--pri);font-size:13px;font-weight:700;text-decoration:none;whit
 .cx-ap.on{background:var(--ok-soft,#dcfce7);color:var(--ok,#047857);border:1px solid currentColor;display:inline-block}
 .cx-rec{border:1px dashed var(--pri);border-radius:14px;background:var(--pri-soft,#eef2ff);padding:10px 12px;margin:0 0 12px;font-size:13.5px}
 #cxRecBox:empty{display:none}
+.mc-tg{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12.5px;font-weight:700;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:5px 11px;background:#fff;cursor:pointer;white-space:nowrap}.mc-tg input{width:16px;height:16px;margin:0;accent-color:var(--pri)}.mc-tg:has(input:checked){border-color:var(--pri);color:var(--pri);background:var(--pri-soft,#eef2ff)}
+#secCard h2 .mc-tg:not([style*="none"])+#cpOpen2{margin-left:0!important}
+
 .cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
 .cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
 .cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
@@ -983,7 +986,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 
   <section class="card" id="secCard">
-    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 혜택 비교</button></h2>
+    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<label class="mc-tg" style="" title="모델마다 다른 카드로 나눠 결제"><input type="checkbox" id="multiOn"> 💳 카드 여러 장 나눠 결제</label><button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 혜택 비교</button></h2>
     <div id="cxRecBox"></div>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
@@ -992,7 +995,6 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
       <label class="switch"><input type="checkbox" id="promoOn" checked> 신규 발급 · 프로모션 대상 고객</label>
       <div id="cardInfo"></div>
     </div>
-    <label class="switch" style="margin:12px 0 8px"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(모델마다 다른 카드)</small></label>
     <details class="fold" id="cmpFold">
       <summary>카드별 혜택 비교</summary>
       <div class="chips" id="cmpTerm" style="margin-top:12px"></div>
