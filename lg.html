@@ -301,6 +301,9 @@ body.preview{background:#e5e7eb;padding:0}
 .cx-ap.on{background:var(--ok-soft,#dcfce7);color:var(--ok,#047857);border:1px solid currentColor;display:inline-block}
 .cx-rec{border:1px dashed var(--pri);border-radius:14px;background:var(--pri-soft,#eef2ff);padding:10px 12px;margin:0 0 12px;font-size:13.5px}
 #cxRecBox:empty{display:none}
+.mc-tg{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12.5px;font-weight:700;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:5px 11px;background:#fff;cursor:pointer;white-space:nowrap}.mc-tg input{width:16px;height:16px;margin:0;accent-color:var(--pri)}.mc-tg:has(input:checked){border-color:var(--pri);color:var(--pri);background:var(--pri-soft,#eef2ff)}
+#secCard h2 .mc-tg:not([style*="none"])+#cpOpen2{margin-left:0!important}
+
 .cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
 .cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
 .cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
@@ -914,9 +917,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   </section>
 
   <section class="card" id="secCard">
-    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 정책 보기</button></h2>
+    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<label class="mc-tg" id="multiWrap" style="display:none;" title="모델마다 다른 카드로 나눠 결제"><input type="checkbox" id="multiOn"> 💳 카드 여러 장 나눠 결제</label><button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 정책 보기</button></h2>
     <div id="cxRecBox"></div>
-    <label class="switch" id="multiWrap" style="margin:0 0 8px;display:none"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(담은 모델 2개 이상 · 모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
@@ -1859,7 +1861,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.43';
+var VERSION='v8.44';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

@@ -183,6 +183,9 @@ a.link{color:var(--pri);font-size:13px;font-weight:700;text-decoration:none;whit
 .cx-ap.on{background:var(--ok-soft,#dcfce7);color:var(--ok,#047857);border:1px solid currentColor;display:inline-block}
 .cx-rec{border:1px dashed var(--pri);border-radius:14px;background:var(--pri-soft,#eef2ff);padding:10px 12px;margin:0 0 12px;font-size:13.5px}
 #cxRecBox:empty{display:none}
+.mc-tg{display:inline-flex;align-items:center;gap:5px;margin-left:auto;font-size:12.5px;font-weight:700;color:var(--sub);border:1px solid var(--line);border-radius:99px;padding:5px 11px;background:#fff;cursor:pointer;white-space:nowrap}.mc-tg input{width:16px;height:16px;margin:0;accent-color:var(--pri)}.mc-tg:has(input:checked){border-color:var(--pri);color:var(--pri);background:var(--pri-soft,#eef2ff)}
+#secCard h2 .mc-tg:not([style*="none"])+#cpOpen2{margin-left:0!important}
+
 .cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
 .cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
 .cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
@@ -980,9 +983,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 
   <section class="card" id="secCard">
-    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 혜택 비교</button></h2>
+    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<label class="mc-tg" style="" title="모델마다 다른 카드로 나눠 결제"><input type="checkbox" id="multiOn"> 💳 카드 여러 장 나눠 결제</label><button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 혜택 비교</button></h2>
     <div id="cxRecBox"></div>
-    <label class="switch" style="margin:0 0 8px"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
       <div class="lbl">카드 월 이용금액 (전월실적)</div>
@@ -1230,8 +1232,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.43',VER_DATE='2026.11.16';
+var VERSION='v8.44',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.44','11.16',['💳 \'카드 여러 장 나눠 결제\'를 제휴카드 제목 옆 버튼으로 옮김 (삼성 · LG)']],
   ['v8.43','11.16',['💳 제휴카드 화면 새 단장 (삼성 · LG · 쿠쿠): 카드 이미지 + 내 견적 기준 할인 큰 순 정렬 · BEST · 카드 이름 옆 적용 버튼 · 전월 실적 구간표','💡 전월 이용금액을 고르면 그 금액대 추천 카드가 자동 적용 · 금액을 올리면 얼마나 더 할인되는지 안내 · 금액대별 추천표','카드 정책 · 혜택 비교 버튼을 제휴카드 제목 옆으로 · 삼성 제휴카드 이미지 추가']],
   ['v8.42','11.16',['🔒 상단 접속자 표시를 눌러도 관리자 모드가 열리지 않게 (관리자는 화면 하단 · 입장 화면의 ⚙ 관리자로)']],
   ['v8.41','11.16',['🧰 모바일 \'도구\' 버튼을 하단바 바로 위로 옮기고, 펼치면 가로 메뉴로 (위가 가려지지 않게)','👆 도구 메뉴를 연 채 화면을 움직이면 바로 닫혀요']],
