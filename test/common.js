@@ -71,23 +71,25 @@ function snapCheck(brand,name,map){
    - 🤝 함께 담기: 인쇄 · 견적 기록에서 같이 담긴 모델 (기록이 없으면 같이 쓰면 좋은 품목)
    페이지가 window.REC_PAGE 로 넘겨 줌: brand · all() → [{code,grp,cat,price}] · add(code) · cart() → [코드] · removeAt(i)
    💰 최저 조합: REC_PAGE.best() → {rows:[{code,from,to,save}], apply()} */
-var REC={pairs:null,busy:false,off:false};
+var REC={pairs:null,pop:{},fb:{},busy:false,off:false};
 try{REC.off=localStorage.getItem('recOff')==='1';}catch(e){}
 var REC_WITH={'냉장고':['김치냉장고','정수기'],'김치냉장고':['냉장고'],'세탁기':['건조기','에어드레서'],'건조기':['세탁기'],'TV':['오디오','사운드바'],'에어컨':['공기청정기','제습기'],'공기청정기':['에어컨','정수기'],'정수기':['공기청정기','비데'],'식기세척기':['전기레인지','정수기'],'전기레인지':['식기세척기','후드'],'청소기':['공기청정기'],'비데':['정수기'],'밥솥':['정수기','인덕션']};
 function recLoadPairs(){if(REC.pairs||!window.REC_PAGE)return;REC.pairs={};
-  try{gsrCommon('getPairs',REC_PAGE.brand,function(r){REC.pairs=(r&&r.pairs)||{};});}catch(e){}}
+  try{gsrCommon('getPairs',REC_PAGE.brand,function(r){REC.pairs=(r&&r.pairs)||{};REC.pop=(r&&r.pop)||{};REC.fb=(r&&r.fb)||{};});}catch(e){}}
+/* 쓸수록 바뀌는 순위: 인기(최근 30일 조회 · 담기 · 인쇄 · 보관) + 추천 반응(보였을 때 담기/바꾸기를 누른 비율) */
+function recScore(code){var p=REC.pop[code]||0,f=REC.fb[code]||[0,0];return Math.log(1+p)+4*((f[1]+1)/(f[0]+5));}
 /* 페이지마다 서버 호출 함수 이름이 달라서(gsr / api) 페이지가 PG.call 로 넘겨 줌 */
 function gsrCommon(fn,arg,cb){if(PG.call)PG.call(fn,arg,cb,function(){});}
 function recWon(n){return Number(n).toLocaleString()+'원';}
 function recFind(code){var A=REC_PAGE.all(),me=null;A.forEach(function(x){if(x.code===code)me=x;});if(!me)return null;
   var cart=REC_PAGE.cart(),inCart=function(c){return cart.indexOf(c)>=0;};
   var same=A.filter(function(x){return x.grp===me.grp&&x.code!==code&&!inCart(x.code)&&x.price>0;});
-  var up=same.filter(function(x){return x.price>me.price&&x.price-me.price<=10000;}).sort(function(a,b){return a.price-b.price;}).slice(0,2);
-  var dn=same.filter(function(x){return x.price<me.price&&x.price>=me.price*0.6;}).sort(function(a,b){return b.price-a.price;}).slice(0,2);
+  var up=same.filter(function(x){return x.price>me.price&&x.price-me.price<=10000;}).sort(function(a,b){return recScore(b.code)-recScore(a.code)||a.price-b.price;}).slice(0,2);
+  var dn=same.filter(function(x){return x.price<me.price&&x.price>=me.price*0.6;}).sort(function(a,b){return recScore(b.code)-recScore(a.code)||b.price-a.price;}).slice(0,2);
   var withL=[],P=(REC.pairs||{})[code]||[];
   P.forEach(function(p){if(withL.length>=2||inCart(p[0]))return;A.forEach(function(x){if(x.code===p[0])withL.push({x:x,n:p[1]});});});
   if(!withL.length){var cats=[];Object.keys(REC_WITH).forEach(function(k){if(String(me.cat).indexOf(k)>=0)cats=cats.concat(REC_WITH[k]);});
-    cats.forEach(function(c){if(withL.length>=2)return;var L=A.filter(function(x){return String(x.cat).indexOf(c)>=0&&!inCart(x.code)&&x.price>0&&cart.every(function(k){var y=null;A.forEach(function(z){if(z.code===k)y=z;});return !y||String(y.cat).indexOf(c)<0;});}).sort(function(a,b){return a.price-b.price;});
+    cats.forEach(function(c){if(withL.length>=2)return;var L=A.filter(function(x){return String(x.cat).indexOf(c)>=0&&!inCart(x.code)&&x.price>0&&cart.every(function(k){var y=null;A.forEach(function(z){if(z.code===k)y=z;});return !y||String(y.cat).indexOf(c)<0;});}).sort(function(a,b){return recScore(b.code)-recScore(a.code)||a.price-b.price;});
       if(L.length)withL.push({x:L[0],n:0,rule:c});});}
   return {me:me,up:up,dn:dn,withL:withL};}
 function recAfterAdd(code){if(REC.off||REC.busy||!window.REC_PAGE)return;recLoadPairs();var r=recFind(code);if(!r)return;
@@ -101,10 +103,13 @@ function recAfterAdd(code){if(REC.off||REC.busy||!window.REC_PAGE)return;recLoad
   if(r.withL.length)h+='<div class="rc-h">'+(r.withL.some(function(w){return w.n;})?'🤝 함께 많이 담는 모델':'🤝 같이 쓰면 좋은 품목')+'</div>'+r.withL.map(function(w){return row(w.x,'with',w.n?'같이 담긴 견적 '+w.n+'건':'같이 쓰면 좋은 품목');}).join('');
   h+='</div><label class="rc-off"><input type="checkbox" id="rcOff"> 다음부터 담을 때 추천 안 보기</label><button class="rc-x">괜찮아요</button></div>';
   var d=document.createElement('div');d.className='rc-ov';d.innerHTML=h;document.body.appendChild(d);
-  var close=function(){if(d.querySelector('#rcOff').checked){REC.off=true;try{localStorage.setItem('recOff','1');}catch(e){}PG.toast('추천을 껐어요 · 💰 최저 조합 버튼 옆에서 다시 켤 수 있어요');}d.remove();};
+  var shown=r.up.concat(r.dn).map(function(x){return x.code;}).concat(r.withL.map(function(w){return w.x.code;})),okL=[],sent=false;
+  var fb=function(){if(sent)return;sent=true;try{gsrCommon('recFb',{brand:REC_PAGE.brand,shown:shown,ok:okL,test:!!window.TEST_MODE},function(){});}catch(e){}
+    shown.forEach(function(c){var f=REC.fb[c]||(REC.fb[c]=[0,0]);f[0]++;});okL.forEach(function(c){var f=REC.fb[c]||(REC.fb[c]=[0,0]);f[1]++;});};
+  var close=function(){fb();if(d.querySelector('#rcOff').checked){REC.off=true;try{localStorage.setItem('recOff','1');}catch(e){}PG.toast('추천을 껐어요 · 💰 최저 조합 버튼 옆에서 다시 켤 수 있어요');}d.remove();};
   d.querySelector('.rc-x').onclick=close;d.onclick=function(e){if(e.target===d)close();};
   d.querySelector('.rc-body').onclick=function(e){var b=e.target.closest('button');if(!b)return;REC.busy=true;
-    try{if(b.dataset.swap){var i=REC_PAGE.cart().lastIndexOf(me.code);if(i>=0)REC_PAGE.removeAt(i);REC_PAGE.add(b.dataset.swap);PG.fuLog('rec:swap');}
+    okL.push(b.dataset.swap||b.dataset.add);try{if(b.dataset.swap){var i=REC_PAGE.cart().lastIndexOf(me.code);if(i>=0)REC_PAGE.removeAt(i);REC_PAGE.add(b.dataset.swap);PG.fuLog('rec:swap');}
       else{REC_PAGE.add(b.dataset.add);PG.fuLog('rec:add');}}finally{REC.busy=false;}
     b.disabled=true;b.textContent=b.dataset.swap?'바꿨어요':'담았어요';if(b.dataset.swap)setTimeout(close,500);};
   PG.fuLog('rec:show');}

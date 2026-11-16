@@ -52,7 +52,7 @@ var API_FUNCS = {
   getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo, adminPinList: adminPinList,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
-  logQuote: logQuote, getPairs: getPairs, adminQuoteLog: adminQuoteLog,
+  logQuote: logQuote, getPairs: getPairs, recFb: recFb, adminQuoteLog: adminQuoteLog,
   getBanner: getBanner, adminBannerSet: adminBannerSet,
   sendFeedback: sendFeedback, myFeedback: myFeedback, adminFeedback: adminFeedback, adminFeedbackSet: adminFeedbackSet,
   getNotice: getNotice, ackNotice: ackNotice, adminNotice: adminNotice, adminPostNotice: adminPostNotice, adminEditNotice: adminEditNotice, adminClearNotice: adminClearNotice
@@ -1465,8 +1465,9 @@ function qlogSheet_() {
   return sh;
 }
 /** 직원 화면: 견적서를 인쇄할 때 한 줄 기록 */
-/** 함께 담기 추천: 인쇄 · 견적 기록에서 같은 견적에 같이 들어간 모델 쌍을 셈 → { pairs: { 모델: [[같이 담긴 모델, 횟수], …최대 5] } }
-    (모델 코드와 횟수만 · 사번 · 고객 정보 없음 · 6시간 캐시) */
+/** 추천 데이터 (1시간 캐시 · 모델 코드와 횟수만, 사번 · 고객 정보 없음)
+    pairs: 인쇄 · 견적 기록에서 같은 견적에 같이 들어간 모델 쌍 { 모델: [[같이 담긴 모델, 횟수], …최대 5] }
+    pop: 최근 30일 인기 점수 { 모델: 점수 } · fb: 추천 반응 { 모델: [보인 횟수, 누른 횟수] } */
 function getPairs(brand) {
   var bn = QLOG_BRAND[brand]; if (!bn) return { pairs: {} };
   var cache = CacheService.getScriptCache(), ck = 'pairs_' + brand, hit = cache.get(ck);
@@ -1481,9 +1482,52 @@ function getPairs(brand) {
   });
   var out = {};
   Object.keys(cnt).forEach(function (a) { out[a] = Object.keys(cnt[a]).map(function (b) { return [b, cnt[a][b]]; }).sort(function (x, y) { return y[1] - x[1]; }).slice(0, 5); });
-  var res = { pairs: out };
-  try { var t = JSON.stringify(res); if (t.length < 90000) cache.put(ck, t, 21600); } catch (e) {}
+  /* 인기: 최근 30일 조회 + 담기×3 + 인쇄×5 + 보관×4 (모델통계) */
+  var pre = brand === 'lg' ? 'LG--' : brand === 'ck' ? 'CK--' : '', pop = {};
+  try {
+    var ag = mvAgg_(mvDay_(29), mvDay_(0));
+    Object.keys(ag).forEach(function (k) {
+      var isLg = k.indexOf('LG--') === 0, isCk = k.indexOf('CK--') === 0;
+      if (pre ? k.indexOf(pre) !== 0 : (isLg || isCk)) return;
+      var a = ag[k], v = a[0] + a[1] * 3 + a[2] * 5 + a[3] * 4; if (v > 0) pop[pre ? k.slice(pre.length) : k] = v;
+    });
+  } catch (e) {}
+  var res = { pairs: out, pop: pop, fb: recFbMap_(brand) };
+  try { var t = JSON.stringify(res); if (t.length < 95000) cache.put(ck, t, 3600); } catch (e) {}
   return res;
+}
+/* 추천 반응: 추천 팝업에 보인 횟수 · 담기/바꾸기 누른 횟수 (견적 시트 파일의 '추천반응' 탭) */
+var RECFB_SHEET = '추천반응';
+function recFbSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(RECFB_SHEET);
+  if (!sh) { sh = ss.insertSheet(RECFB_SHEET); sh.appendRow(['브랜드', '모델', '보인 횟수', '누른 횟수', '마지막']); sh.setFrozenRows(1); }
+  return sh;
+}
+function recFbMap_(brand) {
+  var sh = recFbSheet_(), n = sh.getLastRow(), o = {};
+  if (n >= 2) sh.getRange(2, 1, n - 1, 4).getValues().forEach(function (r) { if (String(r[0]) === brand) o[String(r[1])] = [Number(r[2]) || 0, Number(r[3]) || 0]; });
+  return o;
+}
+/** 화면에서 추천 팝업을 닫을 때 한 번: { brand, shown:[모델…], ok:[누른 모델…] } */
+function recFb(arg) {
+  arg = arg || {};
+  var brand = QLOG_BRAND[arg.brand] ? arg.brand : '';
+  if (!brand || arg.test) return { ok: false };
+  var shown = (Array.isArray(arg.shown) ? arg.shown : []).slice(0, 10).map(function (c) { return cleanStr_(c, 40); }).filter(String);
+  var okL = (Array.isArray(arg.ok) ? arg.ok : []).slice(0, 10).map(function (c) { return cleanStr_(c, 40); }).filter(String);
+  if (!shown.length) return { ok: false };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(5000)) return { ok: false };
+  try {
+    var sh = recFbSheet_(), n = sh.getLastRow(), rows = n >= 2 ? sh.getRange(2, 1, n - 1, 5).getValues() : [], idx = {};
+    rows.forEach(function (r, i) { idx[r[0] + '|' + r[1]] = i; });
+    var now = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm');
+    var bump = function (c, col) { var k = brand + '|' + c, i = idx[k]; if (i === undefined) { rows.push([brand, c, 0, 0, now]); i = idx[k] = rows.length - 1; } rows[i][col] = (Number(rows[i][col]) || 0) + 1; rows[i][4] = now; };
+    shown.forEach(function (c) { bump(c, 2); });
+    okL.forEach(function (c) { bump(c, 3); });
+    if (rows.length) sh.getRange(2, 1, rows.length, 5).setValues(rows);
+  } finally { lock.releaseLock(); }
+  return { ok: true };
 }
 function logQuote(arg) {
   arg = arg || {};
