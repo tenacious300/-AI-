@@ -880,20 +880,20 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
           <button class="chip" data-v="sb">소상공인</button>
         </div>
       </div>
-      <div>
-        <div class="lbl" id="chLbl">적용 단가표</div>
+      <div id="chWrap" style="display:none">
+        <div class="lbl" id="chLbl">소상공인 대수</div>
         <div class="chips" id="channel"></div>
       </div>
+      <div id="secPkg">
+        <div class="lbl">💍 혼수(웨딩) 패키지 <small style="font-weight:500;color:var(--sub)">전자랜드 단독 · 11/1~11/30</small></div>
+        <div class="chips" id="pkgPlan"></div>
+      </div>
     </div>
+    <div id="pkgBody"></div>
     <div class="auto" id="autoMsg"></div>
   </section>
 
-  <section class="card" id="secPkg">
-  <h2><span class="num">💍</span>혼수(웨딩) 패키지 <small style="font-weight:500;color:var(--sub);font-size:12px;margin-left:6px">전자랜드 단독 · 11/1~11/30</small></h2>
-  <div class="lbl">플랜 선택</div>
-  <div class="chips" id="pkgPlan"></div>
-  <div id="pkgBody"></div>
-</section>
+
 <style>
 #pkgBody .ps{display:grid;grid-template-columns:72px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px dashed #e5e7eb;font-size:13.5px}
 #pkgBody .ps b{font-size:12.5px;color:var(--sub)} #pkgBody select{width:100%;padding:8px;border-radius:10px;border:1px solid #d1d5db;font-size:13.5px;background:#fff}
@@ -1175,8 +1175,8 @@ function giftOf(code){var a=actInfo(code);if(!a||a.type!=='모상'||!a.live)retu
 function renderCond(n){
   Array.prototype.forEach.call(document.querySelectorAll('#custType .chip'),function(b){b.classList.toggle('on',b.dataset.v===S.cust);});
   var meta=D.meta||{};
-  if(S.cust==='sb'){$('#chLbl').textContent='소상공인 대수 (숙박업 제외)';$('#channel').innerHTML=[['1대','1대','3%'],['2대이상','2~3대','12%'],['4대이상','4대 이상','12%']].map(function(x){return '<button class="chip'+(x[0]===S.sbN?' on':'')+'" data-v="'+x[0]+'">'+x[1]+' <small>'+x[2]+'</small></button>';}).join('');}
-  else{$('#chLbl').textContent='적용 단가표';$('#channel').innerHTML='<button class="chip on" data-v="">전자랜드 '+esc(String(meta.price||'').replace('전자랜드_','').replace(/^(\d\d)(\d\d)$/,'$1/$2'))+' <small>'+esc(String(meta.act||'').replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1'))+'</small></button>';}
+  if(S.cust==='sb'){$('#chWrap').style.display='';$('#chLbl').textContent='소상공인 대수 (숙박업 제외)';$('#channel').innerHTML=[['1대','1대','3%'],['2대이상','2~3대','12%'],['4대이상','4대 이상','12%']].map(function(x){return '<button class="chip'+(x[0]===S.sbN?' on':'')+'" data-v="'+x[0]+'">'+x[1]+' <small>'+x[2]+'</small></button>';}).join('');}
+  else{$('#chWrap').style.display='none';$('#chLbl').textContent='적용 단가표';$('#channel').innerHTML='<button class="chip on" data-v="">전자랜드 '+esc(String(meta.price||'').replace('전자랜드_','').replace(/^(\d\d)(\d\d)$/,'$1/$2'))+' <small>'+esc(String(meta.act||'').replace(/^.*?(\d+월\s*[\d,]+주말).*$/,'$1'))+'</small></button>';}
   var msg;
   if(S.cust==='single')msg='<b>신규 (단건)</b> · 담은 개수와 관계없이 기본요금(결합 할인 없음)으로 계산해요. 2개 제품군 이상이면 <b>신규 결합</b>, 기존 LG 구독 고객이면 <b>기존 구독</b>을 선택하세요.';
   else if(S.cust==='combo')msg=n>=2?'<b>신규 결합 · 결합 할인 적용 중</b> · 할인율은 품목·계약기간별 단가표 기준 (예: 냉장고 4~5년 3% · 6년 5%)':'<b>신규 결합</b> · 2개 제품군 이상 같이 구독하면 결합 할인이 적용돼요. 지금 '+n+'개 담음';
