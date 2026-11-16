@@ -1033,6 +1033,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab">🔥 활성화 모델</button>
   <button class="care-tab" id="cpTab" style="background:#0f766e">💳 카드 정책</button>
+  <button class="care-tab" id="lpTab" style="background:#7c3aed">📦 패키지 할인</button>
 </div>
 <div class="drawer-bg" id="careBg"></div>
 <aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
@@ -1045,6 +1046,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <div class="drawer-c" id="winChips"></div>
   <div class="drawer-b" id="winBody"></div>
 </aside>
+<aside class="drawer wide" id="lpDrawer" aria-label="패키지 할인 정책"><div class="drawer-h"><b>📦 패키지 할인 정책</b><button class="dclose" aria-label="닫기">✕</button></div><div class="drawer-b" id="lpBody"></div></aside>
 <aside class="drawer" id="cpDrawer" aria-label="카드 정책">
   <div class="drawer-h"><b id="cpTitle">💳 카드 정책</b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="drawer-b" id="cpBody"></div>
@@ -1296,7 +1298,7 @@ function lpKey(cat){cat=String(cat);if(cat==='TV')return 'TV';if(/김치냉장�
 function lpAssign(){var pool=[];S.cart.forEach(function(it){it._lp=null;var m=BY[it.code];if(!m||it.pk)return;var k=lpKey(D.cats[m[1]]);if(k)pool.push({it:it,k:k});});
   var L=LPK.slice().sort(function(a,b){return b[1]-a[1]||b[2].length-a[2].length;}),got=[];
   L.forEach(function(P){for(;;){var use=[],ok=P[2].every(function(k){var f=pool.filter(function(x){return x.k===k&&!x.it._lp&&use.indexOf(x)<0;})[0];if(f)use.push(f);return !!f;});
-    if(!ok)break;var g={n:P[0].slice(3),r:P[1],codes:use.map(function(x){return x.it.code;}),keys:P[2]};use.forEach(function(x){x.it._lp={n:g.n,r:g.r};});got.push(g);}});
+    if(!ok)break;var g={id:P[0],n:P[0].slice(3),r:P[1],codes:use.map(function(x){return x.it.code;}),keys:P[2]};use.forEach(function(x){x.it._lp={n:g.n,r:g.r};});got.push(g);}});
   var sig=got.map(function(g){return g.n+g.codes.join();}).join('|');if(sig&&sig!==window.LP_SIG&&window.LP_READY)setTimeout(function(){lpPop(got);},50);window.LP_SIG=sig;window.LP_READY=1;return got;}
 function lpPop(got){var m=document.getElementById('lpModal');if(!m){m=document.createElement('div');m.id='lpModal';m.style.cssText='position:fixed;inset:0;z-index:95;background:rgba(15,23,42,.45);display:flex;align-items:center;justify-content:center;padding:20px';document.body.appendChild(m);
     m.addEventListener('click',function(e){if(e.target===m||e.target.closest('[data-lpx]'))m.style.display='none';});}
@@ -1737,7 +1739,7 @@ Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.
 window.__previewQuote=function(mode){buildPrint(mode||'basic');document.body.classList.add('preview');};
 
 /* ====== 서랍: 비교하기 · 활성화 모델 ====== */
-function careClose(){['#cmpDrawer','#winDrawer','#cpDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
+function careClose(){['#cmpDrawer','#winDrawer','#cpDrawer','#lpDrawer'].forEach(function(id){$(id).classList.remove('on');});$('#careBg').classList.remove('on');}
 function drawerOpen(id){careClose();$(id).classList.add('on');$('#careBg').classList.add('on');}
 Array.prototype.forEach.call(document.querySelectorAll('.dclose'),function(b){b.onclick=careClose;});$('#careBg').onclick=careClose;
 function cmpRender(){
@@ -1891,7 +1893,21 @@ function cpRender(){var b=$('#cpBody'),o=CP;
 function cpOpen(){fuLog('cardpol');drawerOpen('#cpDrawer');cpRender();
   fetch(CP_BASE+'list.json?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():{imgs:[]};}).then(function(o){if(o&&o.imgs){CP=o;lsPut('lgCardPol2',o);if($('#cpDrawer').classList.contains('on'))cpRender();}})
     .catch(function(){if(!CP){CP={imgs:[]};cpRender();}});}
-$('#cpTab').onclick=cpOpen;$('#cpOpen2').onclick=cpOpen;
+$('#cpTab').onclick=cpOpen;
+function lpPolicy(){var cur={};(window.LP_GOT||[]).forEach(function(g){cur[g.id]=1;});
+  var cols=['TV','F','W','RB','DW','ST','EL','KF','AC','SBM','GF','AP'];
+  var all=LPK.slice(0,7).concat([['08 99플랜(고정형)',3.3,['TV','F','W']],['09 66플랜(고정형)',3.6,['TV','F','W']],['10 77플랜(고정형)',3.8,['TV','F','W']]]).concat(LPK.slice(7));
+  var th='padding:6px 4px;border-bottom:1px solid #e5e7eb;font-size:11px;white-space:nowrap';
+  var h='<p style="font-size:13px;color:var(--sub);margin:0 0 10px">라이프스타일 패키지로 묶으면 <b>6년 계약</b> 모델의 정상 구독료에 할인율만큼 추가 할인돼요. 담은 품목이 조합에 맞으면 자동 적용돼요.</p>'
+   +'<div style="overflow-x:auto"><table style="border-collapse:collapse;width:100%;font-size:12px;text-align:center"><tr style="background:#f5f3ff"><th style="'+th+'">수량</th><th style="'+th+'">할인</th><th style="'+th+';text-align:left">패키지</th>'
+   +cols.map(function(c){return '<th style="'+th+'">'+LPKN[c].replace(/\(.*\)/,'')+'</th>';}).join('')+'</tr>'
+   +all.map(function(P){var n=P[0].slice(3),on=cur[P[0]],fx=/고정형/.test(n);return '<tr style="'+(on?'background:#fdf2f8;font-weight:700':'')+'"><td style="'+th+'">'+P[2].length+'개</td><td style="'+th+';color:#be185d;font-weight:800">'+P[1]+'%</td><td style="'+th+';text-align:left">'+esc(n)+(on?' ✅':'')+(fx?' <small style="color:#7c3aed">💍</small>':'')+'</td>'
+     +cols.map(function(c){return '<td style="'+th+'">'+(P[2].indexOf(c)>=0?'<span style="color:#be185d">●</span>':'<span style="color:#d1d5db">-</span>')+'</td>';}).join('')+'</tr>';}).join('')+'</table></div>'
+   +'<div style="margin-top:14px;background:#f8fafc;border-radius:12px;padding:12px;font-size:12.5px;line-height:1.7">'
+   +'<b>💍 전자랜드 단독 웨딩 패키지 추가 혜택 (11/1~11/30)</b><br>· 웨딩 99플랜 + 캐시백 60만 · 77플랜 + 30만 · 66플랜 + 10만<br>· 웨딩 BEST-PICK + 로봇청소기(로니 포함) + 20만<br>· 웨딩 BEST-PICK + 김치냉장고(스탠드) + 60만 (스바미2 Max 제외)<br>'
+   +'<span style="color:var(--sub)">※ 💍 고정형 플랜은 \'혼수(웨딩) 패키지\' 칸에서 선택 · 할인액 = 정상 구독료 × 할인율 (100원 단위) · ✅ = 지금 견적에 적용 중</span></div>';
+  $('#lpBody').innerHTML=h;}
+$('#lpTab').onclick=function(){lpPolicy();drawerOpen('#lpDrawer');};$('#cpOpen2').onclick=cpOpen;
 function startBeat(){if(!EMP||$('#gate').classList.contains('on'))return;fbInit();bestRender();bestLoad();beat();setInterval(beat,75000);setInterval(bestLoad,300000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden){LASTIN=Date.now();if(FB.gone)fbPresence(true);}if(Date.now()-(window.__lastBeat||0)>5000)beat();});}
 
