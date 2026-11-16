@@ -928,9 +928,10 @@ function fuBuffer_(cache, fu, emp) {
   Object.keys(fu).slice(0, 80).forEach(function (k) {
     var key = String(k).replace(/[^0-9A-Za-z가-힣:_\-]/g, '').slice(0, 30), v = Math.min(500, Number(fu[k]) || 0);
     if (!key || !v) return;
-    var bk = d + '|' + key, a = buf[bk] || [0, ''];
+    var bk = d + '|' + key, a = buf[bk] || [0, '', {}];
     a[0] += v;
     if (emp && key.indexOf(':') < 0 && (',' + a[1] + ',').indexOf(',' + emp + ',') < 0 && a[1].length < 3000) a[1] = a[1] ? a[1] + ',' + emp : emp;
+    if (emp && key.indexOf(':') < 0) { var c = a[2] || (a[2] = {}); c[emp] = (c[emp] || 0) + v; }   // 사번별 횟수
     buf[bk] = a; n++;
   });
   if (n) cache.put('fubuf', JSON.stringify(buf), 21600);
@@ -939,28 +940,37 @@ function fuSheet_() {
   var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(FU_SHEET);
   if (!sh) {
     sh = ss.insertSheet(FU_SHEET);
-    sh.appendRow(['날짜', '기능', '횟수', '사번']);
+    sh.appendRow(['날짜', '기능', '횟수', '사번', '사번별 횟수']);
     sh.setFrozenRows(1);
-    sh.getRange(1, 1, 1, 4).setFontWeight('bold').setBackground('#e0e7ff');
+    sh.getRange(1, 1, 1, 5).setFontWeight('bold').setBackground('#e0e7ff');
   }
   return sh;
 }
+/** '135792:3,246810:1' ↔ {135792:3, 246810:1} */
+function fuCntParse_(s) {
+  var o = {};
+  String(s || '').split(',').forEach(function (p) { var i = p.lastIndexOf(':'); if (i > 0) { var e = p.slice(0, i); o[e] = (o[e] || 0) + (Number(p.slice(i + 1)) || 0); } });
+  return o;
+}
+function fuCntStr_(o) { return Object.keys(o || {}).map(function (e) { return e + ':' + o[e]; }).join(',').slice(0, 45000); }
 /** mvMaybeFlush_ 안(락 보유)에서 호출 */
 function fuFlush_(cache) {
   var buf = JSON.parse(cache.get('fubuf') || '{}'), keys = Object.keys(buf);
   if (!keys.length) return;
   var sh = fuSheet_(), n = sh.getLastRow(), idx = {}, vals = [];
-  if (n >= 2) { vals = sh.getRange(2, 1, n - 1, 4).getValues(); vals.forEach(function (r, i) { idx[String(r[0]) + '|' + String(r[1])] = i; }); }
+  if (!sh.getRange(1, 5).getValue()) sh.getRange(1, 5).setValue('사번별 횟수').setFontWeight('bold').setBackground('#e0e7ff');
+  if (n >= 2) { vals = sh.getRange(2, 1, n - 1, 5).getValues(); vals.forEach(function (r, i) { idx[String(r[0]) + '|' + String(r[1])] = i; }); }
   var add = [];
   keys.forEach(function (k) {
     var a = buf[k], i = idx[k];
     if (i != null) {
       vals[i][2] = Number(vals[i][2] || 0) + a[0];
       if (a[1]) { var set = {}; String(vals[i][3] || '').split(',').concat(a[1].split(',')).forEach(function (e) { if (e) set[e] = 1; }); vals[i][3] = Object.keys(set).join(',').slice(0, 40000); }
-    } else { var p = k.split('|'); add.push([p[0], p[1], a[0], a[1]]); }
+      if (a[2] && Object.keys(a[2]).length) { var c = fuCntParse_(vals[i][4]); Object.keys(a[2]).forEach(function (e) { c[e] = (c[e] || 0) + a[2][e]; }); vals[i][4] = fuCntStr_(c); }
+    } else { var p = k.split('|'); add.push([p[0], p[1], a[0], a[1], fuCntStr_(a[2])]); }
   });
-  if (vals.length) sh.getRange(2, 1, vals.length, 4).setValues(vals);
-  if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 4).setValues(add);
+  if (vals.length) sh.getRange(2, 1, vals.length, 5).setValues(vals);
+  if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 5).setValues(add);
   cache.put('fubuf', '{}', 21600);
 }
 /** 브랜드 구분: LG 화면 기록은 'L_' 접두어. brand '' = 전체(접두어 떼고 합침), 'ss' = 삼성만, 'lg' = LG만 */
@@ -1031,31 +1041,33 @@ function adminEmpUsage(arg) {
   var days = [7, 30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 0;
   var from = days ? mvDay_(days - 1) : '00000000', to = mvDay_(0), U = {}, first = '';
   var QK = { print: 1, copy: 1, save: 1 };
-  var add = function (d, k, emps) {
-    k = String(k); d = String(d);
+  var add = function (d, k, emps, cn) {
+    k = String(k); d = String(d); cn = cn || {};
     if (!emps || d < from || d > to || k.indexOf(':') >= 0) return;
     var lg = k === 'lg' || k.indexOf('L_') === 0, ckb = k.indexOf('K_') === 0, b = lg ? 1 : ckb ? 2 : 0, kk = (k.indexOf('L_') === 0 || ckb) ? k.slice(2) : k;
     if (!first || d < first) first = d;
     String(emps).split(',').forEach(function (e) {
       e = cleanEmp_(e); if (!e) return;
-      var u = U[e] || (U[e] = [{}, {}, {}]), o = u[b];
+      var u = U[e] || (U[e] = [{}, {}, {}]), o = u[b], c = Number(cn[e]) || 1;
       (o.d || (o.d = {}))[d] = 1;
-      if (kk !== 'open' && k !== 'lg') { var f = o.f || (o.f = {}); (f[kk] || (f[kk] = {}))[d] = 1; }
-      if (kk === 'add') (o.a || (o.a = {}))[d] = 1;
-      if (QK[kk]) (o.q || (o.q = {}))[d] = 1;
+      if (kk !== 'open' && k !== 'lg') { var f = o.f || (o.f = {}); (f[kk] || (f[kk] = {}))[d] = 1; var fn = o.fn || (o.fn = {}); fn[kk] = (fn[kk] || 0) + c; o.n = (o.n || 0) + c; }
+      if (kk === 'add') { (o.a || (o.a = {}))[d] = 1; o.an = (o.an || 0) + c; }
+      if (QK[kk]) { (o.q || (o.q = {}))[d] = 1; o.qn = (o.qn || 0) + c; }
     });
   };
   var sh = fuSheet_(), n = sh.getLastRow();
-  if (n >= 2) sh.getRange(2, 1, n - 1, 4).getValues().forEach(function (r) { add(r[0], r[1], r[3]); });
+  if (n >= 2) sh.getRange(2, 1, n - 1, 5).getValues().forEach(function (r) { add(r[0], r[1], r[3], fuCntParse_(r[4])); });
   var buf = JSON.parse(CacheService.getScriptCache().get('fubuf') || '{}');
-  Object.keys(buf).forEach(function (k) { var p = k.split('|'); add(p[0], p[1], buf[k][1]); });
+  Object.keys(buf).forEach(function (k) { var p = k.split('|'); add(p[0], p[1], buf[k][1], buf[k][2]); });
   var cnt = function (o) { return o ? Object.keys(o).length : 0; }, last = function (o) { var k = o ? Object.keys(o).sort() : []; return k.length ? k[k.length - 1] : ''; };
-  var rows = {}, feats = {};
+  var rows = {}, feats = {}, cnts = {}, featN = {};
   var fd = function (o) { var r = {}; Object.keys(o.f || {}).forEach(function (k) { r[k] = cnt(o.f[k]); }); return r; };
   Object.keys(U).forEach(function (e) { var s = U[e][0], l = U[e][1], q = U[e][2] || {};
     rows[e] = [cnt(s.d), cnt(s.a), cnt(s.q), last(s.d), cnt(l.d), cnt(l.a), cnt(l.q), last(l.d), cnt(q.d), cnt(q.a), cnt(q.q), last(q.d)];
-    feats[e] = [fd(s), fd(l), fd(q)]; });   // 사번별 기능 → 쓴 날 수
-  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, roster: rosterMap_(),
+    feats[e] = [fd(s), fd(l), fd(q)];   // 사번별 기능 → 쓴 날 수
+    cnts[e] = [[s.n || 0, s.an || 0, s.qn || 0], [l.n || 0, l.an || 0, l.qn || 0], [q.n || 0, q.an || 0, q.qn || 0]];   // 기능 · 담기 · 견적 횟수
+    featN[e] = [s.fn || {}, l.fn || {}, q.fn || {}]; });   // 사번별 기능 → 횟수
+  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, cnts: cnts, featN: featN, roster: rosterMap_(),
     at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
 }
 
