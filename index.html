@@ -968,7 +968,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
       <div>
         <div class="lbl">구매 채널 (구독포인트)</div>
         <div class="chips" id="channel">
-          <button class="chip on" data-v="5">삼성닷컴 <small>약 5%</small></button>
+          <button class="chip on" data-v="5">전자랜드 <small>약 5%</small></button>
         </div>
       </div>
     </div>
@@ -1054,7 +1054,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
     </details>
     <details class="fold"><summary>구독포인트 · 구독료 지원 판촉</summary>
       <ul>
-        <li>구독포인트(할인 전 정상 총 구독료 기준, 선납 여부와 무관): 삼성닷컴 약 5.0%</li>
+        <li>구독포인트(할인 전 정상 총 구독료 기준, 선납 여부와 무관): 전자랜드 약 5.0%</li>
         <li>3개월 구독료 상당: TV, 모니터, 냉장고(일부), 세탁기, 건조기, 에어드레서, 태블릿(일부)</li>
         <li>6개월 구독료 상당: 냉장고(일부), 식기세척기, 인덕션, 오븐, 청소기, 공기청정기, PC, 태블릿(일부)</li>
         <li>최장 계약만 지급 (PC·모니터·태블릿 4년, 로봇청소기 5년, 그 외 6년) · 대상 모델·개월수는 리스트 기준 자동 반영</li>
@@ -1273,8 +1273,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.46',VER_DATE='2026.11.16';
+var VERSION='v8.47',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.47','11.16',['🏬 구매 채널 표시를 \'전자랜드 약 5%\'로 변경']],
   ['v8.46','11.16',['🌐 사번 입력 화면에 크롬 접속 권장 안내','🧾 관리자 사번별 이용: 이용일 옆에 기능 · 담기 · 견적 횟수 (11/16부터 집계)']],
   ['v8.45','11.16',['🧾 맞춤 구독 견적: 제품 사진·구독 조건 대신 모델명 한 줄','⚖️ 일시불 구매 비교가 처음부터 열림 (글씨·입력칸 작게)','🖥 PC에서 견적 칸을 한 화면에 · 버튼은 아래 고정']],
   ['v8.44','11.16',['💳 \'카드 여러 장 나눠 결제\'를 제휴카드 제목 옆 버튼으로 옮김 (삼성 · LG)']],
