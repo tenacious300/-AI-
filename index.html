@@ -449,6 +449,7 @@ body.preview{background:#e5e7eb;padding:0}
 .ack-chip{display:inline-block;padding:3px 9px;border-radius:99px;background:#fee2e2;color:#991b1b;font-size:12px;margin:3px 4px 0 0}
 .nt-ta{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;resize:vertical}
 .emp-chrome{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;border-radius:10px;padding:7px 12px;font-size:13px;font-weight:600;margin:-4px 0 10px;text-align:center}.emp-chrome b{font-weight:800}
+.terms-ov{position:fixed;inset:0;z-index:10000;background:rgba(15,23,42,.62);display:none;align-items:center;justify-content:center;padding:16px}.terms-ov.on{display:flex}.terms-box{background:#fff;border-radius:18px;max-width:440px;width:100%;padding:22px 20px 18px;box-shadow:0 20px 60px rgba(0,0,0,.3);max-height:90vh;overflow:auto}.terms-box h3{margin:0 0 12px;font-size:17px}.terms-box ul{margin:0 0 16px;padding:12px 14px 12px 28px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-size:13px;line-height:1.6;color:#334155}.terms-box li{margin:3px 0}.terms-box .btn{width:100%;padding:12px;font-size:15px}.terms-sub{text-align:center;font-size:11.5px;color:#94a3b8;margin-top:8px}
 .emp-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:10px;padding:8px 12px;font-size:13px;font-weight:600;line-height:1.5;margin:4px 0 10px;text-align:center}
 .pm-opt.sel{border-color:#dc2626!important;background:#fef2f2!important;box-shadow:0 0 0 2px #fecaca}
 .sus{background:#fef2f2}
@@ -1200,6 +1201,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <div class="credit">Made by <b>여수본점 김동욱</b></div>
   <a href="#" id="gateAdm" style="display:inline-block;margin-top:10px;font-size:11.5px;color:#94a3b8;text-decoration:none">⚙ 관리자</a>
 </div></div>
+<div id="termsPop" class="terms-ov"><div class="terms-box"><h3>📋 이용 약관 안내</h3><ul><li>본 서비스는 전산자료를 바탕으로 제공됩니다.</li><li>정보 입력 과정에서 오타, 누락, 업데이트 지연이 발생할 수 있습니다.</li><li>케어 서비스 내용 및 조건은 각 브랜드 공식 채널을 통해 최종 확인하시기 바랍니다.</li><li>본 서비스는 정보 제공 목적으로 제작되었습니다.</li><li>실제 구독 계약에 대한 책임은 계약 당사자에게 있습니다.</li><li>정보 오류로 인한 문제에 대해서는 책임을 지지 않습니다.</li><li>본 서비스는 사용자 정보, 접속 기록, 활동 내역을 수집하여 서비스 개선 및 통계 목적으로 사용합니다.</li><li>해당 서비스 이용 시 약관에 동의한 것으로 간주됩니다.</li></ul><button class="btn pri" id="termsOk">동의하기</button><div class="terms-sub">동의해야 계산기를 이용할 수 있어요</div></div></div>
 <div class="modal" id="admModal"><div class="modal-box" style="max-width:640px">
   <h3><span>⚙ 관리자 모드</span><button id="admClose" aria-label="닫기">✕</button></h3>
   <div id="admBody"></div>
@@ -2276,6 +2278,10 @@ function fbInit(){
 try{EMP=localStorage.getItem('calcEmp');}catch(e){}
 function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStarted||!HAS_GS)return;beatStarted=true;beat();setInterval(beat,75000);document.addEventListener('visibilitychange',function(){if(document.hidden){if(Date.now()-(window.__lastBeat||0)>5000)beat();}else{LASTIN=Date.now();if(FB.gone)fbPresence(true);if(Date.now()-(window.__lastBeat||0)>5000)beat();}});}
 var EMP_TMP=null;
+/* 이용 약관: 로그인 후 동의해야 입장 (사번별로 이 기기에 한 번) */
+var TERMS_V='1';
+function termsOk(e){var t=lsGet('calcTerms')||{};return t[e]===TERMS_V;}
+function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){var t=lsGet('calcTerms')||{};t[e]=TERMS_V;lsPut('calcTerms',t);$('#termsPop').classList.remove('on');try{fuLog('terms');}catch(x){}done&&done();};}
 function meSave(me,emp){lsPut('calcMe',me?{emp:emp||EMP,name:me.name,br:me.br,rank:me.rank}:null);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 /* 관리자가 ⚡ 강제 업데이트를 누르면, 그 전에 로그인한 화면은 로그아웃 → 사번 다시 입력 (담은 모델은 유지) */
@@ -2289,6 +2295,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   $('#empIn').style.borderColor='';
   if(HAS_GS&&!enter._ok){var bt=$('#empGo');bt.disabled=true;$('#empErr').textContent='확인 중…';
     gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
+  if(!termsOk(v)){termsOpen(v,function(){enter._ok=1;enter();enter._ok=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
@@ -2311,8 +2318,9 @@ $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandS
 function cxU(u){return window.TEST_MODE?u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now():u;}
 $('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=cxU(k==='lg'?'lg.html':'cuckoo.html');};
 var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),ADMIN_CK=/[?&]admin=ck/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||ADMIN_CK||XCMP;
-if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
-if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
+if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&termsOk(EMP)&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
+if(CUST){}else if(EMP&&!FORCE_GATE&&!termsOk(EMP)){var e0=EMP;termsOpen(e0,function(){if(!STAY&&(BRAND==='lg'||BRAND==='ck')){try{sessionStorage.setItem('calcEmpS',e0);}catch(x){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');return;}startBeat();});}
+else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
 var ADM={pw:null,t:null};
 function admLogin(){
   $('#admBody').innerHTML='<div style="font-size:13px;color:var(--sub);margin-top:4px">관리자 비밀번호를 입력하면 상세 정보를 볼 수 있어요.</div>'
