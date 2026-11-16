@@ -2137,7 +2137,7 @@ function cmpRender(){
    +'</table></div>';
   b.innerHTML=h;
 }
-function cmpOpen(){fuLog('cmp');drawerOpen('#cmpDrawer');cmpRender();}
+function cmpOpen(){fuLog('cmp');xOpen('ss');}
 $('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
 $('#cmpBody').addEventListener('click',function(e){var a=e.target.closest('[data-care]');if(a){e.preventDefault();careOpen(a.dataset.care);}});
 var WIN=null,winCat=null;
@@ -2325,7 +2325,7 @@ function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(d
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
 function cxU(u){return window.TEST_MODE?u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now():u;}
 $('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=cxU(k==='lg'?'lg.html':'cuckoo.html');};
-var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),ADMIN_CK=/[?&]admin=ck/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||ADMIN_CK||XCMP;
+var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),ADMIN_CK=/[?&]admin=ck/.test(location.search),XCMP=/[?&]xcmp=(1|lg|ss)/.test(location.search),XCMP_ONLY=(/[?&]xcmp=(lg|ss)/.exec(location.search)||[])[1]||null,STAY=ADMIN_LG||ADMIN_CK||XCMP;
 if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&termsOk(EMP)&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE&&!termsOk(EMP)){var e0=EMP;termsOpen(e0,function(){if(!STAY&&(BRAND==='lg'||BRAND==='ck')){try{sessionStorage.setItem('calcEmpS',e0);}catch(x){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');return;}startBeat();});}
 else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
@@ -3326,7 +3326,7 @@ function xLgRows(m){var L=xLG(),w={single:'결합없음',combo:'신규결합',ex
   return o.map(function(k){var A=g[k];return A.filter(function(r){return L.bd[r[4]]===w;})[0]||A.filter(function(r){return L.bd[r[4]]==='결합없음';})[0]||A[0];});}
 function xLgMon(code,r){var a=xAct(code),ex=0;if(a&&a.type==='요금인하'){var k=a.mid+(a.live?a.add:0);if(k)ex=Math.max(0,Math.ceil(k*1000/72/100)*100-r[9]);}return r[10]-ex;}
 function xLgType(r){var L=xLG(),a=L.ct[r[0]],b=L.cs[r[1]];return (b?a+' '+b:a)+(L.cy[r[2]]?' '+L.cy[r[2]]+'주기':'');}
-function xSave(){lsPut('xcmpList',XC.list);}
+function xKey(){return XC.only?'xcmp_'+XC.only:'xcmpList';}function xSave(){lsPut(xKey(),XC.list);}
 function xCats(){return D.cats.filter(function(c){return XMAP[c];});}
 function xItem(it){
   if(it.b==='ss'){var m=byCode[it.code];if(!m)return null;var cat=catOf(m),ys=[];m[3].forEach(function(p){if(ys.indexOf(p[0])<0)ys.push(p[0]);});ys.sort(function(a,b){return a-b;});
@@ -3356,8 +3356,8 @@ function xRender(){var cats=xCats();if(!XC.cat||cats.indexOf(XC.cat)<0)XC.cat=ca
   its.forEach(function(x){if(x.b==='ss'&&!INFO[x.code])fetchInfo(x.code);});
   var col=function(b,name,color){return '<div style="flex:1;min-width:280px;background:#fff;border-radius:12px;padding:12px;border-top:4px solid '+color+'"><b style="color:'+color+'">'+name+'</b> <span style="font-size:12px;color:var(--sub)">· '+esc(XLAB[XC.cat]||XC.cat)+' · 누르면 비교에 추가</span>'
     +'<div class="search" style="margin-top:8px"><input type="text" data-xq="'+b+'" placeholder="모델코드 검색" value="'+esc(XC.q[b])+'" autocomplete="off" spellcheck="false" style="padding-left:14px;min-height:42px"></div><div data-xl="'+b+'">'+xPickList(b)+'</div></div>';};
-  var h='<div style="display:flex;gap:12px;flex-wrap:wrap">'+col('ss','삼성','#1428a0')+col('lg','LG','#a50034')+'</div>';
-  if(!its.length)h+='<div class="empty" style="background:#fff;margin-top:12px">위에서 삼성 모델과 LG 모델을 눌러 추가하면 여기에 나란히 비교돼요.</div>';
+  var h='<div style="display:flex;gap:12px;flex-wrap:wrap">'+(XC.only!=='lg'?col('ss','삼성','#1428a0'):'')+(XC.only!=='ss'?col('lg','LG','#a50034'):'')+'</div>'+(XC.only?'<div style="margin-top:10px"><button class="btn line sm" id="xImport">🛒 담은 모델 불러오기</button></div>':'');
+  if(!its.length)h+='<div class="empty" style="background:#fff;margin-top:12px">'+(XC.only?'위에서 비교할 모델을 눌러 추가하면 여기에 나란히 비교돼요. 계약 기간 · 케어 서비스도 바로 바꿀 수 있어요.':'위에서 삼성 모델과 LG 모델을 눌러 추가하면 여기에 나란히 비교돼요.')+'</div>';
   else{var minMon=Math.min.apply(null,its.map(function(x){return x.mon2;})),minTot=Math.min.apply(null,its.map(function(x){return x.tot;})),net=function(x){return x.tot-x.benV;},minNet=Math.min.apply(null,its.map(net)),minY=Math.min.apply(null,its.map(function(x){return x.tot/x.y;}));
     var row=function(l,fn){return '<tr><td>'+l+'</td>'+its.map(fn).join('')+'</tr>';},bc=function(x){return x.b==='ss'?'#1428a0':'#a50034';};
     var best=function(v,mn,big){var b=Math.abs(v-mn)<1;return '<td class="'+(b?'best-cell':'')+'"><span class="'+(big?'big2 ':'')+(b?'best':'')+'">'+won(v)+'</span>'+(big?(b?'<span class="diff" style="color:var(--ok)">최저</span>':'<span class="diff">+'+won(v-mn)+'</span>'):'')+'</td>';};
@@ -3377,15 +3377,18 @@ function xRender(){var cats=xCats();if(!XC.cat||cats.indexOf(XC.cat)<0)XC.cat=ca
      +'</table></div><div class="note">삼성은 구독료 할인·포인트(1P=1원), LG는 단가표 활성화·반값·상품권 기준이에요. 케어 내용과 제품 사양이 다르니 금액만으로 단순 비교한 참고용이에요.</div>';}
   var act=document.activeElement,fq=act&&act.dataset&&act.dataset.xq,pos=fq?act.selectionStart:0;
   $('#xBody').innerHTML=h;if(fq){var el=document.querySelector('[data-xq="'+fq+'"]');if(el){el.focus();try{el.setSelectionRange(pos,pos);}catch(e){}}}}
-function xOpen(){if(window.XCMP_BACK)FU['L_xcmp']=(FU['L_xcmp']||0)+1;else fuLog('xcmp');drawerOpen('#xDrawer');$('#xBody').innerHTML='<div class="empty" style="background:#fff">LG 단가를 불러오는 중…</div>';xLoad(xRender);}
-$('#xTab').onclick=xOpen;
+function xOpen(only){XC.only=(only==='ss'||only==='lg')?only:null;XC.list=lsGet(xKey())||[];var tt=document.querySelector('#xDrawer .drawer-h b');if(tt)tt.textContent=XC.only?'⚖️ '+(XC.only==='ss'?'삼성':'LG')+' 모델 비교하기':'🆚 삼성 · LG 구독 비교';if(window.XCMP_BACK)FU['L_xcmp']=(FU['L_xcmp']||0)+1;else fuLog('xcmp');drawerOpen('#xDrawer');$('#xBody').innerHTML='<div class="empty" style="background:#fff">LG 단가를 불러오는 중…</div>';xLoad(xRender);}
+$('#xTab').onclick=function(){xOpen();};
 onChip($('#xCats'),function(v){XC.cat=v;XC.q={ss:'',lg:''};xRender();$('#xBody').scrollTop=0;});
 $('#xBody').addEventListener('input',function(e){var b=e.target.dataset&&e.target.dataset.xq;if(!b)return;XC.q[b]=e.target.value;document.querySelector('[data-xl="'+b+'"]').innerHTML=xPickList(b);});
 $('#xBody').addEventListener('click',function(e){var a=e.target.closest('[data-xadd]');if(a){var p=a.dataset.xadd.split('|');if(XC.list.length>=6){toast('6개까지 비교할 수 있어요');return;}XC.list.push({b:p[0],code:p[1],y:99,t:null});xSave();xRender();toast((p[0]==='ss'?'삼성 ':'LG ')+p[1]+' 추가');return;}
   var d=e.target.closest('[data-xdel]');if(d){XC.list.splice(+d.dataset.xdel,1);xSave();xRender();return;}
-  if(e.target.id==='xClear'){XC.list=[];xSave();xRender();}});
+  if(e.target.id==='xClear'){XC.list=[];xSave();xRender();}
+  if(e.target.id==='xImport'){var add=[];if(XC.only==='ss')S.cart.forEach(function(c){add.push({b:'ss',code:c.code,y:c.y,t:D.types.indexOf(c.type)});});
+    else{var ls=lsGet('lgState');((ls&&ls.cart)||[]).forEach(function(c){add.push({b:'lg',code:c.code,y:c.term/12,t:null});});}
+    if(!add.length){toast('담은 모델이 없어요');return;}XC.list=add.slice(0,6);xSave();xRender();toast('담은 모델 '+XC.list.length+'개를 불러왔어요');}});
 $('#xBody').addEventListener('change',function(e){var t=e.target;if(t.dataset.xy){XC.list[+t.dataset.xy].y=+t.value;XC.list[+t.dataset.xy].t=null;xSave();xRender();}else if(t.dataset.xt){var xi=XC.list[+t.dataset.xt];xi.t=xi.b==='ss'?+t.value:t.value;xSave();xRender();}});
-if(XCMP){window.XCMP_BACK=/[?&]from=lg/.test(location.search);setTimeout(function(){if(EMP)xOpen();},400);}
+if(XCMP){window.XCMP_BACK=/[?&]from=lg/.test(location.search);setTimeout(function(){if(EMP)xOpen(XCMP_ONLY);},400);}
 var BOX=[],boxLoaded=false;
 var LS_KEY='calcQuotes';
 function lsAll(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return [];}}

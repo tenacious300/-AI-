@@ -1775,7 +1775,7 @@ function cmpRender(){
    +row('일시불 기준가',function(i){return '<td>'+(i.lp?won(i.lp):'-')+'</td>';})
    +row('',function(i){return '<td><a class="link" target="_blank" rel="noopener" href="'+lgUrl(i.code)+'">LG전자 ↗</a></td>';})
    +'</table></div>';}
-function cmpOpen(){fuLog('cmp');drawerOpen('#cmpDrawer');cmpRender();}
+function cmpOpen(){fuLog('cmp');location.href=(window.TEST_MODE?'./':'./')+'?xcmp=lg&from=lg';}
 $('#cmpTab').onclick=cmpOpen;$('#cmpOpen2').onclick=cmpOpen;
 $('#xTab').onclick=function(){location.href='./?xcmp=1&from=lg';};
 var winCat=null;
