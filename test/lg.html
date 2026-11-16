@@ -1123,7 +1123,7 @@ function md(s){if(!s)return '';var p=s.split('-');return (+p[1])+'/'+(+p[2]);}
 
 /* ---------- 사번 확인 (삼성 계산기와 같은 사번 사용) ---------- */
 var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS');}catch(e){}
-try{if(EMP&&sessionStorage.getItem('calcTermsS')!==EMP)location.replace('./?brand=lg');}catch(e){}
+try{if(EMP&&localStorage.getItem('calcTermsD')!==EMP+'|'+(function(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);})())location.replace('./?brand=lg');}catch(e){}  /* 약관 동의 하루 한 번 */
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
 $('#meBtn').onclick=function(){location.href='./?gate=1&brand=lg';};
@@ -2100,7 +2100,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.59';
+var VERSION='v8.60';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

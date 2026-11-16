@@ -66,7 +66,7 @@ async def run():
                     else:
                         await r.abort()
                 await pg.route('**/*', route)
-                await pg.add_init_script("localStorage.setItem('calcEmp','%s');sessionStorage.setItem('calcEmpS','%s');sessionStorage.setItem('calcTermsS','%s');localStorage.setItem('calcMe',JSON.stringify({emp:'%s',name:'테스트',br:'%s',rank:'사원'}));" % (EMP, EMP, EMP, EMP, BR))
+                await pg.add_init_script("localStorage.setItem('calcEmp','%s');sessionStorage.setItem('calcEmpS','%s');sessionStorage.setItem('calcTermsS','%s');var _d=new Date();localStorage.setItem('calcTermsD','%s|'+_d.getFullYear()+'-'+('0'+(_d.getMonth()+1)).slice(-2)+'-'+('0'+_d.getDate()).slice(-2));localStorage.setItem('calcMe',JSON.stringify({emp:'%s',name:'테스트',br:'%s',rank:'사원'}));" % (EMP, EMP, EMP, EMP, EMP, BR))
                 await pg.goto(U + page + ('?brand=ss' if page == 'index.html' else ''))
                 await pg.wait_for_timeout(1500)
                 ok(not await pg.is_visible('#gate'), '사번으로 바로 입장')

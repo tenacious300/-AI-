@@ -1300,8 +1300,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.59',VER_DATE='2026.11.17';
+var VERSION='v8.60',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.60','11.17',['📋 이용 약관 동의를 사번마다 하루 한 번만 (같은 날 다시 열면 바로 입장 · 다음 날 처음 열 때 다시 동의)']],
   ['v8.59','11.17',['🛒 삼성 · LG: \'품목별 순위 전체보기\' 버튼을 구독 판매순위 탭 바로 옆으로 옮김']],
   ['v8.58','11.17',['🛒 삼성: 위쪽 탭을 \'🔥 많이 찾는 · 🛒 구독 판매순위\'로 바꾸고 크게 · 혜택 TOP 버튼 삭제 · 판매순위 탭에 품목별 1위','🛒 LG: 구독 판매순위 추가 (LG닷컴 베스트 랭킹 · 가전 구독 품목별) · LG닷컴 월 구독료와 전자랜드 월 구독료 함께 표시 · 바로 담기 · 추천에 순위 반영']],
   ['v8.57','11.16',['🛒 판매순위 창: ✕ 버튼 · 창 바깥(계산기 화면)을 누르면 닫히도록 수정, 휴대폰에서 표가 잘리지 않게 정리']],
@@ -2321,8 +2322,10 @@ var EMP_TMP=null;
 /* 이용 약관: 로그인 후 동의해야 입장 (사번별로 이 기기에 한 번) */
 var TERMS_V='1';
 /* 로그인할 때마다 + 새로 열 때마다(창 단위) 동의 → 서버 '약관동의' 시트에 기록 */
-function termsOk(e){try{return sessionStorage.getItem('calcTermsS')===e;}catch(x){return false;}}
-function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){try{sessionStorage.setItem('calcTermsS',e);}catch(x){}$('#termsPop').classList.remove('on');
+/* 이용 약관 동의: 사번마다 하루 한 번 (이 기기 날짜 기준 · 다음 날 처음 열 때 다시 동의) */
+function termsDay(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function termsOk(e){try{return localStorage.getItem('calcTermsD')===e+'|'+termsDay();}catch(x){return false;}}
+function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){try{sessionStorage.setItem('calcTermsS',e);localStorage.setItem('calcTermsD',e+'|'+termsDay());}catch(x){}$('#termsPop').classList.remove('on');
   if(!window.TEST_MODE)gsr('termsAgree',{emp:e,dev:devName(),b:BRAND},function(){},function(){});done&&done();};}
 function meSave(me,emp){lsPut('calcMe',me?{emp:emp||EMP,name:me.name,br:me.br,rank:me.rank}:null);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
