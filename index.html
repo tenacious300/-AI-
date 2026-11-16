@@ -940,6 +940,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 #rankDrawer{max-width:calc(100% - 44px)}
 @media(max-width:600px){.rk-t{font-size:12px;table-layout:fixed}.rk-t th:nth-child(1),.rk-t td:nth-child(1){width:34px}.rk-t th:nth-child(3),.rk-t td:nth-child(3){width:74px}.rk-t th:nth-child(4),.rk-t td:nth-child(4){width:82px}.rk-t td.n{white-space:normal;word-break:keep-all}.rk-nm{font-size:12px;word-break:break-all}.rk-no{min-width:22px;height:22px;font-size:12px}}
 .tb .tabs{padding:4px}.tb .tabs button,.tb .tabs button[data-tbt]{font-size:15px!important;padding:8px 16px!important;min-height:42px}
+.tbh .rk-all{margin-left:4px!important;order:0;font-weight:800;color:#0f766e;white-space:nowrap}.tbh .rk-all+.per{margin-left:auto}
+@media(max-width:600px){.tbh .rk-all{white-space:normal!important;font-size:12px!important;line-height:1.25;width:76px;text-align:left;padding:2px 4px!important;flex:none}.tbh .rk-all+.per{display:none}}
 </style>
 </head>
 <body>
@@ -1298,8 +1300,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.58',VER_DATE='2026.11.17';
+var VERSION='v8.59',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.59','11.17',['🛒 삼성 · LG: \'품목별 순위 전체보기\' 버튼을 구독 판매순위 탭 바로 옆으로 옮김']],
   ['v8.58','11.17',['🛒 삼성: 위쪽 탭을 \'🔥 많이 찾는 · 🛒 구독 판매순위\'로 바꾸고 크게 · 혜택 TOP 버튼 삭제 · 판매순위 탭에 품목별 1위','🛒 LG: 구독 판매순위 추가 (LG닷컴 베스트 랭킹 · 가전 구독 품목별) · LG닷컴 월 구독료와 전자랜드 월 구독료 함께 표시 · 바로 담기 · 추천에 순위 반영']],
   ['v8.57','11.16',['🛒 판매순위 창: ✕ 버튼 · 창 바깥(계산기 화면)을 누르면 닫히도록 수정, 휴대폰에서 표가 잘리지 않게 정리']],
   ['v8.56','11.16',['🛒 판매순위 창: 판매가는 삼성닷컴, 월 구독료는 전자랜드 단가표 금액(최장 약정 · 담기와 같은 조건)으로 표시']],
@@ -2966,7 +2969,7 @@ function bestRender(){var el=$('#bestSec');if(!el)return;var r=BEST.data[BEST.da
   }else if(TB.tab==='rank'){
     /* 🛒 구독 판매순위: 품목별 삼성닷컴 판매 1위 (누르면 그 품목 순위 창) */
     var RC=rankCats(),SR=window.SS_RANK;
-    h+='<div class="per"><span>품목별 1위 · 삼성닷컴 최근 31일 판매량</span></div><button class="more" data-rkopen="">품목별 순위 ›</button></div>';
+    h+='<button class="more rk-all" data-rkopen="">품목별 순위 전체보기 ›</button><div class="per"><span>품목별 1위 · 삼성닷컴 최근 31일 판매량</span></div></div>';
     h+=!RC.length?'<div class="empty2">판매순위를 아직 받지 못했어요 (매일 새벽 갱신)</div>'
       :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row">'+RC.map(function(c){var k=SR.cats[c][0],f=(SR.info||{})[k]||[],q=rankMon(k);return '<button class="pl ai" data-rkopen="'+esc(c)+'"><i>'+esc(c==='세탁기'&&SR.cats['건조기']&&SR.cats['세탁기'].join()===SR.cats['건조기'].join()?'세탁기·건조기':c)+'</i><b>'+esc(k)+'</b><s>'+(q?'월 '+won(q.mon):esc(String(f[0]||'').slice(0,14)))+'</s></button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
   }else{
