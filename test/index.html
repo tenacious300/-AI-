@@ -892,6 +892,30 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .pl-f{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-top:6px;padding-top:6px;border-top:1px solid var(--line);font-size:12px;color:var(--sub)}.pl-f b{font-size:14.5px;color:var(--ink);white-space:nowrap}
 /* ===== 사용성 개선 끝 ===== */
 #liveBtn,#liveBtn:hover{cursor:default;pointer-events:none}
+
+/* PC: 맞춤 구독 견적 한 화면에 (구독 조건 칩 작게 · 줄 간격 줄임 · 버튼 한 줄) */
+@media(min-width:1024px){
+  .shd{margin:6px 0 8px}
+  .sh-ch{margin-top:6px;gap:4px}
+  .sh-ch span{font-size:11px;font-weight:600;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,.08)}
+  .sh-more1{margin-top:3px;font-size:11px;padding:1px 6px}
+  .sh-ch span:nth-child(4){display:none} /* 카드는 아래 '제휴카드' 칸에 이미 나와요 */
+  .sum-h{margin-bottom:0}
+  #sHead+.cap{padding-top:8px}
+  .sum-l{margin-top:8px}
+  .sum-l div{padding:2px 0;font-size:13px}
+  .sum-l .sgrp div{padding:1px 0}
+  .sgrp,.sum-l .sgrp{padding:6px 12px;margin-top:6px}
+  .sgrp .sg-h{font-size:12px}
+  .sum-l .tot,.sum-l .tot-g .tot{margin-top:3px;padding-top:4px}
+  .stog,.stog.feel-b{padding:5px 8px;margin-top:6px;font-size:12.5px}
+  .sum .btns{grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+  .sum .btns .cap-btn{grid-column:1/-1}
+  .sum .btns .btn{padding:7px 4px;font-size:12.5px;min-height:34px}
+  /* 화면이 낮은 노트북: 견적 칸 안에서 스크롤 · 버튼은 아래에 항상 보이게 */
+  #secSum .sum{max-height:calc(100vh - 128px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+  #secSum .sum .btns{position:sticky;bottom:-22px;z-index:2;margin:10px -22px -22px;padding:12px 22px 22px;background:linear-gradient(180deg,rgba(25,31,40,0),#191F28 14px)}
+}
 </style>
 </head>
 <body>
