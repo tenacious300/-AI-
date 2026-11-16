@@ -867,6 +867,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .due-l{display:flex;flex-direction:column;gap:6px;margin-top:10px}.due{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);color:#fde68a;border-radius:10px;padding:7px 11px;font-size:13px;line-height:1.4}.due b{color:#fff;font-weight:800}.due em{font-style:normal;font-weight:900;color:#fbbf24;margin-left:2px}.due.hot{background:rgba(244,63,94,.16);border-color:rgba(251,113,133,.5);color:#fecdd3}.due.hot em{color:#fb7185}
 .sc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px}.sc-box{background:#fff;color:#111827;border-radius:20px;max-width:420px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:20px 18px 16px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.sc-t{font-size:18px;font-weight:900}.sc-sub{font-size:12.5px;color:#6b7280;margin:4px 0 10px}.sc-body{overflow:auto;flex:1}.sc-s{margin-top:10px}.sc-h{font-size:14px;font-weight:800;margin-bottom:4px}.sc-h small{color:#6b7280;font-weight:600}.sc-h.dn{color:#15803d}.sc-h.up{color:#dc2626}.sc-h.nw{color:#1d4ed8}.sc-h.gone{color:#6b7280}.sc-r{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:5px 0;border-bottom:1px solid #f1f5f9}.sc-r b{font-weight:700;word-break:break-all}.sc-r span{white-space:nowrap;color:#374151}.sc-r i{font-style:normal;font-weight:800;margin-left:4px}.sc-r i.dn{color:#15803d}.sc-r i.up{color:#dc2626}.sc-box details summary{font-size:12.5px;color:#1d4ed8;cursor:pointer;padding:6px 0}.sc-ok{margin-top:12px;border:0;border-radius:12px;background:#3182f6;color:#fff;font-weight:800;font-size:15px;padding:13px;cursor:pointer}
 .rc-ov{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:flex-end;justify-content:center;padding:12px}@media(min-width:600px){.rc-ov{align-items:center}}.rc-box{background:#fff;color:#111827;border-radius:20px;max-width:440px;width:100%;max-height:86vh;display:flex;flex-direction:column;padding:18px 16px 12px;box-shadow:0 20px 50px rgba(0,0,0,.3)}.rc-t{font-size:17px;font-weight:900;word-break:break-all}.rc-sub{font-size:12px;color:#6b7280;margin:3px 0 6px}.rc-body{overflow:auto;flex:1}.rc-h{font-size:13.5px;font-weight:800;margin:12px 0 4px;color:#1f2937}.rc-r{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9}.rc-r>div:first-child{flex:1;min-width:0}.rc-r b{font-size:13.5px;word-break:break-all}.rc-r small{display:block;font-size:11.5px;color:#6b7280;margin-top:1px}.rc-p{font-size:12.5px;text-align:right;white-space:nowrap}.rc-p i{display:block;font-style:normal;font-weight:800;font-size:12px}.rc-p i.up{color:#dc2626}.rc-p i.dn{color:#15803d}.rc-b{border:0;border-radius:10px;background:#3182f6;color:#fff;font-weight:800;font-size:13px;padding:8px 12px;cursor:pointer;white-space:nowrap}.rc-b.sw{background:#0f766e}.rc-b:disabled{background:#cbd5e1}.rc-b.big{width:100%;padding:13px;font-size:15px;margin-top:8px}.rc-sum{margin-top:10px;font-size:14px;text-align:center}.rc-sum b{color:#15803d}.rc-sum small{display:block;color:#6b7280;font-size:11.5px}.rc-off{display:flex;align-items:center;gap:6px;font-size:12.5px;color:#4b5563;margin-top:10px}.rc-x{margin-top:8px;border:0;border-radius:12px;background:#F2F4F6;color:#374151;font-weight:800;font-size:14px;padding:12px;cursor:pointer}
+.rc-tag{display:inline-block;margin-top:3px;font-style:normal;font-size:11px;font-weight:800;color:#b45309;background:#fef3c7;border-radius:6px;padding:1px 6px}
 </style>
 </head>
 <body>
@@ -1770,7 +1771,11 @@ function capQuote(){if(!S.cart.length){toast('담은 모델이 없어요');retur
 window.PG={call:api,meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
 $('#capBtn').onclick=capQuote;
 /* 💡 추천 팝업 · 💰 최저 조합 (common.js) */
-window.REC_PAGE={brand:'lg',all:function(){if(!REC_PAGE._a){REC_PAGE._a=D.m.map(function(m){var v=null;candRows(m).forEach(function(r){if(v===null||r[R.fin]<v)v=r[R.fin];});return {code:m[0],grp:D.cats[m[1]],cat:D.cats[m[1]],price:v||0};});}return REC_PAGE._a;},
+window.REC_PAGE={brand:'lg',priceLabel:'요금은 지금 진행 중인 활성화 · 프로모션 할인까지 반영한 모델별 가장 싼 월 요금',
+  /* 오늘 날짜 기준 활성화(주말 · 코그페 · 월중 등) 할인이 들어간 월 요금으로 비교, 진행 중인 프로모션 모델은 가산점 · 표시 */
+  all:function(){var key=todayStr()+'|'+S.cust;if(!REC_PAGE._a||REC_PAGE._k!==key){REC_PAGE._k=key;REC_PAGE._a=D.m.map(function(m){var v=null;candRows(m).forEach(function(r){var x=monOf(m[0],r);if(v===null||x<v)v=x;});
+      var a=actInfo(m[0]),tag='',boost=0;if(a&&a.type==='요금인하'&&(a.mid||(a.live&&a.add))){var e=a.e?' ~'+(+a.e.slice(5,7))+'/'+(+a.e.slice(8,10)):'';tag='🔥 '+((a.live&&a.note)||'월중 활성화')+e;boost=a.live&&a.add?2:1;}
+      return {code:m[0],grp:D.cats[m[1]],cat:D.cats[m[1]],price:v||0,tag:tag,boost:boost};});}return REC_PAGE._a;},
   add:function(code){pickModel(code);$('#addBtn').onclick();},cart:function(){return S.cart.map(function(x){return x.code;});},removeAt:function(i){S.cart.splice(i,1);render();},
   best:function(){var rows=[],ch=[],lb=function(r){return r[R.term]+'개월 · '+[D.ct[r[R.ct]],D.cs[r[R.cs]],D.cy[r[R.cy]]].filter(function(v){return v&&v!=='-';}).join(' · ');};
     S.cart.forEach(function(x,i){var m=BY[x.code];if(!m)return;var C=candRows(m),cur=C.filter(function(r){return r[R.term]===x.term&&r[R.ct]===x.ct&&r[R.cs]===x.cs&&r[R.cy]===x.cy;})[0];if(!cur)return;
@@ -2049,7 +2054,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.52';
+var VERSION='v8.53';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

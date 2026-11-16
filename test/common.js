@@ -77,27 +77,27 @@ var REC_WITH={'냉장고':['김치냉장고','정수기'],'김치냉장고':['�
 function recLoadPairs(){if(REC.pairs||!window.REC_PAGE)return;REC.pairs={};
   try{gsrCommon('getPairs',REC_PAGE.brand,function(r){REC.pairs=(r&&r.pairs)||{};REC.pop=(r&&r.pop)||{};REC.fb=(r&&r.fb)||{};});}catch(e){}}
 /* 쓸수록 바뀌는 순위: 인기(최근 30일 조회 · 담기 · 인쇄 · 보관) + 추천 반응(보였을 때 담기/바꾸기를 누른 비율) */
-function recScore(code){var p=REC.pop[code]||0,f=REC.fb[code]||[0,0];return Math.log(1+p)+4*((f[1]+1)/(f[0]+5));}
+function recScore(code,x){var p=REC.pop[code]||0,f=REC.fb[code]||[0,0];return Math.log(1+p)+4*((f[1]+1)/(f[0]+5))+((x&&x.boost)||0);}  /* boost: 판촉 · 활성화 대상 모델 가산점 (페이지가 넣어 줌) */
 /* 페이지마다 서버 호출 함수 이름이 달라서(gsr / api) 페이지가 PG.call 로 넘겨 줌 */
 function gsrCommon(fn,arg,cb){if(PG.call)PG.call(fn,arg,cb,function(){});}
 function recWon(n){return Number(n).toLocaleString()+'원';}
 function recFind(code){var A=REC_PAGE.all(),me=null;A.forEach(function(x){if(x.code===code)me=x;});if(!me)return null;
   var cart=REC_PAGE.cart(),inCart=function(c){return cart.indexOf(c)>=0;};
   var same=A.filter(function(x){return x.grp===me.grp&&x.code!==code&&!inCart(x.code)&&x.price>0;});
-  var up=same.filter(function(x){return x.price>me.price&&x.price-me.price<=10000;}).sort(function(a,b){return recScore(b.code)-recScore(a.code)||a.price-b.price;}).slice(0,2);
-  var dn=same.filter(function(x){return x.price<me.price&&x.price>=me.price*0.6;}).sort(function(a,b){return recScore(b.code)-recScore(a.code)||b.price-a.price;}).slice(0,2);
+  var up=same.filter(function(x){return x.price>me.price&&x.price-me.price<=10000;}).sort(function(a,b){return recScore(b.code,b)-recScore(a.code,a)||a.price-b.price;}).slice(0,2);
+  var dn=same.filter(function(x){return x.price<me.price&&x.price>=me.price*0.6;}).sort(function(a,b){return recScore(b.code,b)-recScore(a.code,a)||b.price-a.price;}).slice(0,2);
   var withL=[],P=(REC.pairs||{})[code]||[];
   P.forEach(function(p){if(withL.length>=2||inCart(p[0]))return;A.forEach(function(x){if(x.code===p[0])withL.push({x:x,n:p[1]});});});
   if(!withL.length){var cats=[];Object.keys(REC_WITH).forEach(function(k){if(String(me.cat).indexOf(k)>=0)cats=cats.concat(REC_WITH[k]);});
-    cats.forEach(function(c){if(withL.length>=2)return;var L=A.filter(function(x){return String(x.cat).indexOf(c)>=0&&!inCart(x.code)&&x.price>0&&cart.every(function(k){var y=null;A.forEach(function(z){if(z.code===k)y=z;});return !y||String(y.cat).indexOf(c)<0;});}).sort(function(a,b){return recScore(b.code)-recScore(a.code)||a.price-b.price;});
+    cats.forEach(function(c){if(withL.length>=2)return;var L=A.filter(function(x){return String(x.cat).indexOf(c)>=0&&!inCart(x.code)&&x.price>0&&cart.every(function(k){var y=null;A.forEach(function(z){if(z.code===k)y=z;});return !y||String(y.cat).indexOf(c)<0;});}).sort(function(a,b){return recScore(b.code,b)-recScore(a.code,a)||a.price-b.price;});
       if(L.length)withL.push({x:L[0],n:0,rule:c});});}
   return {me:me,up:up,dn:dn,withL:withL};}
 function recAfterAdd(code){if(REC.off||REC.busy||!window.REC_PAGE)return;recLoadPairs();var r=recFind(code);if(!r)return;
   if(!r.up.length&&!r.dn.length&&!r.withL.length)return;
   var E=PG.esc,me=r.me,row=function(x,kind,note){var d=x.price-me.price;
     var btn=kind==='swap'?'<button class="rc-b sw" data-swap="'+E(x.code)+'">바꾸기</button>':'<button class="rc-b" data-add="'+E(x.code)+'">담기</button>';
-    return '<div class="rc-r"><div><b>'+E(x.code)+'</b><small>'+E(x.cat)+(note?' · '+note:'')+'</small></div><div class="rc-p">월 '+recWon(x.price)+(kind==='with'?'':'<i class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+recWon(d)+'</i>')+'</div>'+btn+'</div>';};
-  var h='<div class="rc-box"><div class="rc-t">💡 '+E(me.code)+' 담았어요</div><div class="rc-sub">이런 모델도 함께 보여 드려요 · 요금은 모델별 가장 싼 월 요금 기준</div><div class="rc-body">';
+    return '<div class="rc-r"><div><b>'+E(x.code)+'</b><small>'+E(x.cat)+(note?' · '+note:'')+'</small>'+(x.tag?'<em class="rc-tag">'+E(x.tag)+'</em>':'')+'</div><div class="rc-p">월 '+recWon(x.price)+(kind==='with'?'':'<i class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+recWon(d)+'</i>')+'</div>'+btn+'</div>';};
+  var h='<div class="rc-box"><div class="rc-t">💡 '+E(me.code)+' 담았어요</div><div class="rc-sub">이런 모델도 함께 보여 드려요 · '+E(REC_PAGE.priceLabel||'요금은 모델별 가장 싼 월 요금 기준')+'</div><div class="rc-body">';
   if(r.up.length)h+='<div class="rc-h">⬆ 조금만 더 내면 한 단계 위</div>'+r.up.map(function(x){return row(x,'add');}).join('');
   if(r.dn.length)h+='<div class="rc-h">⬇ 비슷한 모델, 더 저렴하게</div>'+r.dn.map(function(x){return row(x,'swap','방금 담은 모델과 바꿔요');}).join('');
   if(r.withL.length)h+='<div class="rc-h">'+(r.withL.some(function(w){return w.n;})?'🤝 함께 많이 담는 모델':'🤝 같이 쓰면 좋은 품목')+'</div>'+r.withL.map(function(w){return row(w.x,'with',w.n?'같이 담긴 견적 '+w.n+'건':'같이 쓰면 좋은 품목');}).join('');
