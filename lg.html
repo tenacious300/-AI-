@@ -2090,5 +2090,22 @@ var VERSION='v8.48';
   new MutationObserver(syncBd).observe(st,{subtree:true,attributes:true,attributeFilter:['style'],childList:true,characterData:true});set(false);
 })();
 </script>
+<style>
+/* 메뉴별 테두리 박스 (공통) */
+.mbox{border:1px solid #e5e7eb;border-radius:14px;padding:11px 13px;margin-top:10px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.mbox>.lbl,.mbox>div>.lbl:first-child{margin-top:0!important}
+#secCond .cond{gap:12px;margin-top:12px}#secCond .cond>.mbox{margin-top:0}
+</style>
+<script>
+(function(){function go(){
+  var W=['cycWrap','preWrap','chWrap','secPkg'];
+  document.querySelectorAll('#secCond .cond>div, #cardBody').forEach(function(d){d.classList.add('mbox');});
+  document.querySelectorAll('#picked .lbl, #secCond > .lbl, #secCard > .lbl').forEach(function(l){
+    if(l.closest('.mbox'))return;var p=l.parentNode;
+    if(W.indexOf(p.id)>=0||(p.children[0]===l&&p.children.length===2&&p.id!=='picked')){p.classList.add('mbox');return;}
+    var n=l.nextElementSibling;if(!n||n.classList.contains('lbl'))return;
+    var b=document.createElement('div');b.className='mbox';p.insertBefore(b,l);b.appendChild(l);b.appendChild(n);});}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',go);else go();})();
+</script>
 </body>
 </html>
