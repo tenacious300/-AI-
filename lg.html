@@ -1280,7 +1280,7 @@ var CARD_X={
   nh:{fee:'15,000 / 17,000원',ars:'1644-2866',full:'NH 올원 BEST',color:'#15803d'},
   best:{fee:'14,000 / 15,000원',ars:'광주 1588-3109 · 전북 1588-2331',full:'광주/전북 베스트케어',color:'#1d4ed8'}};
 var LGCARD_IMG=window.TEST_MODE?'../lgcard/':'lgcard/';
-/* ---------- (테스트) 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
+/* ---------- 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
 var CXO={open:'',init:0};
 function cxFace(src,label,color,w){w=w||80;var h=Math.round(w*0.72);
   if(src)return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;justify-content:center;flex:none"><img src="'+src+'" alt="" loading="lazy" style="max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 3px 10px rgba(15,23,42,.2)" onerror="this.style.display=\'none\'"></div>';
@@ -1430,7 +1430,7 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
       ;$('#cardInfo').insertAdjacentHTML('afterbegin',cardPolicyHtml(card,tr,PL));
   }else $('#cardInfo').innerHTML='';
 
-  if(window.TEST_MODE&&!MU){
+  if(!MU){
     var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){var X=CARD_X[c.id]||{};return {face:cxFace(X.img?LGCARD_IMG+X.img+'.png':'',c.name,X.color,80),full:X.full||c.name,months:c.baseM+'개월',
         tags:[X.apply?[X.apply,X.apply==='간편신청'?'easy':'']:null,X.sub?['LG 구독료 실적 인정','ok']:null,X.apt?['아파트 관리비 실적 인정','ok']:null,['연회비 '+(X.fee||'-')]].filter(Boolean),
@@ -1859,7 +1859,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.42';
+var VERSION='v8.43';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

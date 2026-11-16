@@ -1231,7 +1231,7 @@ var CARDS=[
 if(D.cards&&D.cards.length)CARDS=D.cards;
 var USAGES=uniq([30,40,70,80,120,150,160].concat([].concat.apply([],CARDS.map(function(c){return c.tiers.map(function(t){return t[0];});})))).sort(function(a,b){return a-b;});
 var CARD_IMG=window.TEST_MODE?'../ckcard/':'ckcard/';
-/* ---------- (테스트) 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
+/* ---------- 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
 var CXO={open:'',init:0};
 function cxFace(src,label,color,w){w=w||80;var h=Math.round(w*0.72);
   if(src)return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;justify-content:center;flex:none"><img src="'+src+'" alt="" loading="lazy" style="max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 3px 10px rgba(15,23,42,.2)" onerror="this.style.display=\'none\'"></div>';
@@ -1370,7 +1370,7 @@ function render(){if(S.card!=='none'&&!cardById(S.card))S.card='none';save();
       +'<div class="note">연회비 '+card.fee+' · ARS '+card.ars+(card.extra?' · '+esc(card.extra):'')+'</div>'
       +(S.promo&&!cardPromoLive()?'<div class="warn">신규발급 추가할인 기간('+md(CARD_META.from)+'~'+md(CARD_META.to)+')이 지나 기본 할인만 계산했어요.</div>':'');
   }else $('#cardInfo').innerHTML='';
-  if(window.TEST_MODE){
+  if(true){
     var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:PL,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){return {face:cxFace(c.img?CARD_IMG+c.img+'.png':'',c.name,'#334155',80),full:c.name,months:c.baseM+'개월',
         tags:[c.rank?['추천 '+c.rank+'위','easy']:null,['연회비 '+(c.fee||'-')]].filter(Boolean),note:'발급 ARS '+esc(c.ars||'-')+(c.extra?' · '+esc(c.extra):'')};}};
@@ -1726,7 +1726,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.42';
+var VERSION='v8.43';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
