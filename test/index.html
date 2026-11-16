@@ -933,6 +933,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .lp-iw{width:118px;min-height:32px;padding:0 9px;border-radius:9px;border-width:1px}
 .sum .lumpin{padding:6px 0}
 @media(min-width:1024px){.sum .lp-iw input{font-size:13px!important}}
+#pinBox input{width:100%;border:0;background:#F2F4F6;border-radius:14px;padding:11px 14px;min-height:54px;font-size:20px}
 </style>
 </head>
 <body>
@@ -1194,6 +1195,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <h2>AI 구독 계산기</h2>
   <p>사번을 입력하고 계산기를 골라 주세요</p>
   <input type="text" id="empIn" placeholder="사번 입력" autocomplete="off" maxlength="15" inputmode="numeric" enterkeyhint="go">
+  <div id="pinBox" style="display:none;margin-top:8px"><div id="pinMsg" style="font-size:13px;color:var(--sub);margin-bottom:6px"></div>
+    <input type="password" id="pinIn" placeholder="PIN 4자리" autocomplete="off" maxlength="4" inputmode="numeric" enterkeyhint="go">
+    <input type="password" id="pin2In" placeholder="PIN 한 번 더" autocomplete="off" maxlength="4" inputmode="numeric" enterkeyhint="go" style="display:none;margin-top:6px">
+    <div style="font-size:11.5px;color:var(--sub);margin-top:6px">PIN을 잊었으면 관리자에게 초기화를 요청하세요</div></div>
   <div class="err" id="empErr"></div>
   <div class="emp-warn">⚠️ 비정상 사번 입력 시 추후 접속 불가</div>
   <div class="emp-chrome">🌐 <b>크롬(Chrome)</b> 접속을 권장해요</div>
@@ -2303,7 +2308,17 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   if(!empOk(v)){$('#empErr').textContent='사번은 숫자 6자리로 입력해 주세요';$('#empIn').style.borderColor='#dc2626';$('#empIn').focus();return;}
   $('#empIn').style.borderColor='';
   if(HAS_GS&&!enter._ok){var bt=$('#empGo');bt.disabled=true;$('#empErr').textContent='확인 중…';
-    gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
+    var pa={emp:v,dev:devName(),did:DID,pinMode:1};if(PIN.emp===v){var p1=$('#pinIn').value.trim();if(PIN.mode==='new'){if(!/^[0-9]{4}$/.test(p1)){pinAsk('new','숫자 4자리로 정해 주세요',1);bt.disabled=false;$('#empErr').textContent='';return;}if(p1!==$('#pin2In').value.trim()){pinAsk('new','두 번 입력한 PIN이 달라요',1);bt.disabled=false;$('#empErr').textContent='';return;}pa.newPin=p1;}else pa.pin=p1;}
+    gsr('checkEmp',pa,function(r){bt.disabled=false;$('#empErr').textContent='';
+      if(r&&r.ok===false&&/^pin/.test(r.reason||'')){PIN.emp=v;
+        if(r.reason==='pin_new')pinAsk('new','🔐 처음 입장이에요. 앞으로 쓸 PIN 4자리를 정해 주세요');
+        else if(r.reason==='pin')pinAsk('pin','🔐 PIN 4자리를 입력해 주세요');
+        else if(r.reason==='pin_bad')pinAsk('pin','PIN이 맞지 않아요 (남은 횟수 '+r.left+'번)',1);
+        else pinAsk('pin','PIN을 여러 번 틀려 30분 동안 잠겼어요. 관리자에게 문의하세요',1);return;}
+      if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}
+      if(r&&r.tok){lsPut('calcTok',{emp:v,tok:r.tok});if(r.pinNew)toast('PIN을 정했어요. 다음부터 입장할 때 입력해 주세요');}
+      PIN.emp='';$('#pinBox').style.display='none';
+      if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
   if(!enter._t){termsOpen(v,function(){enter._ok=1;enter._t=1;enter();enter._ok=0;enter._t=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
@@ -2313,11 +2328,18 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   $('#gate').classList.remove('on');showMe();
   if(changed){firstBeat=true;beat();}else startBeat();
   toast(v+' 님, 환영해요');BOX=[];boxLoaded=false;boxBadge();}
+/* 🔐 직원 PIN: 사번 확인 후 서버가 PIN을 요구하면 입력칸을 보여 줌 (처음이면 두 번 입력해서 정함) */
+var PIN={emp:'',mode:''};
+function pinAsk(mode,msg,err){PIN.mode=mode;$('#pinBox').style.display='';$('#pinMsg').innerHTML=err?'<b style="color:#dc2626">'+esc(msg)+'</b>':esc(msg);$('#pin2In').style.display=mode==='new'?'':'none';$('#pinIn').value='';$('#pin2In').value='';$('#pinIn').focus();}
+function TOK(){var t=lsGet('calcTok');return t&&t.emp===EMP?t.tok:'';}
+$('#pinIn').addEventListener('keydown',function(e){if(e.key==='Enter'){if(PIN.mode==='new'&&!$('#pin2In').value)$('#pin2In').focus();else enter();}});
+$('#pin2In').addEventListener('keydown',function(e){if(e.key==='Enter')enter();});
+$('#empIn').addEventListener('input',function(){if(PIN.emp&&this.value.replace(/[^0-9]/g,'')!==PIN.emp){PIN.emp='';$('#pinBox').style.display='none';}});
 $('#empGo').onclick=enter;
 $('#empIn').addEventListener('keydown',function(e){if(e.key==='Enter')enter();});
 $('#meBtn').onclick=openGate;
 /* 로그아웃: 이 기기에 저장된 사번을 지우고 입장 화면으로 (담은 모델은 그대로) */
-$('#logoutBtn').onclick=function(){if(!EMP)return;var e=EMP;EMP=null;try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(x){}lsPut('calcMe',null);lsPut('calcLoginAt',null);
+$('#logoutBtn').onclick=function(){if(!EMP)return;var e=EMP;EMP=null;try{localStorage.removeItem('calcEmp');sessionStorage.removeItem('calcEmpS');}catch(x){}lsPut('calcMe',null);lsPut('calcLoginAt',null);lsPut('calcTok',null);
   BOX=[];boxLoaded=false;boxBadge();showMe();openGate();$('#empErr').innerHTML='<span style="color:#1d4ed8">'+esc(e)+' 님, 로그아웃했어요.</span>';fuLog('logout');};
 showMe();
 if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}}
@@ -2664,7 +2686,7 @@ function parseRosterWB(wb){var aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNa
     var g=function(i){return i==null||row[i]==null?'':String(row[i]).trim();};map[e]=[g(col.n),g(col.b),g(col.k),g(col.t),g(col.c)];n++;}
   if(!n)return {err:'읽을 수 있는 사번이 없어요.'};return {map:map,n:Object.keys(map).length,cols:col};}
 function rsDiff(nm){var om=(RS.data&&RS.data.map)||{},add=0,del=0,ch=0;Object.keys(nm).forEach(function(k){if(!om[k])add++;else if(JSON.stringify(om[k])!==JSON.stringify(nm[k]))ch++;});Object.keys(om).forEach(function(k){if(!nm[k])del++;});return {add:add,del:del,ch:ch};}
-function admRosterHtml(){var D=RS.data,h='';if(!D)return '<div class="empty" style="margin-top:12px">불러오는 중…</div>';if(!D.ok)return '<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
+function admRosterHtml(){var D=RS.data,h='';h+='<div class="adm-sec">🔐 직원 PIN 초기화 <small>PIN을 잊은 직원 · 다음 입장 때 새로 정해요</small></div><div class="ae-tools"><input type="search" id="pinRsEmp" placeholder="사번 6자리" inputmode="numeric" maxlength="6" autocomplete="off"><button class="btn line sm" id="pinRsGo">초기화</button></div>';if(!D)return '<div class="empty" style="margin-top:12px">불러오는 중…</div>';if(!D.ok)return '<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
   var map=D.map||{},keys=Object.keys(map),cnt={},brs={};keys.forEach(function(k){var r=map[k];cnt[r[3]]=(cnt[r[3]]||0)+1;brs[r[1]]=(brs[r[1]]||0)+1;});
   h+='<div class="adm-card">현재 명부: '+(D.meta?'<b>'+esc(D.meta.file)+'</b> · '+esc(D.meta.at)+' 업로드 · <b>'+keys.length+'명</b> ('+Object.keys(cnt).map(function(k){return esc(k||'기타')+' '+cnt[k];}).join(' · ')+') · 소속 '+Object.keys(brs).length+'곳':'<b>아직 올린 명부가 없어요</b> · 명부가 없으면 누구나 입장할 수 있어요')+'</div>';
   h+='<label class="rs-drop">📂 <b>명부 엑셀(.xlsx) 올리기</b><br><small>성명 · 사번 · 부서 · 직책 · 사원구분 · 협력업체명 열을 자동으로 찾아요</small><input type="file" id="rsFile" accept=".xlsx,.xls" style="display:none"></label>';
@@ -2686,7 +2708,7 @@ function rsList(){var el=$('#rsList');if(!el)return;var L=rsRows(),lim=RS.more?L
   el.innerHTML=L.length?'<div class="scroll" style="margin-top:8px"><table class="tbl"><tr><th>사번</th><th>성명</th><th>소속</th><th>직책</th><th>구분</th><th>오늘</th></tr>'+L.slice(0,lim).map(function(x){var r=x[1],t=x[2];return '<tr><td><b>'+esc(x[0])+'</b></td><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td><td>'+rTp(r[3])+(r[4]?' <small style="color:var(--sub)">'+esc(r[4])+'</small>':'')+'</td><td>'+(t?'<b style="color:#16a34a">● '+t.n+'회</b> <small style="color:var(--sub)">'+esc(t.last)+'</small>':'<span style="color:#94a3b8">미접속</span>')+'</td></tr>';}).join('')+'</table></div>'
     +(L.length>lim?'<a href="#" class="link" id="rsMore" style="display:inline-block;margin-top:8px;font-size:13px">'+L.length+'명 중 '+lim+'명 표시 · 모두 보기 ▾</a>':'<div class="hint" style="margin-top:6px">'+L.length+'명</div>'):'<div class="empty" style="margin-top:8px">검색 결과가 없어요.</div>';
   var m=$('#rsMore');if(m)m.onclick=function(e){e.preventDefault();RS.more=true;rsList();};}
-function admRosterBind(){var f=$('#rsFile');if(f)f.onchange=function(){var file=f.files[0];if(!file)return;toast('명부를 읽는 중…');readXlsxFile(file,function(wb){var r=parseRosterWB(wb);RS.up={file:file.name,map:r.map,n:r.n,err:r.err};admRender();});};
+function admRosterBind(){var pg=$('#pinRsGo');if(pg)pg.onclick=function(){var e=($('#pinRsEmp').value||'').replace(/[^0-9]/g,'');if(e.length!==6){toast('사번 6자리를 입력해 주세요');return;}if(!confirm(e+' 사번의 PIN을 초기화할까요?'))return;gsr('adminPinReset',{pw:ADM.pw,emp:e},function(r){toast(r&&r.ok?e+' PIN을 초기화했어요':(r&&r.msg)||'초기화하지 못했어요');if(r&&r.ok)$('#pinRsEmp').value='';},function(){toast('서버에 연결하지 못했어요');});};var f=$('#rsFile');if(f)f.onchange=function(){var file=f.files[0];if(!file)return;toast('명부를 읽는 중…');readXlsxFile(file,function(wb){var r=parseRosterWB(wb);RS.up={file:file.name,map:r.map,n:r.n,err:r.err};admRender();});};
   var ap=$('#rsApply');if(ap)ap.onclick=function(){ap.disabled=true;ap.textContent='적용 중…';gsr('adminSaveRoster',{pw:ADM.pw,map:RS.up.map,file:RS.up.file},function(r){if(r&&r.ok){toast('명부를 적용했어요 · '+r.meta.count+'명');RS.up=null;rsLoad();admRefresh();}else{toast((r&&r.msg)||'적용하지 못했어요');admRender();}},function(){toast('서버에 연결하지 못했어요');admRender();});};
   var cc=$('#rsCancel');if(cc)cc.onclick=function(){RS.up=null;admRender();};
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-rmode]'),function(b){b.onclick=function(){var m=b.dataset.rmode;if(m===RS.data.mode)return;
@@ -3410,13 +3432,13 @@ var LS_KEY='calcQuotes';
 function lsAll(){try{return JSON.parse(localStorage.getItem(LS_KEY)||'[]');}catch(e){return [];}}
 function lsSet(a){try{localStorage.setItem(LS_KEY,JSON.stringify(a));}catch(e){}}
 var Q={
-  save:function(q,cb){if(HAS_GS){google.script.run.withSuccessHandler(cb).withFailureHandler(function(){cb({ok:false,msg:'서버에 연결하지 못했어요.'});}).saveQuote(q);return;}
+  save:function(q,cb){if(HAS_GS){q.tok=TOK();google.script.run.withSuccessHandler(cb).withFailureHandler(function(){cb({ok:false,msg:'서버에 연결하지 못했어요.'});}).saveQuote(q);return;}
     var a=lsAll(),now=new Date(),ts=now.getFullYear()+'-'+('0'+(now.getMonth()+1)).slice(-2)+'-'+('0'+now.getDate()).slice(-2)+' '+('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
     var rec={id:q.id||Math.random().toString(36).slice(2,10),emp:q.emp,ts:ts,name:q.name,phone:q.phone,memo:q.memo,summary:q.summary,monthly:q.monthly,prepay:q.prepay,state:q.state};
     var k=-1;a.forEach(function(x,i){if(x.id===q.id&&x.emp===q.emp)k=i;});if(k>=0)a[k]=rec;else a.push(rec);lsSet(a);cb({ok:true,id:rec.id,updated:k>=0});},
-  list:function(cb){if(HAS_GS){google.script.run.withSuccessHandler(cb).withFailureHandler(function(){cb(null);}).listQuotes(EMP);return;}
+  list:function(cb){if(HAS_GS){google.script.run.withSuccessHandler(cb).withFailureHandler(function(){cb(null);}).listQuotes({emp:EMP,tok:TOK()});return;}
     cb(lsAll().filter(function(x){return x.emp===EMP;}).sort(function(a,b){return a.ts<b.ts?1:-1;}));},
-  del:function(id,cb){if(HAS_GS){google.script.run.withSuccessHandler(cb).withFailureHandler(function(){cb({ok:false});}).deleteQuote({emp:EMP,id:id});return;}
+  del:function(id,cb){if(HAS_GS){google.script.run.withSuccessHandler(cb).withFailureHandler(function(){cb({ok:false});}).deleteQuote({emp:EMP,id:id,tok:TOK()});return;}
     lsSet(lsAll().filter(function(x){return !(x.id===id&&x.emp===EMP);}));cb({ok:true});}
 };
 function fmtPhone(v){var d=String(v||'').replace(/[^0-9]/g,'').slice(0,11);

@@ -49,7 +49,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, adminPinReset: adminPinReset,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
@@ -382,6 +382,7 @@ function cleanStr_(v, n) { return String(v == null ? '' : v).replace(/[\r\n\t]+/
 function saveQuote(q) {
   q = q || {};
   var emp = cleanEmp_(q.emp);
+  if (emp && !quoteAuth_(emp, q.tok)) return { ok: false, msg: '다시 로그인해 주세요 (PIN 확인 필요).', auth: true };
   var name = cleanStr_(q.name, 30);
   if (!emp || !name) return { ok: false, msg: '사번과 고객명이 필요해요.' };
   var state = String(q.state || '');
@@ -412,9 +413,10 @@ function saveQuote(q) {
 }
 
 /** 내 사번의 견적 목록 (최신순) */
-function listQuotes(emp) {
-  emp = cleanEmp_(emp);
+function listQuotes(arg) {
+  var emp = cleanEmp_(typeof arg === 'object' && arg ? arg.emp : arg);
   if (!emp) return [];
+  if (!quoteAuth_(emp, typeof arg === 'object' && arg ? arg.tok : '')) return [];
   var sh = quoteSheet_();
   var n = sh.getLastRow();
   if (n < 2) return [];
@@ -434,6 +436,7 @@ function deleteQuote(arg) {
   arg = arg || {};
   var emp = cleanEmp_(arg.emp), id = String(arg.id || '');
   if (!emp || !id) return { ok: false };
+  if (!quoteAuth_(emp, arg.tok)) return { ok: false, auth: true };
   var lock = LockService.getScriptLock();
   try { lock.waitLock(10000); } catch (e) { return { ok: false }; }
   try {
@@ -1224,10 +1227,96 @@ function rosterAllowed_(emp) {
   return false;
 }
 /** 직원: 입장 전 사번 확인 */
+/* ---------- 직원 PIN (4자리) ----------
+   - 화면이 pinMode로 요청할 때만 PIN을 확인해요. 예전 화면(PIN 없음)은 그대로 들어와요.
+   - 스크립트 속성 PIN_REQUIRED=Y 로 바꾸면 PIN 없이 들어오는 요청과 토큰 없는 견적 보관함 요청을 막아요 (정식 적용 때).
+   - PIN은 원문이 아니라 해시로 견적 시트 파일의 'PIN' 탭에 저장. 사번당 5번 틀리면 30분 잠금. */
+var PIN_SHEET = 'PIN', PIN_MAX_FAIL = 5, PIN_LOCK_SEC = 1800;
+function pinRequired_() { return PropertiesService.getScriptProperties().getProperty('PIN_REQUIRED') === 'Y'; }
+function pinSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(PIN_SHEET);
+  if (!sh) { sh = ss.insertSheet(PIN_SHEET); sh.appendRow(['사번', 'PIN 해시', '토큰', '설정 시각']); sh.setFrozenRows(1); }
+  return sh;
+}
+function pinSalt_() {
+  var p = PropertiesService.getScriptProperties(), v = p.getProperty('PIN_SALT');
+  if (!v) { v = Utilities.getUuid(); p.setProperty('PIN_SALT', v); }
+  return v;
+}
+function pinHash_(emp, pin) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, emp + ':' + pin + ':' + pinSalt_(), Utilities.Charset.UTF_8)
+    .map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
+}
+function pinRow_(sh, emp) {
+  var n = sh.getLastRow(); if (n < 2) return 0;
+  var v = sh.getRange(2, 1, n - 1, 1).getDisplayValues();
+  for (var i = 0; i < v.length; i++) if (cleanEmp_(v[i][0]) === emp) return i + 2;
+  return 0;
+}
+/** 새 토큰 (기기마다 하나 · 사번당 최근 5개) */
+function pinIssue_(sh, row, emp) {
+  var tok = Utilities.getUuid().replace(/-/g, ''), c = sh.getRange(row, 3), L = String(c.getValue() || '').split(',').filter(String);
+  L.unshift(tok); c.setValue(L.slice(0, 5).join(','));
+  CacheService.getScriptCache().remove('tok_' + emp);
+  return tok;
+}
+function tokOk_(emp, tok) {
+  emp = cleanEmp_(emp); tok = String(tok || '');
+  if (!emp || !/^[0-9a-f]{32}$/.test(tok)) return false;
+  var c = CacheService.getScriptCache(), k = 'tok_' + emp, v = c.get(k);
+  if (v == null) { var sh = pinSheet_(), r = pinRow_(sh, emp); v = r ? String(sh.getRange(r, 3).getValue() || '') : ''; c.put(k, v, 600); }
+  return v.split(',').indexOf(tok) >= 0;
+}
+/** 견적 보관함: 토큰을 보냈으면 반드시 맞아야 하고, PIN_REQUIRED면 토큰이 있어야 함 */
+function quoteAuth_(emp, tok) {
+  if (tok) return tokOk_(emp, tok);
+  return !pinRequired_();
+}
+/** 입장할 때 PIN 확인 → { ok, tok } 또는 { ok:false, reason: pin_new | pin | pin_bad | pin_locked } */
+function pinCheck_(emp, arg) {
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(8000); } catch (e) { return { ok: false, reason: 'busy' }; }
+  try {
+    var sh = pinSheet_(), row = pinRow_(sh, emp), now = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm:ss');
+    if (!row) {
+      var np = String(arg.newPin || '');
+      if (!/^[0-9]{4}$/.test(np)) return { ok: false, reason: 'pin_new' };
+      sh.appendRow(["'" + emp, pinHash_(emp, np), '', now]); row = sh.getLastRow();
+      return { ok: true, tok: pinIssue_(sh, row, emp), pinNew: true };
+    }
+    var c = CacheService.getScriptCache(), fk = 'pinf_' + emp, f = Number(c.get(fk) || 0);
+    if (f >= PIN_MAX_FAIL) return { ok: false, reason: 'pin_locked' };
+    var pin = String(arg.pin || '');
+    if (!/^[0-9]{4}$/.test(pin)) return { ok: false, reason: 'pin' };
+    if (pinHash_(emp, pin) !== String(sh.getRange(row, 2).getValue())) {
+      c.put(fk, String(f + 1), PIN_LOCK_SEC);
+      return { ok: false, reason: f + 1 >= PIN_MAX_FAIL ? 'pin_locked' : 'pin_bad', left: PIN_MAX_FAIL - f - 1 };
+    }
+    c.remove(fk);
+    return { ok: true, tok: pinIssue_(sh, row, emp) };
+  } finally { try { lock.releaseLock(); } catch (e) {} }
+}
+/** 관리자: 직원 PIN 초기화 (다음 입장 때 새로 정함 · 기존 기기 토큰도 모두 무효) */
+function adminPinReset(arg) {
+  arg = arg || {};
+  if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
+  var emp = cleanEmp_(arg.emp); if (!emp) return { ok: false, msg: '사번을 확인해 주세요.' };
+  var sh = pinSheet_(), row = pinRow_(sh, emp);
+  if (!row) return { ok: false, msg: '아직 PIN을 정하지 않은 사번이에요.' };
+  sh.deleteRow(row);
+  var c = CacheService.getScriptCache(); c.remove('tok_' + emp); c.remove('pinf_' + emp);
+  return { ok: true };
+}
 function checkEmp(arg) {
   var emp = typeof arg === 'object' && arg ? arg.emp : arg, did = typeof arg === 'object' && arg ? arg.did : '';
   if (isBlocked_(emp, did)) return { ok: false, reason: 'blocked' };
   if (!rosterAllowed_(emp)) { nrLog_(emp, 'r', typeof arg === 'object' ? arg : {}); return { ok: false, reason: 'roster' }; }
+  if ((typeof arg === 'object' && arg && arg.pinMode) || pinRequired_()) {
+    if (!(typeof arg === 'object' && arg)) return { ok: false, reason: 'pin' };
+    var pr = pinCheck_(cleanEmp_(emp), arg);
+    if (!pr.ok) return pr;
+    return { ok: true, me: meInfo_(emp), tok: pr.tok, pinNew: !!pr.pinNew };
+  }
   return { ok: true, me: meInfo_(emp) };
 }
 /** 본인 사번의 이름 · 지점 · 직책 (견적서 담당자 표시용) */
