@@ -1237,9 +1237,14 @@ function renderPicked(){if(!S.sel)return;var m=BY[S.sel.code],code=m[0];if(!m){S
   var po=preOptsOf(p);if(!po.some(function(o){return o[0]===S.sel.preK;}))S.sel.preK='0';
   $('#preWrap').style.display=po.length>1?'':'none';
   var fx=po.filter(function(o){return o[0][0]==='f';}),isF=S.sel.preK[0]==='f';
-  $('#pkPre').innerHTML=po.filter(function(o){return o[0][0]!=='f';}).map(function(o){return '<button class="chip sm '+(S.sel.preK===o[0]?'on':'')+'" data-v="'+o[0]+'">'+o[1]+(o[2]?' <small>'+won(o[2])+'</small>':'')+'</button>';}).join('')
-    +(fx.length?'<select id="preFix" class="presel'+(isF?' on':'')+'"><option value="">정액 선택</option>'+fx.map(function(o){return '<option value="'+o[0]+'"'+(S.sel.preK===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>':'');
-  var pf=$('#preFix');if(pf)pf.onchange=function(){S.sel.preK=pf.value||'0';renderPicked();};
+  var rt=po.filter(function(o){return o[0]!=='0'&&o[0][0]!=='f';});
+  var mode=S.sel.preM||(S.sel.preK==='0'?'none':isF?'fix':'rate');S.sel.preM=mode;
+  var mb=function(k,l,dis){return '<button class="chip sm '+(mode===k?'on':'')+'" data-m="'+k+'"'+(dis?' disabled style="opacity:.4"':'')+'>'+l+'</button>';};
+  var h='<div class="chips" style="margin-bottom:8px">'+mb('none','안 함')+mb('rate','정률 (%)',!rt.length)+mb('fix','정액 (만원)',!fx.length)+'</div>';
+  if(mode==='rate')h+='<div class="chips">'+rt.map(function(o){return '<button class="chip sm '+(S.sel.preK===o[0]?'on':'')+'" data-v="'+o[0]+'">'+o[1]+' <small>'+won(o[2])+'</small></button>';}).join('')+'</div>';
+  if(mode==='fix')h+='<select id="preFix" class="presel'+(isF?' on':'')+'"><option value="">정액 금액 선택 ('+(fx[0][2]/10000)+'만~'+(fx[fx.length-1][2]/10000)+'만원)</option>'+fx.map(function(o){return '<option value="'+o[0]+'"'+(S.sel.preK===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>';
+  $('#pkPre').innerHTML=h;
+  var pf=$('#preFix');if(pf)pf.onchange=function(){if(pf.value)S.sel.preK=pf.value;renderPicked();};
   var P=(po.filter(function(o){return o[0]===S.sel.preK;})[0]||po[0])[2],c=calc(code,p.slice(),P),rate=p[R.base]?1-c.monP/p[R.base]:0;
   $('#pkSub1').textContent='정상 월 '+won(p[R.base])+' · '+(p[R.term]/12)+'년('+p[R.term]+'개월)';
   $('#pkPrice').innerHTML='월 '+won(c.monP)+(rate>0?' <span style="font-size:14px;color:var(--pri);font-weight:700">'+pct(rate)+'↓</span>':'');
@@ -1254,7 +1259,11 @@ function renderPicked(){if(!S.sel)return;var m=BY[S.sel.code],code=m[0];if(!m){S
 $('#terms').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.y=+b.dataset.v;S.sel.care=null;renderPicked();});
 $('#types').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.care=b.dataset.v;S.sel.cy=null;renderPicked();});
 $('#cycles').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.cy=+b.dataset.v;renderPicked();});
-$('#pkPre').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;S.sel.preK=b.dataset.v;renderPicked();});
+$('#pkPre').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b||b.disabled)return;
+  if(b.dataset.m){var m=b.dataset.m;S.sel.preM=m;var po=preOptsOf(selRow(BY[S.sel.code]).p);
+    if(m==='none')S.sel.preK='0';else if(m==='rate'){var r=po.filter(function(o){return o[0]!=='0'&&o[0][0]!=='f';})[0];S.sel.preK=r?r[0]:'0';}else if(S.sel.preK[0]!=='f'){var f=po.filter(function(o){return o[0][0]==='f';})[0];S.sel.preK=f?f[0]:'0';}
+    renderPicked();return;}
+  S.sel.preK=b.dataset.v;renderPicked();});
 $('#addBtn').onclick=function(){if(!S.sel)return;var m=BY[S.sel.code],p=selRow(m).p;
   S.cart.push({code:m[0],term:p[R.term],ct:p[R.ct],cs:p[R.cs],cy:p[R.cy],preK:S.sel.preK});
   mvLog(m[0],'add');fuLog('add');fuLog('cust:'+S.cust);fuLog('term:'+(p[R.term]>=Math.max.apply(null,m[2].map(function(r){return r[R.term];}))?'max':'other'));var pk=S.sel.preK||'0';fuLog('pre:'+(pk==='0'?'0':pk[0]==='f'?'fix':'rate'));
@@ -1462,7 +1471,8 @@ function render(){if(S.card!=='none'&&!CARDS.some(function(c){return c.id===S.ca
       +'<div class="item-g"><div><span>정상 월</span><b>'+won(it.mon)+'</b></div>'
       +'<div><span>'+(it.P?'선납금':'할인 후 월')+'</span><b>'+(it.P?won(it.P):won(it.mon1))+'</b></div>'
       +'<div class="hi"><span>월 납부액</span><b>'+won(it.mon2)+'</b></div></div>'
-      +'<div class="item-row"><span class="k">선납</span><select data-pre="'+i+'">'+it.po.map(function(o){return '<option value="'+o[0]+'" '+(it.preK===o[0]?'selected':'')+'>'+o[1]+(o[2]&&o[0][0]!=='f'?' ('+won(o[2])+')':'')+'</option>';}).join('')+'</select></div>'
+      +'<div class="item-row"><span class="k">선납</span><select data-pre="'+i+'">'+(function(){var op=function(o){return '<option value="'+o[0]+'" '+(it.preK===o[0]?'selected':'')+'>'+o[1]+(o[2]&&o[0][0]!=='f'?' ('+won(o[2])+')':'')+'</option>';},g=function(l,f){var a=it.po.filter(f);return a.length?'<optgroup label="'+l+'">'+a.map(op).join('')+'</optgroup>':'';};
+  return it.po.filter(function(o){return o[0]==='0';}).map(op).join('')+g('정률 (%)',function(o){return /^\d/.test(o[0])&&o[0]!=='0';})+g('정액 (만원)',function(o){return o[0][0]==='f';})+g('패키지 선납',function(o){return o[0][0]==='p';});})()+'</select></div>'
       +'<div class="item-row"><span class="k">구독혜택</span>'
       +(it.hm?'<span class="tag g">🎁 처음 '+it.hm+'개월 반값 '+won(it.halfP)+'</span>':'')+(it.gift?'<span class="tag g">🎁 '+esc(it.gift.note)+'</span>':'')+(!it.hm&&!it.gift?'<span class="tag gr">대상 아님</span>':'')+'</div>'
       +'<div class="item-row"><label class="cmpchk"><input type="checkbox" data-cmp="'+i+'" '+(it.cmp!==false?'checked':'')+'>비교</label><a class="link" style="margin-left:auto" target="_blank" rel="noopener" href="'+lgUrl(it.code)+'">LG전자에서 보기 ↗</a></div>'
