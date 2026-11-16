@@ -875,7 +875,23 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
     <div class="auto" id="autoMsg"></div>
   </section>
 
-  <section class="card" id="secPick">
+  <section class="card" id="secPkg">
+  <h2><span class="num">💍</span>혼수(웨딩) 패키지 <small style="font-weight:500;color:var(--sub);font-size:12px;margin-left:6px">전자랜드 단독 · 11/1~11/30</small></h2>
+  <div class="lbl">플랜 선택</div>
+  <div class="chips" id="pkgPlan"></div>
+  <div id="pkgBody"></div>
+</section>
+<style>
+#pkgBody .ps{display:grid;grid-template-columns:72px 1fr auto;gap:8px;align-items:center;padding:9px 0;border-bottom:1px dashed #e5e7eb;font-size:13.5px}
+#pkgBody .ps b{font-size:12.5px;color:var(--sub)} #pkgBody select{width:100%;padding:8px;border-radius:10px;border:1px solid #d1d5db;font-size:13.5px;background:#fff}
+#pkgBody .pr{font-weight:700;white-space:nowrap}
+.pkres{margin-top:12px;background:linear-gradient(135deg,#eef4ff,#f5f3ff);border-radius:16px;padding:14px 16px}
+.pkres .row{display:flex;justify-content:space-between;font-size:13.5px;padding:3px 0}.pkres .row.mi span:last-child{color:#dc2626}
+.pkres .big{font-size:26px;font-weight:800;color:var(--pri);text-align:right;margin-top:6px}
+.pkres .cb{margin-top:8px;background:#fff7ed;color:#c2410c;border-radius:10px;padding:8px 10px;font-weight:700;font-size:14px;text-align:center}
+.pkres .ref{font-size:12px;color:var(--sub);margin-top:6px;text-align:right}
+</style>
+<section class="card" id="secPick">
     <h2><span class="num">2</span>모델 찾기</h2>
     <div class="search">
       <svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1258,6 +1274,47 @@ function calcItems(){var out=[];S.cart=S.cart.filter(function(it){var m=BY[it.co
     return true;});
   return out;}
 function payAt(i,m){return m<=i.N?(m<=i.hm?i.halfP:i.mon2):0;}
+/* ===== 혼수(웨딩) 패키지 시뮬레이션 ===== */
+var PKG=[
+ {id:'w99',name:'웨딩 99플랜',rate:3.3,pre:10500000,cb:600000,ref:'선납 1,050만 · 월 9.9만',slots:[['TV',['OLED77C6FL','OLED77C6FS','OLED77C6FW']],['냉장고',['M876GBB232']],['세탁기',['FC2521SX6C.']]]},
+ {id:'w77',name:'웨딩 77플랜',rate:3.8,pre:8200000,cb:300000,ref:'선납 820만 · 월 7.7만',slots:[['TV',['OLED77B6XS','OLED77B6XW']],['냉장고',['H876GBB111']],['세탁기',['W2520WHM.AKOR']]]},
+ {id:'w66',name:'웨딩 66플랜',rate:3.6,pre:6800000,cb:100000,ref:'선납 680만 · 월 6.6만',slots:[['TV',['OLED65B6XS','OLED65B6XW']],['냉장고',['T876MEE1S1']],['세탁기',['W2520WHM.AKOR']]]},
+ {id:'bpR',name:'BEST-PICK + 로봇청소기',rate:0,pre:0,cb:200000,best:1,slots:[['로봇청소기',['B95AWBH','B95AWBTH','N95THO','N95TWU','N95THU']]]},
+ {id:'bpK',name:'BEST-PICK + 김치냉장고',rate:0,pre:0,cb:600000,best:1,noSbm:1,slots:[['김치냉장고',['Z386GBB241','Z484GBB152','Z495GBB251']]]}];
+var BP=[['TV',['OLED77C6FL','OLED77C6FS','OLED77C6FW','OLED65C6FS','OLED65C6FW','OLED77B6XS','OLED77B6XW','OLED65B6XS','OLED65B6XW','85QNED82BKS','85QNED82BKW','32LX6BKGA']],
+ ['냉장고',['M876GBB232','G646GBB031','G646GBB032','H876GBB111','T876MEE1S1','D646GBB081','D646GBB021']],
+ ['세탁기',['FC2521SX6C','FC2521SX6CX','FH25EAX','FH25EAF','FH25EA.','WA2525VMP6R','WA2525GEP6R','W2520WHM']]];
+var PK={id:'',sel:{},preOn:true};
+function pkCodes(pfx){var o=[];pfx.forEach(function(p){D.m.forEach(function(m){if(m[0].indexOf(p)===0&&o.indexOf(m[0])<0)o.push(m[0]);});});return o;}
+function pkRow(code){var m=BY[code];if(!m)return null;var rows=candRows(m),mx=Math.max.apply(null,rows.map(function(r){return r[R.term];}));
+  return rows.filter(function(r){return r[R.term]===mx;}).sort(function(a,b){return monOf(code,a)-monOf(code,b);})[0];}
+function renderPkg(){var p=PKG.filter(function(x){return x.id===PK.id;})[0];
+  $('#pkgPlan').innerHTML='<button class="chip sm '+(!PK.id?'on':'')+'" data-v="">선택 안 함</button>'+PKG.map(function(x){return '<button class="chip sm '+(x.id===PK.id?'on':'')+'" data-v="'+x.id+'">'+x.name+' <small>+'+(x.cb/10000)+'만 캐시백</small></button>';}).join('');
+  var B=$('#pkgBody');if(!p){B.innerHTML='';return;}
+  var slots=(p.best?BP.map(function(s){return [s[0],s[1].filter(function(c){return !(p.noSbm&&c==='32LX6BKGA');})];}):[]).concat(p.slots);
+  var h='<div class="note" style="margin:8px 0">'+(p.best?'TV·냉장고·세탁기 가이드 모델 각 1대 + '+slots[slots.length-1][0]+' 구독 시 캐시백'+(p.noSbm?' (스바미2 Max 제외)':''):'정해진 모델 3종 + 선납 · 패키지 추가 요금할인 '+p.rate+'%')+'</div>',sum=0,pmax=0,items=[];
+  slots.forEach(function(s,i){var cs=pkCodes(s[1]);var cur=PK.sel[i];if(cs.indexOf(cur)<0)cur=PK.sel[i]=cs[0];
+    var r=cur&&pkRow(cur),mon=r?monOf(cur,r):0;sum+=mon;if(r){pmax+=r[R.pmax];items.push({code:cur,r:r,mon:mon});}
+    h+='<div class="ps"><b>'+s[0]+'</b><select data-i="'+i+'">'+cs.map(function(c){return '<option'+(c===cur?' selected':'')+'>'+c+'</option>';}).join('')+'</select><span class="pr">'+(r?'월 '+won(mon):'단가 없음')+'</span></div>'
+      +(r?'<div style="font-size:11.5px;color:var(--sub);margin:-4px 0 4px 80px">'+(r[R.term]/12)+'년 · '+esc(typeName(r))+'</div>':'');});
+  var pre=p.pre&&PK.preOn?p.pre:0,term=72,cut=pre?Math.round(pre/term+pre*PRE_RATE):0,after=Math.max(0,sum-cut),pd=Math.floor(after*p.rate/100/100)*100,fin=Math.floor((after-pd)/100)*100;
+  h+='<div class="pkres">';
+  if(p.pre)h+='<label class="switch" style="margin-bottom:6px"><input type="checkbox" id="pkPreOn"'+(PK.preOn?' checked':'')+'> 패키지 선납 '+won(p.pre)+' 적용</label>';
+  h+='<div class="row"><span>모델 월 요금 합계 (6년)</span><span>'+won(sum)+'</span></div>';
+  if(pre)h+='<div class="row mi"><span>선납 '+won(pre)+' 차감 (÷72 + 연 2.25%)</span><span>−'+won(cut)+'</span></div>';
+  if(p.rate)h+='<div class="row mi"><span>패키지 추가 요금할인 '+p.rate+'%</span><span>−'+won(pd)+'</span></div>';
+  h+='<div class="big">월 '+won(fin)+'</div>';
+  h+='<div class="row" style="font-size:12.5px;color:var(--sub)"><span>6년 총 납부</span><span>'+won(pre+fin*term)+'</span></div>';
+  h+='<div class="cb">🎁 전자랜드 캐시백 '+won(p.cb)+'</div>';
+  if(p.ref)h+='<div class="ref">정책 안내 기준: '+p.ref+'</div>';
+  h+='</div><button class="btn pri" id="pkAdd" style="margin-top:10px;width:100%">패키지 모델 한 번에 담기</button>';
+  B.innerHTML=h;}
+$('#pkgPlan').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;PK.id=b.dataset.v;PK.sel={};renderPkg();});
+$('#pkgBody').addEventListener('change',function(e){if(e.target.dataset.i!=null){PK.sel[e.target.dataset.i]=e.target.value;renderPkg();}if(e.target.id==='pkPreOn'){PK.preOn=e.target.checked;renderPkg();}});
+$('#pkgBody').addEventListener('click',function(e){if(e.target.id!=='pkAdd')return;var n=0;$('#pkgBody').querySelectorAll('select').forEach(function(sl){var c=sl.value,r=pkRow(c);if(!r)return;S.cart.push({code:c,term:r[R.term],ct:r[R.ct],cs:r[R.cs],cy:r[R.cy],preK:'0'});n++;});render();toast('패키지 모델 '+n+'개 담았어요');});
+renderPkg();
+
+
 
 /* ====== 제휴카드 (LG전자 구독 제휴카드 안내, 2026.11 기준 · 프로모션 11/1~11/30) ====== */
 var CARD_META={from:'2026-11-01',to:'2026-11-30'};
