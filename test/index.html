@@ -2960,11 +2960,12 @@ function capDraw(){var d=capData();if(!d)return null;var W=760,P=40,F='"Malgun G
     y+=36;T('구독 총 실부담 (카드·포인트 반영)',P+4,y,23,'#334155');T(won(d.feelT),W-P-4,y,23,'#334155',400,'right');
     y+=40;T(d.LP.diff>0?'구독이 더 들어요 (무상수리연장 포함)':'구독이 덜 들어요',P+4,y,25,'#0f172a',800);T(won(Math.abs(d.LP.diff)),W-P-4,y,25,'#0f172a',800,'right');y=y0+186;}
   y+=36;x.fillStyle='#f8fafc';x.fillRect(0,y,W,90);
-  T('전자랜드 여수본점'+(EMP?' · 담당 '+EMP:''),P,y+52,20,'#94a3b8');T('※ 참고용 견적 · 최종 금액은 계약 시 확인',W-P,y+52,20,'#94a3b8',400,'right');
+  T(capBr()+(EMP?' · 담당 '+EMP:''),P,y+52,20,'#94a3b8');T('※ 참고용 견적 · 최종 금액은 계약 시 확인',W-P,y+52,20,'#94a3b8',400,'right');
   var FH=y+90,o=document.createElement('canvas');o.width=W;o.height=FH;var ox=o.getContext('2d');
   ox.beginPath();ox.moveTo(36,0);ox.arcTo(W,0,W,FH,36);ox.arcTo(W,FH,0,FH,36);ox.arcTo(0,FH,0,0,36);ox.arcTo(0,0,W,0,36);ox.clip();ox.drawImage(c,0,0);
   return o;}
 /* 화면의 '맞춤 구독 견적' 카드를 그대로 이미지로 (실패하면 예전 방식으로 그림) */
+function capBr(){var m=meGet(),b=m&&m.br?String(m.br).replace(/^전자랜드\s*/,'').trim():'';return '전자랜드'+(b?' '+b:'');}
 function capLib(){if(window.html2canvas)return Promise.resolve();return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=(/\/test\//.test(location.pathname)?'../':'')+'vendor/html2canvas.min.js?v=1.4.1';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
 function capShot(){
   var el=document.querySelector('.card.sum');if(!el)return Promise.reject('no');
@@ -2972,7 +2973,7 @@ function capShot(){
   return capLib().then(function(){var w=el.offsetWidth;
     return html2canvas(el,{scale:Math.min(3,Math.max(2,1000/w)),backgroundColor:null,useCORS:true,logging:false,imageTimeout:4000,
       onclone:function(doc){var c=doc.querySelector('.card.sum');if(!c)return;c.classList.add('cap-mode');c.style.position='static';
-        var f=doc.createElement('div');f.className='cap-foot';f.innerHTML='<span>전자랜드 여수본점'+(EMP?' · 담당 '+esc(EMP):'')+' · '+ds+' 견적</span><span>※ 참고용 견적 · 최종 금액은 계약 시 확인</span>';c.appendChild(f);
+        var f=doc.createElement('div');f.className='cap-foot';f.innerHTML='<span>'+esc(capBr())+(EMP?' · 담당 '+esc(EMP):'')+' · '+ds+' 견적</span><span>※ 참고용 견적 · 최종 금액은 계약 시 확인</span>';c.appendChild(f);
         [].forEach.call(c.querySelectorAll('.lumpin input'),function(ip){var sp=doc.createElement('b');sp.className='cap-val';sp.textContent=ip.value||'미입력';ip.replaceWith(sp);});
         [].forEach.call(c.querySelectorAll('.sgrp'),function(g){if(g.querySelector('.lumpin')&&!g.querySelector('.lumpin .cap-val:not(:empty)')){}if(g.querySelector('.lumpin')&&![].some.call(g.querySelectorAll('.cap-val'),function(v){return v.textContent!=='미입력';}))g.style.display='none';});
         [].forEach.call(c.querySelectorAll('img'),function(im){if(!im.complete||!im.naturalWidth){var sp=doc.createElement('span');sp.textContent='📦';im.replaceWith(sp);}});}});});}
