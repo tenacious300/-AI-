@@ -1281,8 +1281,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.49',VER_DATE='2026.11.16';
+var VERSION='v8.50',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.50','11.16',['🔐 직원 PIN 4자리 입장 (관리자 > 직원 명부에서 \'PIN 필수\' 켜기 · 끄기, PIN 초기화)','🔐 PIN 필수가 켜지면 사번 입력 화면에 안내 · 견적 보관함은 PIN으로 입장한 기기에서만 열림','✅ 관리자 약관 · PIN 탭: 🔐 PIN 설정 보기 추가 (지점별 설정률, 아직 안 정한 직원 목록 · CSV)','🛡 관리자 비밀번호 15분 안에 10번 틀리면 15분 잠금 · PIN 필수일 때 직원 이름 · 지점 정보 보호','🧰 세 계산기 공통 코드 정리 (견적 캡처) · 자동 점검 추가']],
   ['v8.49','11.16',['📋 이용 약관: 계산기를 새로 열 때마다 동의 팝업 · 동의 기록을 구글 시트 \'약관동의\'에 저장 (삼성 · LG · 쿠쿠)','✅ 관리자 약관 동의 탭 신설: 동의 · 미동의 인원, 지점별 동의율, 미동의 직원 목록 · CSV','🧾 관리자 사번별 이용에 \'약관 동의\' 칸 추가 (CSV 포함)','📸 LG · 쿠쿠 계산기에도 견적 캡처 추가 (견적 카드 맨 위에 담은 모델명 표시)','🏬 견적 캡처 아래 지점명을 로그인한 사번의 지점으로 표시 (예전엔 여수본점 고정)']],
   ['v8.48','11.16',['📋 로그인 후 이용 약관 팝업 · 동의해야 입장 (사번별 한 번)']],
   ['v8.47','11.16',['🏬 구매 채널 표시를 \'전자랜드 약 5%\'로 변경']],
@@ -2238,7 +2239,7 @@ function beat(){
   if(!EMP)return;
   window.__lastBeat=Date.now();
   var evs=EVQ.splice(0,60),fus=FU;FU={};if(firstBeat){fus['dev:'+(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)?'모바일':'PC')]=1;if(!STAY)fus.open=1;}
-  var idl=idleMin(),info={fu:fus,act:idl>=IDLE_MIN?'idle:'+idl:curAct(),away:!!document.hidden||idl>=IDLE_MIN,ev:evs,emp:EMP,sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat,msgAck:lsGet('msgAck')||''};
+  var idl=idleMin(),info={fu:fus,act:idl>=IDLE_MIN?'idle:'+idl:curAct(),away:!!document.hidden||idl>=IDLE_MIN,ev:evs,emp:EMP,tok:TOK(),sid:SID,did:DID,dev:devName(),cart:S.cart.length,models:S.cart.map(function(i){return i.code;}).join(', '),ver:VERSION,first:firstBeat,msgAck:lsGet('msgAck')||''};
   firstBeat=false;
   gsr('heartbeat',info,function(r){if(r&&r.pinReq&&EMP&&!TOK()){pinForce();return;}if(!r||r.online===-1){EVQ=evs.concat(EVQ);Object.keys(fus).forEach(function(k){FU[k]=(FU[k]||0)+fus[k];});}if(r&&r.blocked){if(r.reason==='roster'){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}showMe();openGate();rosterReject();return;}showBlocked();return;}if(r&&lsGet('calcBlocked')){lsPut('calcBlocked',null);$('#blockedScr').classList.remove('on');}if(r&&r.online>0&&!FB.on){$('#liveN').textContent=r.online;$('#liveBtn').classList.remove('off');}if(r&&r.dv)syncData(r.dv);if(r&&r.me!==undefined)meSave(r.me);if(r&&r.msg)msgShow(r.msg);if(r&&r.nid)ntCheck(r.nid);if(r&&r.mv&&verLt(VERSION,r.mv)){doUpdate();return;}if(r&&r.mva&&r.mva>(lsGet('calcLoginAt')||0))forceRelog();},function(){$('#liveBtn').classList.add('off');});
 }
@@ -2598,37 +2599,41 @@ function aeDetail(x){var col=function(f,lg,r,o){f=f||{};var N=(x.fn&&x.fn[lg])||
         :'<div style="margin-top:8px;font-size:12.5px;color:var(--sub)">'+(r[o]?'들어오기만 하고 기능은 안 썼어요':'—')+'</div>')+'</div>';};
   return '<tr><td colspan="8" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+col(x.f[2],2,x.r,8)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">굵은 숫자는 그 기능을 쓴 횟수, 옆 작은 숫자는 쓴 날 수예요 (11/16 이전 기록은 하루 1회로 셈)</div></div></td></tr>';}
 /* ✅ 약관 동의 탭: 명부 기준으로 동의 · 미동의를 한눈에 (원본은 구글 시트 '약관동의' 탭) */
-var ATM={days:30,data:null,st:'all',br:'',q:''};
-function admTmLoad(){ATM.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:ATM.days},function(r){ATM.data=r&&r.ok?r:{ok:false};if(ADM.tab==='terms')admRender();},function(){ATM.data={ok:false};if(ADM.tab==='terms')admRender();});}
+var ATM={days:30,data:null,st:'all',br:'',q:'',view:'terms',pin:null};
+function admTmLoad(){ATM.data=null;ATM.pin=null;gsr('adminPinList',ADM.pw,function(r){ATM.pin=r&&r.ok?r:{ok:false};if(ADM.tab==='terms')admRender();},function(){ATM.pin={ok:false};if(ADM.tab==='terms')admRender();});gsr('adminEmpUsage',{pw:ADM.pw,days:ATM.days},function(r){ATM.data=r&&r.ok?r:{ok:false};if(ADM.tab==='terms')admRender();},function(){ATM.data={ok:false};if(ADM.tab==='terms')admRender();});}
 function admTmList(){var R=ATM.data,ro=R.roster||{},tm=R.terms||{},seen={},L=[];
-  var push=function(e){if(seen[e])return;seen[e]=1;var m=ro[e],t=tm[e];L.push({e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,t:t,ok:!!t});};
-  Object.keys(ro).forEach(push);Object.keys(tm).forEach(push);return L;}
-function admTmHtml(){var R=ATM.data,h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],[90,'90일'],[0,'전체 기간']].map(function(x){return '<button class="chip sm '+(ATM.days===x[0]?'on':'')+'" data-tmd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="tmCsv">⬇ CSV</button></div>';
+  var PV=ATM.view==='pin',pn=(ATM.pin&&ATM.pin.pins)||{};var push=function(e){if(seen[e])return;seen[e]=1;var m=ro[e],t=tm[e],pa=pn[e];L.push({e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,t:t,pa:pa,ok:PV?pa!==undefined:!!t});};
+  Object.keys(ro).forEach(push);Object.keys(PV?pn:tm).forEach(push);return L;}
+function admTmHtml(){var PV=ATM.view==='pin',R=ATM.data,h='<div class="afb" style="margin-top:12px">'+[['terms','✅ 약관 동의'],['pin','🔐 PIN 설정']].map(function(x){return '<button class="'+(ATM.view===x[0]?'on':'')+'" data-tmv="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>'+'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><div class="chips" style="margin:0">'+[[1,'오늘'],[7,'7일'],[30,'30일'],[90,'90일'],[0,'전체 기간']].map(function(x){return '<button class="chip sm '+(ATM.days===x[0]?'on':'')+'" data-tmd="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="tmCsv">⬇ CSV</button></div>';
+  var LB=PV?{ok:'PIN 정함',no:'안 정함',rate:'설정률',col:'PIN',first:'안 정함 먼저'}:{ok:'동의',no:'미동의',rate:'동의율',col:'약관 동의',first:'미동의 먼저'};
+  if(PV&&!ATM.pin)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  if(PV&&!ATM.pin.ok)return h+'<div class="warn" style="margin-top:12px">PIN 현황을 불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
   if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
   var L=admTmList(),ok=L.filter(function(x){return x.ok;}).length,no=L.length-ok,pc=function(n){return L.length?Math.round(n/L.length*100)+'%':'-';};
-  h+='<div class="hint" style="margin:8px 0 0">'+aeMd(R.from)+' ~ '+aeMd(R.to)+' 기간에 동의한 기록 기준 · 명부 '+Object.keys(R.roster||{}).length+'명 · '+esc(R.at||'')+'</div>';
-  h+='<div class="adm-kpi ae">'+[['all','대상 인원',L.length,''],['ok','✅ 동의',ok,pc(ok)],['no','❌ 미동의',no,pc(no)]].map(function(x){return '<div class="'+(ATM.st===x[0]?'on':'')+'" data-tms="'+x[0]+'"><span>'+x[1]+'</span><b>'+x[2]+'</b>'+(x[3]?'<em>'+x[3]+'</em>':'')+'</div>';}).join('')+'</div>';
+  h+=PV?'<div class="hint" style="margin:8px 0 0">명부 '+Object.keys(R.roster||{}).length+'명 기준 · PIN 필수 '+(ATM.pin.on?'<b style="color:#15803d">켜짐</b>':'꺼짐')+' · 켜고 끄기 · 초기화는 👥 직원 명부 탭</div>':'<div class="hint" style="margin:8px 0 0">'+aeMd(R.from)+' ~ '+aeMd(R.to)+' 기간에 동의한 기록 기준 · 명부 '+Object.keys(R.roster||{}).length+'명 · '+esc(R.at||'')+'</div>';
+  h+='<div class="adm-kpi ae">'+[['all','대상 인원',L.length,''],['ok',PV?'🔐 PIN 정함':'✅ 동의',ok,pc(ok)],['no',PV?'⏳ 안 정함':'❌ 미동의',no,pc(no)]].map(function(x){return '<div class="'+(ATM.st===x[0]?'on':'')+'" data-tms="'+x[0]+'"><span>'+x[1]+'</span><b>'+x[2]+'</b>'+(x[3]?'<em>'+x[3]+'</em>':'')+'</div>';}).join('')+'</div>';
   var B={};L.forEach(function(x){var k=x.br||(x.inR?'(지점 없음)':'(명부 없음)'),b=B[k]||(B[k]={k:k,n:0,ok:0});b.n++;if(x.ok)b.ok++;});
   var BL=Object.keys(B).map(function(k){return B[k];}).sort(function(a,b){return a.ok/a.n-b.ok/b.n||b.n-a.n;});
-  h+='<details class="fold" style="margin-top:12px"'+(ATM.br?'':' open')+'><summary>지점별 동의 현황 ('+BL.length+'곳 · 동의율 낮은 순)</summary><div class="scroll" style="margin-top:8px;max-height:320px"><table class="ae-tbl"><tr><th>지점</th><th style="text-align:right">인원</th><th style="text-align:right">동의</th><th style="text-align:right">미동의</th><th>동의율</th></tr>'
+  h+='<details class="fold" style="margin-top:12px"'+(ATM.br?'':' open')+'><summary>지점별 '+LB.ok+' 현황 ('+BL.length+'곳 · '+LB.rate+' 낮은 순)</summary><div class="scroll" style="margin-top:8px;max-height:320px"><table class="ae-tbl"><tr><th>지점</th><th style="text-align:right">인원</th><th style="text-align:right">'+LB.ok+'</th><th style="text-align:right">'+LB.no+'</th><th>'+LB.rate+'</th></tr>'
     +BL.map(function(b){var p=Math.round(b.ok/b.n*100);return '<tr data-tmbr="'+esc(b.k)+'" style="cursor:pointer'+(ATM.br===b.k?';background:#eef2ff':'')+'"><td><b>'+esc(b.k)+'</b></td><td class="n">'+b.n+'</td><td class="n" style="color:#15803d;font-weight:800">'+b.ok+'</td><td class="n" style="color:#dc2626;font-weight:700">'+(b.n-b.ok)+'</td><td><div style="display:flex;align-items:center;gap:6px"><div class="ae-bar"><i style="width:'+p+'%;background:#22c55e"></i></div><small>'+p+'%</small></div></td></tr>';}).join('')
     +'</table></div><div class="hint" style="margin:6px 0 0">지점을 누르면 아래 목록이 그 지점만 보여요</div></details>';
   var q=ATM.q.trim().toLowerCase(),F=L.filter(function(x){return (ATM.st==='all'||(ATM.st==='ok')===x.ok)&&(!ATM.br||(x.br||(x.inR?'(지점 없음)':'(명부 없음)'))===ATM.br)&&(!q||(x.e+' '+x.name+' '+x.br+' '+x.rank).toLowerCase().indexOf(q)>=0);});
   F.sort(function(a,b){return (a.ok-b.ok)||(a.br<b.br?-1:a.br>b.br?1:0)||(a.name<b.name?-1:1);});
   h+='<div class="ae-tools"><select id="tmBr"><option value="">전체 지점</option>'+BL.map(function(b){return '<option'+(ATM.br===b.k?' selected':'')+'>'+esc(b.k)+'</option>';}).join('')+'</select><input type="search" id="tmQ" placeholder="사번 · 이름 · 직책 검색" value="'+esc(ATM.q)+'" autocomplete="off"></div>';
-  h+='<div class="adm-sec">목록 <small>'+F.length+'명'+(F.length>400?' · 앞 400명만 표시 (CSV에는 전체)':'')+' · 미동의 먼저</small></div>'
-    +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>약관 동의</th><th>지점</th><th>직책</th></tr>'
-    +(F.length?F.slice(0,400).map(function(x){return '<tr><td><b>'+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td>'+(x.t?'<td class="bs"><b style="color:#15803d">✅ 동의 '+x.t[1]+'회</b><br><small>마지막 '+esc(String(x.t[0]).slice(5,16).replace('-','/'))+'</small></td>':'<td class="bs"><b style="color:#dc2626">❌ 미동의</b></td>')+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>';}).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
+  h+='<div class="adm-sec">목록 <small>'+F.length+'명'+(F.length>400?' · 앞 400명만 표시 (CSV에는 전체)':'')+' · '+LB.first+'</small></div>'
+    +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>'+LB.col+'</th><th>지점</th><th>직책</th></tr>'
+    +(F.length?F.slice(0,400).map(function(x){return '<tr><td><b>'+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td>'+(PV?(x.pa!==undefined?'<td class="bs"><b style="color:#15803d">🔐 정함</b><br><small>'+esc(String(x.pa).slice(5,16).replace('-','/'))+'</small></td>':'<td class="bs"><b style="color:#dc2626">⏳ 안 정함</b></td>'):x.t?'<td class="bs"><b style="color:#15803d">✅ 동의 '+x.t[1]+'회</b><br><small>마지막 '+esc(String(x.t[0]).slice(5,16).replace('-','/'))+'</small></td>':'<td class="bs"><b style="color:#dc2626">❌ 미동의</b></td>')+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>';}).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
     +'</table></div><div class="note">· 계산기를 새로 열 때마다 동의 팝업이 뜨고, 동의할 때마다 한 번씩 셉니다. 고른 기간 안에 한 번이라도 동의했으면 \'동의\'예요.<br>· 원본은 구글 시트 \'약관동의\' 탭에 시각 · 사번 · 기기 · 계산기와 함께 쌓여요.</div>';
   return h;}
 function admTmBind(){
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-tmv]'),function(b){b.onclick=function(){ATM.view=b.dataset.tmv;ATM.st='all';admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-tmd]'),function(b){b.onclick=function(){var v=+b.dataset.tmd;if(ATM.days===v)return;ATM.days=v;admTmLoad();admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-tms]'),function(b){b.onclick=function(){ATM.st=b.dataset.tms;admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-tmbr]'),function(b){b.onclick=function(){ATM.br=ATM.br===b.dataset.tmbr?'':b.dataset.tmbr;admRender();};});
   var s=$('#tmBr');if(s)s.onchange=function(){ATM.br=s.value;admRender();};
   var qi=$('#tmQ');if(qi)qi.oninput=function(){ATM.q=qi.value;var p=qi.selectionStart;admRender();var n=$('#tmQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(x){}}};
-  var cv=$('#tmCsv');if(cv)cv.onclick=function(){if(!ATM.data||!ATM.data.ok)return;csvDown([['사번','이름','지점','직책','약관 동의','동의 횟수','마지막 동의','명부']].concat(admTmList().map(function(x){return [x.e,x.name,x.br,x.rank,x.ok?'동의':'미동의',x.t?x.t[1]:0,x.t?x.t[0]:'',x.inR?'O':'X'];})),'약관동의_'+(ATM.days?ATM.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};}
+  var cv=$('#tmCsv');if(cv)cv.onclick=function(){if(!ATM.data||!ATM.data.ok)return;csvDown([['사번','이름','지점','직책','약관 동의','동의 횟수','마지막 동의','PIN','PIN 정한 시각','명부']].concat(admTmList().map(function(x){return [x.e,x.name,x.br,x.rank,x.t?'동의':'미동의',x.t?x.t[1]:0,x.t?x.t[0]:'',x.pa!==undefined?'정함':'안 정함',x.pa||'',x.inR?'O':'X'];})),'약관동의_'+(ATM.days?ATM.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};}
 function admEmpBind(){
   Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-aeo]'),function(b){b.onclick=function(){AEMP.open=AEMP.open===b.dataset.aeo?'':b.dataset.aeo;var sc=b.closest('.scroll'),top=sc?sc.scrollTop:0;admRender();var n=document.querySelector('#admBody tr[data-aeo="'+b.dataset.aeo+'"]'),s2=n&&n.closest('.scroll');if(s2)s2.scrollTop=top;};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aed]'),function(b){b.onclick=function(){var v=+b.dataset.aed;if(AEMP.days===v)return;AEMP.days=v;admEmpLoad();admRender();};});
@@ -2771,7 +2776,7 @@ function admQuoteBind(){
       d.disabled=true;gsr('adminDeleteQuote',{pw:ADM.pw,id:d.dataset.adel},function(res){if(res&&res.ok){ADM.quotes.list=ADM.quotes.list.filter(function(x){return x.id!==d.dataset.adel;});ADM.quotes.total=(ADM.quotes.total||1)-1;toast('삭제했어요');admRender();}else{d.disabled=false;toast('삭제하지 못했어요');}});}
   };
 }
-function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['terms','✅ 약관 동의'],['plog','🖨 인쇄 기록'],['fb','💡 개선 요청'],['bn','📣 상단 배너'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function admTabsHtml(){var t=ADM.tab||'stat';return '<div class="adm-tabs" id="admTabs">'+[['stat','📊 접속 현황'],['roster','👥 직원 명부'],['best','🔥 베스트 모델'],['feat','📈 기능 사용'],['emp','🧾 사번별 이용'],['terms','✅ 약관 · PIN'],['plog','🖨 인쇄 기록'],['fb','💡 개선 요청'],['bn','📣 상단 배너'],['price','💰 단가표'],['promo','🏆 추가 판촉'],['lg','🅻 LG 단가 · 카드정책'],['ck','🅲 쿠쿠 단가 · 프로모션'],['notice','📢 공지'],['quote','📁 견적 관리'],['ver','📝 수정 내역']].map(function(x){return '<button class="chip sm '+(t===x[0]?'on':'')+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
 var NT={info:null,load:false,draft:{title:'',body:'',pick:{}},more:false,cur:null,preview:false};
 function ntFmt(ts){if(!ts)return '';var d=new Date(ts);return (d.getMonth()+1)+'.'+d.getDate()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
 function ntShow(n,preview){NT.cur=n;NT.preview=!!preview;

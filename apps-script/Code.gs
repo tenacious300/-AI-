@@ -49,7 +49,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo, adminPinList: adminPinList,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
@@ -218,7 +218,7 @@ function heartbeat(info) {
     var memp = cleanEmp_(info.emp), mraw = memp && CacheService.getScriptCache().get('msg_' + memp);
     if (mraw) { var mm = JSON.parse(mraw); if (mm.id !== String(info.msgAck || '')) res.msg = mm; }
   } catch (e) {}
-  if (isFirst) { try { res.dv = dataVersion_(); } catch (e) {} try { res.me = meInfo_(info.emp); } catch (e) {} }
+  if (isFirst) { try { res.dv = dataVersion_(); } catch (e) {} try { if (!pinRequired_() || tokOk_(info.emp, info.tok)) res.me = meInfo_(info.emp); } catch (e) {}   /* PIN 필수면 열쇠 있는 기기에만 이름 · 지점 */ }
   res.pinReq = pinRequired_();
   return res;
 }
@@ -1313,6 +1313,13 @@ function adminPinInfo(pw) {
   if (!pwOk_(pw)) return { ok: false };
   var sh = pinSheet_();
   return { ok: true, on: pinRequired_(), n: Math.max(0, sh.getLastRow() - 1) };
+}
+/** 관리자: PIN 정한 사번 목록 { 사번: 설정 시각 } */
+function adminPinList(pw) {
+  if (!pwOk_(pw)) return { ok: false };
+  var sh = pinSheet_(), n = sh.getLastRow(), o = {};
+  if (n >= 2) sh.getRange(2, 1, n - 1, 4).getDisplayValues().forEach(function (r) { var e = cleanEmp_(r[0]); if (e) o[e] = String(r[3] || ''); });
+  return { ok: true, on: pinRequired_(), pins: o };
 }
 /** 관리자: 직원 PIN 초기화 (다음 입장 때 새로 정함 · 기존 기기 토큰도 모두 무효) */
 function adminPinReset(arg) {
