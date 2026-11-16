@@ -1,4 +1,4 @@
-name: 삼성닷컴 판매량순 갱신
+name: 삼성닷컴 · LG 구독 판매순위 갱신
 
 # 삼성닷컴 'AI 구독' 품목별 판매량순(매일 02시 갱신)을 받아 data/ss-rank.js 로 저장해요.
 # 매일 03:20(한국 시간) 실행 · Actions 탭에서 'Run workflow'로 바로 실행도 가능
@@ -27,10 +27,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ -z "$(git status --porcelain data/ss-rank.js test/data/ss-rank.js)" ]; then echo "변경 없음"; exit 0; fi
+          if [ -z "$(git status --porcelain data/ss-rank.js test/data/ss-rank.js data/lg-rank.js test/data/lg-rank.js)" ]; then echo "변경 없음"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ss-rank.js test/data/ss-rank.js
-          git commit -m "삼성닷컴 판매량순 갱신"
+          git add data/ss-rank.js test/data/ss-rank.js data/lg-rank.js test/data/lg-rank.js
+          git commit -m "삼성닷컴 · LG 구독 판매순위 갱신"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
           curl -s -o /dev/null -w "pages build 요청: %{http_code}\n" -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/pages/builds" || true

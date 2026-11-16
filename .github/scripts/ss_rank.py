@@ -37,14 +37,57 @@ def main():
         except Exception as e:
             fail.append(cat); print('실패', cat, e)
     total = sum(len(v) for v in got.values())
+    lg_ok = lg_main(root)
     if total < 100:   # 거의 못 받았으면 기존 파일 유지
-        print('받은 모델이 너무 적어요 (%d) → 기존 파일 유지' % total); sys.exit(1)
+        print('받은 모델이 너무 적어요 (%d) → 기존 파일 유지' % total); sys.exit(0 if lg_ok else 1)
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
     body = 'window.SS_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info}, ensure_ascii=False, separators=(',', ':')) + ';\n'
     head = '/* 삼성닷컴 AI 구독 품목별 판매량순 (최근 31일 판매 수량) · .github/scripts/ss_rank.py 가 매일 자동 갱신 */\n'
     for p in ('data/ss-rank.js', 'test/data/ss-rank.js'):
         with open(os.path.join(root, p), 'w', encoding='utf-8') as f: f.write(head + body)
     print('저장', now, {k: len(v) for k, v in got.items()}, '실패', fail)
+
+
+
+# ---------- LG전자 '베스트 랭킹 · 가전 구독' 품목별 순위 → data/lg-rank.js ----------
+LG_CATS = [  # (LG닷컴 품목 이름, 상위 분류, 품목 분류)
+    ('냉장고', 'CT50000174', 'CT50178000'), ('정수기', 'CT50000174', 'CT50000175'), ('전기레인지', 'CT50000174', 'CT50000180'),
+    ('식기세척기', 'CT50000174', 'CT50000181'), ('광파오븐', 'CT50000174', 'CT50259000'),
+    ('세탁기', 'CT50000183', 'CT50136000'), ('세탁 건조기', 'CT50000183', 'CT50390000'), ('의류건조기', 'CT50000183', 'CT50000178'),
+    ('의류관리기', 'CT50000183', 'CT50000179'), ('청소기', 'CT50000183', 'CT50150000'), ('안마의자', 'CT50000183', 'CT50000182'),
+    ('에어컨', 'CT50000184', 'CT50080000'), ('공기청정기', 'CT50000184', 'CT50000177'), ('제습기', 'CT50000184', 'CT50273000'),
+    ('가습기', 'CT50000184', 'CT50226000'), ('TV', 'CT50238000', 'CT50238002'), ('노트북', 'CT50238000', 'CT50238004'),
+]
+LG_URL = 'https://www.lge.co.kr/best-ranking/subscribe?superCategoryId={}&categoryId={}'
+
+def lg_main(root):
+    import re, html
+    got, info, fail = {}, {}, []
+    for name, sup, cat in LG_CATS:
+        try:
+            req = urllib.request.Request(LG_URL.format(sup, cat), headers={**HEAD, 'Referer': 'https://www.lge.co.kr/best-ranking/subscribe', 'Accept': 'text/html'})
+            with urllib.request.urlopen(req, timeout=40) as r: t = r.read().decode('utf-8', 'replace')
+            L = []
+            for m in re.finditer(r'<div class="ranking__item item_subscribe"([^>]*)>', t):
+                g = lambda k: html.unescape((re.search(k + r'="([^"]*)"', m.group(1)) or [None, ''])[1])
+                sku = g('data-sku')
+                if not sku or sku in L: continue
+                L.append(sku)   # 모델: [이름, 월 정가, 월 할인가]
+                info[sku] = [g('data-modelDisplayName'), int(g('data-obsOriginalPrice') or 0), int(g('data-obsSellingPrice') or 0)]
+            got[name] = L
+        except Exception as e:
+            fail.append(name); print('LG 실패', name, e)
+    total = sum(len(v) for v in got.values())
+    if total < 50:
+        print('LG 받은 모델이 너무 적어요 (%d) → 기존 파일 유지' % total); return False
+    now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
+    body = 'window.LG_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info}, ensure_ascii=False, separators=(',', ':')) + ';\n'
+    head = '/* LG전자 베스트 랭킹 · 가전 구독 품목별 순위 · .github/scripts/ss_rank.py 가 매일 자동 갱신 */\n'
+    for p in ('data/lg-rank.js', 'test/data/lg-rank.js'):
+        with open(os.path.join(root, p), 'w', encoding='utf-8') as f: f.write(head + body)
+    print('LG 저장', now, {k: len(v) for k, v in got.items()}, '실패', fail)
+    return True
+
 
 if __name__ == '__main__':
     main()
