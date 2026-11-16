@@ -2284,8 +2284,10 @@ function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStart
 var EMP_TMP=null;
 /* 이용 약관: 로그인 후 동의해야 입장 (사번별로 이 기기에 한 번) */
 var TERMS_V='1';
-function termsOk(e){var t=lsGet('calcTerms')||{};return t[e]===TERMS_V;}
-function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){var t=lsGet('calcTerms')||{};t[e]=TERMS_V;lsPut('calcTerms',t);$('#termsPop').classList.remove('on');try{fuLog('terms');}catch(x){}done&&done();};}
+/* 로그인할 때마다 + 새로 열 때마다(창 단위) 동의 → 서버 '약관동의' 시트에 기록 */
+function termsOk(e){try{return sessionStorage.getItem('calcTermsS')===e;}catch(x){return false;}}
+function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){try{sessionStorage.setItem('calcTermsS',e);}catch(x){}$('#termsPop').classList.remove('on');
+  if(!window.TEST_MODE)gsr('termsAgree',{emp:e,dev:devName(),b:BRAND},function(){},function(){});done&&done();};}
 function meSave(me,emp){lsPut('calcMe',me?{emp:emp||EMP,name:me.name,br:me.br,rank:me.rank}:null);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 /* 관리자가 ⚡ 강제 업데이트를 누르면, 그 전에 로그인한 화면은 로그아웃 → 사번 다시 입력 (담은 모델은 유지) */
@@ -2299,7 +2301,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   $('#empIn').style.borderColor='';
   if(HAS_GS&&!enter._ok){var bt=$('#empGo');bt.disabled=true;$('#empErr').textContent='확인 중…';
     gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
-  if(!termsOk(v)){termsOpen(v,function(){enter._ok=1;enter();enter._ok=0;});return;}
+  if(!enter._t){termsOpen(v,function(){enter._ok=1;enter._t=1;enter();enter._ok=0;enter._t=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}
@@ -2556,16 +2558,18 @@ function admEmpHtml(){var R=AEMP.data,h='<div style="display:flex;justify-conten
   var cell=function(r,o,c){if(!r[o])return '<td class="bs z">—</td>';c=c||[0,0,0];return '<td class="bs"><b>'+r[o]+'일 · '+c[0]+'회</b> <small>· 담기 '+c[1]+'회 · 견적 '+c[2]+'회</small><br><small>마지막 '+aeMd(r[o+3])+'</small></td>';};
   var BN={both:'✅ 둘 다',ss:'삼성만',lg:'LG만',none:'미사용'};
   h+='<div class="adm-sec">목록 <small>'+F.length+'명'+(F.length>400?' · 앞 400명만 표시 (CSV에는 전체)':'')+' · 미사용 → 한쪽만 → 둘 다 순 · 이름을 누르면 많이 쓴 기능</small></div>'
-    +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>상태</th><th style="color:#1428a0">삼성 이용</th><th style="color:#a50034">LG 이용</th><th style="color:#c8102e">쿠쿠 이용</th><th>지점</th><th>직책</th></tr>'
-    +(F.length?F.slice(0,400).map(function(x){var op=AEMP.open===x.e;return '<tr data-aeo="'+esc(x.e)+'" style="cursor:pointer'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td><span class="ae-b '+x.st+'">'+BN[x.st]+'</span></td>'+cell(x.r,0,x.c[0])+cell(x.r,4,x.c[1])+cell(x.r,8,x.c[2])+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>'+(op?aeDetail(x):'');}).join(''):'<tr><td colspan="7" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
+    +'<div class="scroll" style="margin-top:6px;max-height:560px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>상태</th><th style="color:#1428a0">삼성 이용</th><th style="color:#a50034">LG 이용</th><th style="color:#c8102e">쿠쿠 이용</th><th>약관 동의</th><th>지점</th><th>직책</th></tr>'
+    +(F.length?F.slice(0,400).map(function(x){var op=AEMP.open===x.e;return '<tr data-aeo="'+esc(x.e)+'" style="cursor:pointer'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td><span class="ae-b '+x.st+'">'+BN[x.st]+'</span></td>'+cell(x.r,0,x.c[0])+cell(x.r,4,x.c[1])+cell(x.r,8,x.c[2])+aeTerms(x.e)+'<td>'+esc(x.br||'-')+'</td><td>'+esc(x.rank||'-')+'</td></tr>'+(op?aeDetail(x):'');}).join(''):'<tr><td colspan="8" style="text-align:center;color:var(--sub);padding:24px">해당하는 직원이 없어요</td></tr>')
     +'</table></div>';
-  h+='<div class="note">· 이용일은 그 기간에 해당 계산기를 쓴 날 수예요 (같은 날 여러 번은 1일). ○회는 기능을 쓴 횟수, 담기 · 견적도 횟수예요. 횟수는 11/16부터 정확히 쌓이고, 그 전 기록은 하루 1회로 셌어요.<br>· LG 기록은 LG 계산기를 연 11/14부터 쌓였고, 들어오기만 하고 아무 기능도 안 쓴 날은 v8.28부터 기록돼요.<br>· 쿠쿠 기록은 v8.34(쿠쿠 계산기)부터 쌓여요. \'쿠쿠 사용\'은 삼성 · LG 상태와 겹쳐서 세요.<br>· 명부에 없는 사번은 명부 대조 없이 사번만 보여요.</div>';
+  h+='<div class="note">· 이용일은 그 기간에 해당 계산기를 쓴 날 수예요 (같은 날 여러 번은 1일). ○회는 기능을 쓴 횟수, 담기 · 견적도 횟수예요. 횟수는 11/16부터 정확히 쌓이고, 그 전 기록은 하루 1회로 셌어요.<br>· LG 기록은 LG 계산기를 연 11/14부터 쌓였고, 들어오기만 하고 아무 기능도 안 쓴 날은 v8.28부터 기록돼요.<br>· 쿠쿠 기록은 v8.34(쿠쿠 계산기)부터 쌓여요. \'쿠쿠 사용\'은 삼성 · LG 상태와 겹쳐서 세요.<br>· 명부에 없는 사번은 명부 대조 없이 사번만 보여요.<br>· 약관 동의는 v8.49부터 로그인(새로 열기)할 때마다 기록돼요. 원본은 구글 시트 \'약관동의\' 탭에 시각 · 사번 · 기기와 함께 쌓여요.</div>';
   return h;}
+function aeTm(e){return ((AEMP.data&&AEMP.data.terms)||{})[e];}
+function aeTerms(e){var t=aeTm(e);return t?'<td class="bs"><b style="color:#15803d">✅ '+t[1]+'회</b><br><small>마지막 '+esc(t[0].slice(5,16).replace('-','/'))+'</small></td>':'<td class="bs"><b style="color:#dc2626">미동의</b></td>';}
 function aeDetail(x){var col=function(f,lg,r,o){f=f||{};var N=(x.fn&&x.fn[lg])||{},v=function(k){return N[k]||f[k];},ks=aeTop(f,lg).sort(function(a,b){return v(b)-v(a);}),mx=Math.max.apply(null,[1].concat(ks.map(v))),c=lg===2?'#c8102e':lg?'#a50034':'#1428a0';
     return '<div style="flex:1;min-width:230px;background:#fff;border-radius:10px;padding:10px 12px;border-top:3px solid '+c+'"><b style="color:'+c+'">'+(lg===2?'쿠쿠':lg?'LG':'삼성')+'</b> <small style="color:var(--sub)">'+(r[o]?'이용 '+r[o]+'일 · '+((x.c&&x.c[lg]||[0])[0])+'회 · 마지막 '+aeMd(r[o+3]):'이 기간 사용 없음')+'</small>'
       +(ks.length?ks.map(function(k){var n=aeFn(k,lg);return '<div style="display:grid;grid-template-columns:22px 1fr 80px 64px;gap:6px;align-items:center;margin-top:6px;font-size:12.5px"><span>'+n[0]+'</span><span>'+n[1]+'</span><div class="ae-bar" style="min-width:0;height:8px"><i style="width:'+Math.round(v(k)/mx*100)+'%;background:'+c+'"></i></div><b style="text-align:right;white-space:nowrap">'+v(k)+'회 <small style="font-weight:500;color:var(--sub)">'+f[k]+'일</small></b></div>';}).join('')
         :'<div style="margin-top:8px;font-size:12.5px;color:var(--sub)">'+(r[o]?'들어오기만 하고 기능은 안 썼어요':'—')+'</div>')+'</div>';};
-  return '<tr><td colspan="7" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+col(x.f[2],2,x.r,8)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">굵은 숫자는 그 기능을 쓴 횟수, 옆 작은 숫자는 쓴 날 수예요 (11/16 이전 기록은 하루 1회로 셈)</div></div></td></tr>';}
+  return '<tr><td colspan="8" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+col(x.f[2],2,x.r,8)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">굵은 숫자는 그 기능을 쓴 횟수, 옆 작은 숫자는 쓴 날 수예요 (11/16 이전 기록은 하루 1회로 셈)</div></div></td></tr>';}
 function admEmpBind(){
   Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-aeo]'),function(b){b.onclick=function(){AEMP.open=AEMP.open===b.dataset.aeo?'':b.dataset.aeo;var sc=b.closest('.scroll'),top=sc?sc.scrollTop:0;admRender();var n=document.querySelector('#admBody tr[data-aeo="'+b.dataset.aeo+'"]'),s2=n&&n.closest('.scroll');if(s2)s2.scrollTop=top;};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aed]'),function(b){b.onclick=function(){var v=+b.dataset.aed;if(AEMP.days===v)return;AEMP.days=v;admEmpLoad();admRender();};});
@@ -2576,7 +2580,7 @@ function admEmpBind(){
   var qi=$('#aeQ');if(qi)qi.oninput=function(){AEMP.q=this.value;var p=this.selectionStart;admRender();var n=$('#aeQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}};
   var cv=$('#aeCsv');if(cv)cv.onclick=function(){var R=AEMP.data;if(!R||!R.ok)return;var BN={both:'둘 다',ss:'삼성만',lg:'LG만',none:'미사용'};
     var tf=function(f,lg,N){N=N||{};return aeTop(f,lg).sort(function(a,b){return (N[b]||f[b])-(N[a]||f[a]);}).slice(0,5).map(function(k){return aeFn(k,lg)[1]+' '+(N[k]||f[k])+'회('+f[k]+'일)';}).join(' / ');};
-    csvDown([['사번','이름','지점','직책','삼성 이용일','삼성 담은 날','삼성 견적 낸 날','삼성 마지막','LG 이용일','LG 담은 날','LG 견적 낸 날','LG 마지막','쿠쿠 이용일','쿠쿠 담은 날','쿠쿠 견적 낸 날','쿠쿠 마지막','삼성 기능 횟수','삼성 담기 횟수','삼성 견적 횟수','LG 기능 횟수','LG 담기 횟수','LG 견적 횟수','쿠쿠 기능 횟수','쿠쿠 담기 횟수','쿠쿠 견적 횟수','상태 (삼성 · LG)','명부','삼성 많이 쓴 기능','LG 많이 쓴 기능','쿠쿠 많이 쓴 기능']].concat(aeList().map(function(x){var r=x.r;return [x.e,x.name,x.br,x.rank,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11]].concat(x.c[0],x.c[1],x.c[2]).concat([BN[x.st],x.inR?'O':'X',tf(x.f[0],0,x.fn[0]),tf(x.f[1],1,x.fn[1]),tf(x.f[2]||{},2,x.fn[2])]);})),'사번별이용_'+(AEMP.days?AEMP.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};
+    csvDown([['사번','이름','지점','직책','삼성 이용일','삼성 담은 날','삼성 견적 낸 날','삼성 마지막','LG 이용일','LG 담은 날','LG 견적 낸 날','LG 마지막','쿠쿠 이용일','쿠쿠 담은 날','쿠쿠 견적 낸 날','쿠쿠 마지막','삼성 기능 횟수','삼성 담기 횟수','삼성 견적 횟수','LG 기능 횟수','LG 담기 횟수','LG 견적 횟수','쿠쿠 기능 횟수','쿠쿠 담기 횟수','쿠쿠 견적 횟수','약관 동의 횟수','약관 마지막 동의','상태 (삼성 · LG)','명부','삼성 많이 쓴 기능','LG 많이 쓴 기능','쿠쿠 많이 쓴 기능']].concat(aeList().map(function(x){var r=x.r;return [x.e,x.name,x.br,x.rank,r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8],r[9],r[10],r[11]].concat(x.c[0],x.c[1],x.c[2]).concat([(aeTm(x.e)||[0,0])[1],(aeTm(x.e)||[''])[0],BN[x.st],x.inR?'O':'X',tf(x.f[0],0,x.fn[0]),tf(x.f[1],1,x.fn[1]),tf(x.f[2]||{},2,x.fn[2])]);})),'사번별이용_'+(AEMP.days?AEMP.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};
 }
 function afDs(d){return d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);}
 function afMd(d){return (+d.slice(4,6))+'/'+(+d.slice(6,8));}

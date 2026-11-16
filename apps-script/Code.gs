@@ -31,7 +31,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
@@ -923,6 +923,42 @@ function adminSetMinVer(arg) {
 
 /* ===================== 기능 사용 통계 ===================== */
 var FU_SHEET = '기능통계';
+/* ---------- 이용 약관 동의 기록 (로그인할 때마다 한 줄) ---------- */
+var TERMS_SHEET = '약관동의';
+function termsSheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(TERMS_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(TERMS_SHEET);
+    sh.appendRow(['동의 시각', '사번', '이름', '지점', '직책', '기기', '계산기']);
+    sh.setFrozenRows(1);
+    sh.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#e0e7ff');
+  }
+  return sh;
+}
+function termsAgree(arg) {
+  arg = arg || {};
+  var emp = cleanEmp_(arg.emp);
+  if (!emp) return { ok: false };
+  var me = meInfo_(emp) || {}, b = { ss: '삼성', lg: 'LG', ck: '쿠쿠' }[arg.b] || '';
+  var lock = LockService.getScriptLock();
+  try { lock.waitLock(5000); } catch (e) {}
+  try {
+    termsSheet_().appendRow([Utilities.formatDate(new Date(), 'Asia/Seoul', 'yyyy-MM-dd HH:mm:ss'), "'" + emp, me.name || '', me.br || '', me.rank || '', String(arg.dev || '').slice(0, 60), b]);
+  } finally { try { lock.releaseLock(); } catch (e) {} }
+  return { ok: true };
+}
+/** 기간 안의 사번별 약관 동의 → { 사번: [마지막 시각, 횟수] } */
+function termsMap_(from, to) {
+  var sh = termsSheet_(), n = sh.getLastRow(), o = {};
+  if (n < 2) return o;
+  sh.getRange(2, 1, n - 1, 2).getDisplayValues().forEach(function (r) {
+    var t = String(r[0]), d = t.slice(0, 10).replace(/-/g, ''), e = cleanEmp_(r[1]);
+    if (!e || d < from || d > to) return;
+    var a = o[e] || (o[e] = ['', 0]);
+    a[1]++; if (t > a[0]) a[0] = t;
+  });
+  return o;
+}
 function fuBuffer_(cache, fu, emp) {
   var buf = JSON.parse(cache.get('fubuf') || '{}'), d = today_(), n = 0;
   Object.keys(fu).slice(0, 80).forEach(function (k) {
@@ -1067,7 +1103,8 @@ function adminEmpUsage(arg) {
     feats[e] = [fd(s), fd(l), fd(q)];   // 사번별 기능 → 쓴 날 수
     cnts[e] = [[s.n || 0, s.an || 0, s.qn || 0], [l.n || 0, l.an || 0, l.qn || 0], [q.n || 0, q.an || 0, q.qn || 0]];   // 기능 · 담기 · 견적 횟수
     featN[e] = [s.fn || {}, l.fn || {}, q.fn || {}]; });   // 사번별 기능 → 횟수
-  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, cnts: cnts, featN: featN, roster: rosterMap_(),
+  var terms = {}; try { terms = termsMap_(from, to); } catch (e) {}
+  return { ok: true, days: days, from: days ? from : first, to: to, rows: rows, feats: feats, cnts: cnts, featN: featN, terms: terms, roster: rosterMap_(),
     at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
 }
 
