@@ -1083,7 +1083,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 <script>
 (function(){var d=new Date(),day=''+d.getFullYear()+(d.getMonth()+1)+d.getDate();
-document.write('<script src="data/lg.js?d='+day+'"><\/script><script src="data/lg-img.js?d='+day+'"><\/script><script src="lg-parse.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script>');})();
+document.write('<script src="data/lg.js?d='+day+'"><\/script><script src="data/lg-img.js?d='+day+'"><\/script><script src="lg-parse.js?d='+day+'"><\/script><script src="config.js?t='+Date.now()+'"><\/script><script src="common.js?t='+Date.now()+'"><\/script>');})();
 </script>
 <script>
 (function(){
@@ -1753,32 +1753,12 @@ function printQuote(mode){if(!S.cart.length){toast('담은 모델이 없어요')
   var imgs=Array.prototype.slice.call($('#printArea').querySelectorAll('img'));
   Promise.race([Promise.all(imgs.map(function(im){return im.complete?1:new Promise(function(r){im.onload=im.onerror=r;});})),new Promise(function(r){setTimeout(r,5000);})]).then(function(){setTimeout(function(){window.print();},200);});}
 function sumHead(){var el=$('#sHead');if(!el)return;if(!S.cart.length){el.innerHTML='<div class="sh-line sh-line0">🛒 아직 담은 모델이 없어요</div>';return;}el.innerHTML='<div class="sh-line" title="'+esc(S.cart.map(function(x){return x.code;}).join(', '))+'">'+S.cart.map(function(x){return '<b>'+esc(x.code)+'</b>';}).join('<i>·</i>')+'</div>';}
-function capBr(){var m=meGet(),b=m&&m.br?String(m.br).replace(/^전자랜드\s*/,'').trim():'';return '전자랜드'+(b?' '+b:'');}
 /* 📸 견적 캡처: 화면의 '맞춤 구독 견적' 카드를 그대로 이미지로 (삼성과 같은 방식) */
-function capLib(){if(window.html2canvas)return Promise.resolve();return new Promise(function(res,rej){var sc=document.createElement('script');sc.src=(/\/test\//.test(location.pathname)?'../':'')+'vendor/html2canvas.min.js?v=1.4.1';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
-function capShot(){
-  var el=document.querySelector('.card.sum');if(!el)return Promise.reject('no');
-  var dt=new Date(),ds=dt.getFullYear()+'.'+(dt.getMonth()+1)+'.'+dt.getDate();
-  return capLib().then(function(){var w=el.offsetWidth;
-    return html2canvas(el,{scale:Math.min(3,Math.max(2,1000/w)),backgroundColor:null,useCORS:true,logging:false,imageTimeout:4000,
-      onclone:function(doc){var c=doc.querySelector('.card.sum');if(!c)return;c.classList.add('cap-mode');c.style.position='static';
-        var f=doc.createElement('div');f.className='cap-foot';f.innerHTML='<span>'+esc(capBr())+(EMP?' · 담당 '+esc(EMP):'')+' · '+ds+' 견적</span><span>※ 참고용 견적 · 최종 금액은 계약 시 확인</span>';c.appendChild(f);
-        [].forEach.call(c.querySelectorAll('.lumpin input'),function(ip){var sp=doc.createElement('b');sp.className='cap-val';sp.textContent=ip.value||'미입력';ip.replaceWith(sp);});
-        [].forEach.call(c.querySelectorAll('.sgrp'),function(g){if(g.querySelector('.lumpin')&&!g.querySelector('.lumpin .cap-val:not(:empty)')){}if(g.querySelector('.lumpin')&&![].some.call(g.querySelectorAll('.cap-val'),function(v){return v.textContent!=='미입력';}))g.style.display='none';});
-        [].forEach.call(c.querySelectorAll('img'),function(im){if(!im.complete||!im.naturalWidth){var sp=doc.createElement('span');sp.textContent='📦';im.replaceWith(sp);}});}});});}
 function capQuote(){if(!S.cart.length){toast('담은 모델이 없어요');return;}
   var b=$('#capBtn');if(b){b.disabled=true;b.dataset.t=b.innerHTML;b.innerHTML='📸 견적 이미지 만드는 중…';}
   var done=function(c){if(b){b.disabled=false;b.innerHTML=b.dataset.t;}capSave(c);};
   capShot().then(done,function(){if(b){b.disabled=false;b.innerHTML=b.dataset.t;}toast('이미지를 만들지 못했어요. 다시 눌러 주세요');});}
-function capSave(c){if(!c){toast('담은 모델이 없어요');return;}fuLog('capture');if(typeof markAct==='function')markAct('견적 캡처');
-  var dt=new Date(),name='구독견적_'+dt.getFullYear()+('0'+(dt.getMonth()+1)).slice(-2)+('0'+dt.getDate()).slice(-2)+'_'+('0'+dt.getHours()).slice(-2)+('0'+dt.getMinutes()).slice(-2)+'.png';
-  c.toBlob(function(b){if(!b){toast('이미지를 만들지 못했어요');return;}
-    var file=null;try{file=new File([b],name,{type:'image/png'});}catch(e){}
-    var mobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-    if(mobile&&file&&navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:'맞춤 구독 견적'}).catch(function(){});return;}
-    var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1500);
-    var msg='견적 이미지를 저장했어요';
-    if(navigator.clipboard&&window.ClipboardItem){navigator.clipboard.write([new ClipboardItem({'image/png':b})]).then(function(){toast(msg+' · 복사도 됐어요 (카톡에 Ctrl+V)');},function(){toast(msg);});}else toast(msg);},'image/png');}
+window.PG={meGet:meGet,esc:esc,toast:toast,fuLog:fuLog,markAct:typeof markAct==='function'?markAct:function(){},emp:function(){return EMP;}};  /* common.js(견적 캡처 등)에 넘겨 줌 */
 $('#capBtn').onclick=capQuote;
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
 $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};

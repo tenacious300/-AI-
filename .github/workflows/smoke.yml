@@ -1,0 +1,26 @@
+name: 계산기 자동 점검
+
+# 화면 파일이 main에 올라오면 테스트 · 정식 화면을 실제 브라우저로 열어 기본 흐름을 점검해요.
+# (입장 → 모델 담기 → 견적 금액 → 📸 캡처 → 관리자 탭 전부 열기 · 화면 오류 없음)
+# 실패하면 GitHub Actions 탭에 빨간 ❌ 로 표시돼요. 사이트 반영을 막지는 않아요.
+on:
+  push:
+    branches: [main]
+    paths: ['*.html', '*.js', 'data/**', 'test/**', 'tools/**']
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: 테스트 화면 점검
+        run: python tools/smoke.py
+      - name: 정식 화면 점검
+        run: python tools/smoke.py prod
+      - name: 테스트 · 정식 차이 (참고용 · 테스트에서 작업 중이면 다를 수 있어요)
+        run: python tools/promote.py check || true
