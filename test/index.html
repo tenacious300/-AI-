@@ -1233,8 +1233,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.42',VER_DATE='2026.11.16';
+var VERSION='v8.43',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.43','11.16',['💳 제휴카드 화면 새 단장 (삼성 · LG · 쿠쿠): 카드 이미지 + 내 견적 기준 할인 큰 순 정렬 · BEST · 카드 이름 옆 적용 버튼 · 전월 실적 구간표','💡 전월 이용금액을 고르면 그 금액대 추천 카드가 자동 적용 · 금액을 올리면 얼마나 더 할인되는지 안내 · 금액대별 추천표','카드 정책 · 혜택 비교 버튼을 제휴카드 제목 옆으로 · 삼성 제휴카드 이미지 추가']],
   ['v8.42','11.16',['🔒 상단 접속자 표시를 눌러도 관리자 모드가 열리지 않게 (관리자는 화면 하단 · 입장 화면의 ⚙ 관리자로)']],
   ['v8.41','11.16',['🧰 모바일 \'도구\' 버튼을 하단바 바로 위로 옮기고, 펼치면 가로 메뉴로 (위가 가려지지 않게)','👆 도구 메뉴를 연 채 화면을 움직이면 바로 닫혀요']],
   ['v8.40','11.15',['📣 상단 배너를 관리자 모드에서 브랜드별(삼성 · LG · 쿠쿠)로 직접 입력하거나 끌 수 있어요','📱 모바일 오른쪽 끝에 보이던 세로줄 제거','🧰 \'도구\' 버튼이 제자리에서 펼치고 접혀요 (LG · 쿠쿠도 같은 방식)']],
@@ -1425,7 +1426,7 @@ var CARDS=[
 ];
 var USAGES=[30,50,70,80,100,120,150,200,250,350,500];
 var SSCARD_IMG=window.TEST_MODE?'../sscard/':'sscard/',SSCARD_X={samsung:{img:'samsung',full:'삼성카드 삼성 AI 구독'},kb:{img:'kb',full:'KB국민 삼성 AI 구독'},lotte:{img:'lotte',full:'롯데 DiGi LOCA 삼성 AI 구독'},woori:{img:'woori',full:'우리카드 삼성전자'},hana:{full:'하나카드',color:'#0f766e'},kj:{full:'광주은행 BC',color:'#1d4ed8'}};
-/* ---------- (테스트) 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
+/* ---------- 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
 var CXO={open:'',init:0};
 function cxFace(src,label,color,w){w=w||80;var h=Math.round(w*0.72);
   if(src)return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;justify-content:center;flex:none"><img src="'+src+'" alt="" loading="lazy" style="max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 3px 10px rgba(15,23,42,.2)" onerror="this.style.display=\'none\'"></div>';
@@ -1731,7 +1732,7 @@ function render(){
     if(S.mc.length){card={id:'multi',name:names.join(' + '),once:0};cs={tier:[0],months:mm,baseSum:bs,promoSum:ps,extra:ex};S._mc={card:card,cs:cs,per:per};}
     else{card=null;cs=null;}
   }
-  if(window.TEST_MODE&&!S.multi){
+  if(!S.multi){
     var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:!!S.promo,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){var X=SSCARD_X[c.id]||{};return {face:cxFace(X.img?SSCARD_IMG+X.img+'.png':'',c.name,X.color,80),full:X.full||c.name,months:c.promoM?'프로모션 '+c.promoM+'개월':'기본 할인',
         tags:[c.promoM?['프로모션 '+c.promoM+'개월','ok']:null,c.once?['연회비 캐시백 '+won(c.once),'ok']:null,c.launch?['런칭 선납 캐시백','ok']:null].filter(Boolean),note:esc(c.note)};}};

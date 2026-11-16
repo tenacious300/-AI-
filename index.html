@@ -159,6 +159,34 @@ a.link{color:var(--pri);font-size:13px;font-weight:700;text-decoration:none;whit
 .tbl th{color:var(--sub);font-weight:700;font-size:12.5px}
 .tbl tr.best td{background:var(--ok-soft);font-weight:800}
 .tbl tr.sel td:first-child{color:var(--pri);font-weight:800}
+.cx-hero{border-radius:16px;padding:18px;background:linear-gradient(135deg,var(--cxa,#1e1b2e) 0%,var(--cxb,#4a0d24) 100%);color:#fff;margin-bottom:12px}
+.cx-hero .k{font-size:11px;letter-spacing:.18em;font-weight:800;color:#fda4af}.cx-hero h3{margin:4px 0 6px;font-size:19px;line-height:1.35;color:#fff}.cx-hero p{margin:0;font-size:13px;color:#e2e8f0}
+.cx-hero{--cxa:#0b1437;--cxb:#1e40af}
+.cx-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.cx-stats div{background:rgba(255,255,255,.1);border-radius:12px;padding:10px;text-align:center}.cx-stats b{display:block;font-size:17px;color:#fde68a}.cx-stats span{font-size:11.5px;color:#cbd5e1}
+.cx{border:1px solid var(--line);border-radius:16px;background:#fff;margin-top:10px;overflow:hidden;transition:box-shadow .15s}.cx.sel{border:2px solid var(--pri);box-shadow:0 6px 20px rgba(15,23,42,.14)}
+.cx-h{display:flex;gap:12px;align-items:center;padding:12px 14px;cursor:pointer}.cx-h .im{flex:none}
+.cx-n{font-weight:800;font-size:15px;line-height:1.3}.cx-m{font-size:12.5px;color:var(--sub);margin-top:2px}.cx-m b{color:var(--pri);font-size:15px}
+.cx-r{margin-left:auto;text-align:right;flex:none}.cx-r small{display:block;font-size:11px;color:var(--sub)}.cx-r b{font-size:17px;color:#0f172a}
+.cx-best{display:inline-block;font-size:10.5px;font-weight:900;background:#facc15;color:#422006;border-radius:6px;padding:1px 6px;margin-right:4px;vertical-align:2px}
+.cx-tag{display:inline-block;font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 6px;margin:4px 4px 0 0;background:var(--soft);color:var(--sub)}.cx-tag.ok{background:#fef3c7;color:#92400e}.cx-tag.easy{background:#fef9c3;color:#713f12}
+.cx-b{border-top:1px solid var(--line);padding:12px 14px;background:#fafafa}
+.cx-t{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden}.cx-t th,.cx-t td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:right}.cx-t th{background:var(--soft);color:var(--sub);font-size:12px}.cx-t td:first-child,.cx-t th:first-child{text-align:left}
+.cx-t tr.on td{background:#eef2ff;font-weight:800;color:var(--pri)}
+.cx-q{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.cx-q div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 10px}.cx-q small{display:block;color:var(--sub);font-size:11px}.cx-q b{font-size:15px}
+.cx-go{display:block;width:100%;margin-top:10px}
+@media(max-width:480px){.cx-stats b{font-size:15px}.cx-q{grid-template-columns:1fr 1fr}.cx-q div:last-child{grid-column:span 2}
+.cx-h{flex-wrap:wrap;gap:10px}.cx-h .im{transform:scale(.86);transform-origin:left center;margin-right:-8px}.cx-h>div:nth-child(2){flex:1;min-width:0}
+.cx-r{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:8px;text-align:left;border-top:1px dashed var(--line);padding-top:8px;margin-left:0}.cx-r small{display:inline}.cx-r b{font-size:16px}
+.cx-t th,.cx-t td{padding:7px 6px;font-size:12px;white-space:nowrap}.cx-b{padding:10px}}
+.cx-nr{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.cx-ap{flex:none;border:0;background:var(--pri);color:#fff;font-weight:800;font-size:12.5px;border-radius:99px;padding:5px 14px;cursor:pointer;white-space:nowrap}.cx-ap:hover{filter:brightness(1.1)}
+.cx-ap.on{background:var(--ok-soft,#dcfce7);color:var(--ok,#047857);border:1px solid currentColor;display:inline-block}
+.cx-rec{border:1px dashed var(--pri);border-radius:14px;background:var(--pri-soft,#eef2ff);padding:10px 12px;margin:0 0 12px;font-size:13.5px}
+#cxRecBox:empty{display:none}
+.cx-rec-m{display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;line-height:1.5}.cx-rec-k{font-weight:800;color:var(--pri);margin-right:2px}.cx-rec-v{color:var(--pri)}.cx-rec small{color:var(--sub)}
+.cx-up{margin-top:4px;font-size:12.5px;color:var(--sub)}.cx-up a{color:var(--pri);font-weight:800}
+.cx-all{margin-top:6px}.cx-all summary{cursor:pointer;font-size:12.5px;font-weight:700;color:var(--sub)}
+
 .tbl tr[data-card]{cursor:pointer}
 .scroll{overflow-x:auto}
 details.fold{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}
@@ -952,7 +980,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
 
   <section class="card" id="secCard">
-    <h2><span class="num">4</span>제휴카드</h2>
+    <h2 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="num">4</span>제휴카드<button class="btn line sm" id="cpOpen2" type="button" style="margin-left:auto;color:#0f766e;border-color:#99f6e4">💳 카드 혜택 비교</button></h2>
+    <div id="cxRecBox"></div>
     <label class="switch" style="margin:0 0 8px"><input type="checkbox" id="multiOn"> 💳 카드 여러 장으로 나눠 결제 <small style="color:var(--sub)">(모델마다 다른 카드)</small></label>
     <div class="chips" id="cardSel"></div>
     <div id="cardBody">
@@ -1201,8 +1230,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.42',VER_DATE='2026.11.16';
+var VERSION='v8.43',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.43','11.16',['💳 제휴카드 화면 새 단장 (삼성 · LG · 쿠쿠): 카드 이미지 + 내 견적 기준 할인 큰 순 정렬 · BEST · 카드 이름 옆 적용 버튼 · 전월 실적 구간표','💡 전월 이용금액을 고르면 그 금액대 추천 카드가 자동 적용 · 금액을 올리면 얼마나 더 할인되는지 안내 · 금액대별 추천표','카드 정책 · 혜택 비교 버튼을 제휴카드 제목 옆으로 · 삼성 제휴카드 이미지 추가']],
   ['v8.42','11.16',['🔒 상단 접속자 표시를 눌러도 관리자 모드가 열리지 않게 (관리자는 화면 하단 · 입장 화면의 ⚙ 관리자로)']],
   ['v8.41','11.16',['🧰 모바일 \'도구\' 버튼을 하단바 바로 위로 옮기고, 펼치면 가로 메뉴로 (위가 가려지지 않게)','👆 도구 메뉴를 연 채 화면을 움직이면 바로 닫혀요']],
   ['v8.40','11.15',['📣 상단 배너를 관리자 모드에서 브랜드별(삼성 · LG · 쿠쿠)로 직접 입력하거나 끌 수 있어요','📱 모바일 오른쪽 끝에 보이던 세로줄 제거','🧰 \'도구\' 버튼이 제자리에서 펼치고 접혀요 (LG · 쿠쿠도 같은 방식)']],
@@ -1392,6 +1422,48 @@ var CARDS=[
    note:'프로모션(캐시백) 36개월'}
 ];
 var USAGES=[30,50,70,80,100,120,150,200,250,350,500];
+var SSCARD_IMG=window.TEST_MODE?'../sscard/':'sscard/',SSCARD_X={samsung:{img:'samsung',full:'삼성카드 삼성 AI 구독'},kb:{img:'kb',full:'KB국민 삼성 AI 구독'},lotte:{img:'lotte',full:'롯데 DiGi LOCA 삼성 AI 구독'},woori:{img:'woori',full:'우리카드 삼성전자'},hana:{full:'하나카드',color:'#0f766e'},kj:{full:'광주은행 BC',color:'#1d4ed8'}};
+/* ---------- 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
+var CXO={open:'',init:0};
+function cxFace(src,label,color,w){w=w||80;var h=Math.round(w*0.72);
+  if(src)return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;justify-content:center;flex:none"><img src="'+src+'" alt="" loading="lazy" style="max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 3px 10px rgba(15,23,42,.2)" onerror="this.style.display=\'none\'"></div>';
+  return '<div style="width:'+w+'px;height:'+h+'px;display:flex;align-items:center;flex:none"><div style="width:100%;height:'+Math.round(w*.63)+'px;border-radius:8px;background:linear-gradient(135deg,'+(color||'#334155')+',#0f172a);color:#fff;font-size:10.5px;font-weight:800;padding:6px;display:flex;align-items:flex-end;line-height:1.2;box-shadow:0 3px 10px rgba(15,23,42,.2)">'+esc(label)+'</div></div>';}
+function cxTier(c,u){var t=null;c.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
+/* 이 전월실적에서 혜택이 가장 큰 카드 (담은 모델 있으면 계약기간 할인 합계, 없으면 월 할인) */
+function cxBestAt(o,u){var b=null;o.cards.forEach(function(c){var t=cxTier(c,u);if(!t)return;var v,tot;
+    if(o.n){var r=o.sched(c,u);v=r.months&&r.months[0]?r.months[0].b+r.months[0].p:0;tot=r.baseSum+r.promoSum+(r.extra||0);}else{v=t[1]+(o.promo?t[2]:0);tot=v;}
+    if(!b||tot>b.tot||(tot===b.tot&&v>b.v))b={c:c,v:v,tot:tot};});return b;}
+function cxRec(o){var us=(o.usages||[]).slice().sort(function(a,b){return a-b;}),cur=cxBestAt(o,o.u),nm=function(c){return esc(o.info(c).full||c.name);};
+  var h='<div class="cx-rec">';
+  if(cur){h+='<div class="cx-rec-m"><span class="cx-rec-k">💡 전월 '+o.u+'만원↑ 추천</span><b>'+nm(cur.c)+'</b> 월 <b class="cx-rec-v">−'+won(cur.v)+'</b>'+(o.n?' <small>· 계약기간 '+won(cur.tot)+'</small>':'')
+      +(o.sel===cur.c.id?' <span class="cx-ap on">✓ 적용 중</span>':' <button class="cx-ap" data-cxs="'+cur.c.id+'">적용</button>')+'</div>';
+    for(var i=0;i<us.length;i++){if(us[i]<=o.u)continue;var b=cxBestAt(o,us[i]);if(b&&b.v>cur.v){h+='<div class="cx-up">↑ 전월 <a href="#" data-cxu="'+us[i]+'">'+us[i]+'만원 이상</a> 쓰면 '+nm(b.c)+' 월 −'+won(b.v)+' (+'+won(b.v-cur.v)+')</div>';break;}}}
+  else h+='<div class="cx-rec-m"><span class="cx-rec-k">💡 전월 '+o.u+'만원↑</span> 이 금액으로 할인되는 카드가 없어요. 금액을 올려 보세요.</div>';
+  h+='<details class="cx-all"><summary>금액대별 추천 카드 보기</summary><table class="cx-t" style="margin-top:8px"><tr><th>전월 실적</th><th>추천 카드</th><th>월 할인</th>'+(o.n?'<th>계약기간</th>':'')+'</tr>'
+    +us.map(function(u){var b=cxBestAt(o,u);return '<tr class="'+(u===o.u?'on':'')+'" data-cxu="'+u+'" style="cursor:pointer"><td>'+u+'만원↑</td><td>'+(b?nm(b.c):'-')+'</td><td>'+(b?'−'+won(b.v):'-')+'</td>'+(o.n?'<td>'+(b?won(b.tot):'-')+'</td>':'')+'</tr>';}).join('')+'</table><div class="note" style="margin-top:6px">줄을 누르면 그 금액대로 바뀌어요</div></details></div>';
+  return h;}
+/* o: {cards, usages, items, n, u, promo, sel, sumMon2, sched(c,u), info(c)->{face,full,tags,months,note}} */
+function cxHtml(o){
+  var list=o.cards.map(function(c){var r=o.sched(c,o.u),f=r.months&&r.months[0]?r.months[0].b+r.months[0].p:0;return {c:c,r:r,f:f,tot:r.baseSum+r.promoSum+(r.extra||0)};});
+  var ranked=list.slice().sort(function(a,b){return b.tot-a.tot||b.f-a.f;}),best=ranked[0]&&ranked[0].tot>0?ranked[0].c.id:'';
+  if(!CXO.init&&o.n){CXO.init=1;CXO.open=o.sel&&o.sel!=='none'?o.sel:best;}
+  var h='';
+  h+=ranked.map(function(x){var c=x.c,I=o.info(c),tr=x.r.tier,sel=o.sel===c.id,op=CXO.open===c.id||sel,tl=c.tiers[c.tiers.length-1];
+    var tags=(I.tags||[]).map(function(t){return '<span class="cx-tag '+(t[1]||'')+'">'+t[0]+'</span>';}).join('');
+    var s='<div class="cx'+(sel?' sel':'')+'" data-cx="'+c.id+'"><div class="cx-h" data-cxo="'+c.id+'"><div class="im">'+I.face+'</div><div style="min-width:0;flex:1"><div class="cx-nr"><div class="cx-n">'+(c.id===best&&o.n?'<span class="cx-best">BEST</span>':'')+esc(I.full||c.name)+'</div>'
+      +'<button class="cx-ap'+(sel?' on':'')+'" data-cxs="'+c.id+'">'+(sel?'✓ 적용 중':'적용')+'</button></div>'
+      +'<div class="cx-m">최대 <b>월 '+won(tl[1]+(o.promo?tl[2]:0))+'</b>'+(I.months?' · '+I.months:'')+'</div><div>'+tags+'</div></div>'
+      +(o.n?'<div class="cx-r">'+(tr?'<small>내 견적 할인</small><b>−'+won(x.f)+'</b><small>계약기간 '+won(x.tot)+'</small>':'<small>'+o.u+'만원으로는</small><b style="font-size:13px;color:var(--sub)">할인 없음</b><small>'+c.tiers[0][0]+'만원↑부터</small>')+'</div>':'')+'</div>';
+    if(op){s+='<div class="cx-b"><table class="cx-t"><tr><th>전월 실적</th><th>기본</th><th>추가 <small>(프로모션)</small></th><th>합계 / 월</th></tr>'
+        +c.tiers.map(function(t){return '<tr class="'+(tr&&tr[0]===t[0]?'on':'')+'"><td>'+t[0]+'만원 이상</td><td>'+won(t[1])+'</td><td>'+(t[2]?(o.promo?'+'+won(t[2]):won(t[2])+' <small>미적용</small>'):'-')+'</td><td>'+won(t[1]+(o.promo?t[2]:0))+'</td></tr>';}).join('')+'</table>'
+        +(o.n&&tr?'<div class="cx-q"><div><small>카드 적용 월 실 납부</small><b>'+won(Math.max(0,(x.r.months&&x.r.months[0]?x.r.months[0].pay:o.sumMon2)-x.f))+'</b></div><div><small>계약기간 카드 할인 합계</small><b style="color:var(--pri)">'+won(x.r.baseSum+x.r.promoSum)+'</b></div><div><small>추가 캐시백</small><b>'+(x.r.extra?won(x.r.extra):'-')+'</b></div></div>':'')
+        +(I.note?'<div class="note" style="margin-top:8px">'+I.note+'</div>':'')+'</div>';}
+    return s+'</div>';}).join('');
+  return h+'<div class="note" style="margin-top:10px">💡 순서는 지금 담은 모델 · 계약기간 · 전월 이용금액 기준 카드 할인 합계(추가 캐시백 포함)가 큰 순이에요. 카드사 정책은 바뀔 수 있어요.</div>';}
+function cxBind(onPick,onUsage){$('#secCard').addEventListener('click',function(e){var s=e.target.closest('[data-cxs]');if(s){e.preventDefault();onPick(s.dataset.cxs);return;}
+  var u=e.target.closest('[data-cxu]');if(u){e.preventDefault();onUsage(+u.dataset.cxu);return;}
+  var o=e.target.closest('[data-cxo]');if(o){CXO.open=CXO.open===o.dataset.cxo?'':o.dataset.cxo;render();}});}
+
 function tierOf(card,u){var t=null;card.tiers.forEach(function(x){if(u>=x[0])t=x;});return t;}
 
 var S={win:false,cust:'single',ch:'5',card:'none',usage:100,promo:true,cart:[],cmpY:null,cat:null,sub:null,
@@ -1657,6 +1729,14 @@ function render(){
     if(S.mc.length){card={id:'multi',name:names.join(' + '),once:0};cs={tier:[0],months:mm,baseSum:bs,promoSum:ps,extra:ex};S._mc={card:card,cs:cs,per:per};}
     else{card=null;cs=null;}
   }
+  if(!S.multi){
+    var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:!!S.promo,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
+      info:function(c){var X=SSCARD_X[c.id]||{};return {face:cxFace(X.img?SSCARD_IMG+X.img+'.png':'',c.name,X.color,80),full:X.full||c.name,months:c.promoM?'프로모션 '+c.promoM+'개월':'기본 할인',
+        tags:[c.promoM?['프로모션 '+c.promoM+'개월','ok']:null,c.once?['연회비 캐시백 '+won(c.once),'ok']:null,c.launch?['런칭 선납 캐시백','ok']:null].filter(Boolean),note:esc(c.note)};}};
+    if(CXO.auto){CXO.auto=0;var bb=cxBestAt(CXcfg,S.usage),nv=bb?bb.c.id:'none';if(S.card!==nv){S.card=nv;CXO.open=nv;toast(bb?'전월 '+S.usage+'만원↑ 추천 카드 '+(CXcfg.info(bb.c).full||bb.c.name)+' 자동 적용':'전월 '+S.usage+'만원으로는 할인되는 카드가 없어요');setTimeout(render,0);}}
+    $('#cxRecBox').innerHTML=cxRec(CXcfg);$('#cardInfo').innerHTML=cxHtml(CXcfg);
+    $('#cardSel').innerHTML='';$('#cardSel').style.display='none';
+  }else{$('#cardSel').style.display='';$('#cxRecBox').innerHTML='';}
 
   var sumMon=items.reduce(function(a,i){return a+i.mon;},0),sumT=items.reduce(function(a,i){return a+i.T;},0);
   var sumDisc=items.reduce(function(a,i){return a+i.disc;},0),sumP=items.reduce(function(a,i){return a+i.P;},0);
@@ -1823,8 +1903,10 @@ S.multi=false;S.mc=[];S.mu={};
 $('#multiOn').onchange=function(){S.multi=this.checked;if(S.multi)fuLog('multi');if(S.multi&&!S.mc.length&&S.card!=='none')S.mc=[S.card];render();};
 $('#cardInfo').addEventListener('change',function(e){var t=e.target;if(t.dataset.mu){S.mu[t.dataset.mu]=+t.value;render();}
   if(t.dataset.asg!=null){S.cart[+t.dataset.asg].pc=t.checked?t.dataset.card:'none';render();}});
-onChip($('#usage'),function(v){S.usage=+v;render();});
+onChip($('#usage'),function(v){S.usage=+v;CXO.auto=1;render();});
 onChip($('#cmpTerm'),function(v){S.cmpY=+v;render();});
+$('#cpOpen2').onclick=function(){var f=$('#cmpFold');f.open=true;f.scrollIntoView({behavior:'smooth',block:'start'});};
+cxBind(function(v){S.card=S.card===v?'none':v;if(S.card!=='none'){CXO.open=v;fuLog('card:'+v);}render();},function(u){S.usage=u;CXO.auto=1;render();});
 $('#cmpTbl').addEventListener('click',function(e){var r=e.target.closest('[data-card]');if(r){S.card=r.dataset.card;render();toast(CARDS.filter(function(c){return c.id===S.card;})[0].name+' 선택');}});
 $('#promoOn').onchange=function(e){S.promo=e.target.checked;render();};
 function reset(){S.pkgPrev=0;S.multi=false;S.mc=[];S.mu={};S._mc=null;S.loaded=null;if(typeof showLoaded==='function')showLoaded();S.cart=[];S.card='none';S.sel={m:null,y:null,t:null,pre:0};S.cmpY=null;$('#picked').style.display='none';$('#q').value='';S.cat=null;S.sub=null;renderCats();renderList();render();window.scrollTo(0,0);}
@@ -2182,7 +2264,8 @@ if(EMP&&!empOk(EMP)){EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}
 var BRAND=(function(){var m=/[?&]brand=(ss|lg|ck)/.exec(location.search);return m?m[1]:(lsGet('calcBrand')||'ss');})();
 function brandSet(b){BRAND=b;lsPut('calcBrand',b);Array.prototype.forEach.call(document.querySelectorAll('#brandPick button'),function(x){x.classList.toggle('on',x.dataset.b===b);});$('#empGo').textContent=b==='lg'?'LG 계산기로 입장하기':b==='ck'?'쿠쿠 계산기로 입장하기':'삼성 계산기로 입장하기';}
 $('#brandPick').onclick=function(e){var b=e.target.closest('button');if(b)brandSet(b.dataset.b);};brandSet(BRAND);
-$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=k==='lg'?'lg.html':'cuckoo.html';};
+function cxU(u){return window.TEST_MODE?u+(u.indexOf('?')<0?'?':'&')+'t='+Date.now():u;}
+$('#brandSw').onclick=function(e){var b=e.target.closest('button');if(!b||b.dataset.b==='ss')return;var k=b.dataset.b;if(!EMP){brandSet(k);openGate();return;}lsPut('calcBrand',k);try{sessionStorage.setItem('calcEmpS',EMP);}catch(x){}location.href=cxU(k==='lg'?'lg.html':'cuckoo.html');};
 var FORCE_GATE=/[?&]gate=1/.test(location.search),ADMIN_LG=/[?&]admin=lg/.test(location.search),ADMIN_CK=/[?&]admin=ck/.test(location.search),XCMP=/[?&]xcmp=1/.test(location.search),STAY=ADMIN_LG||ADMIN_CK||XCMP;
 if(EMP&&!CUST&&!FORCE_GATE&&!STAY&&(BRAND==='lg'||BRAND==='ck')&&!lsGet('calcBlocked')){try{sessionStorage.setItem('calcEmpS',EMP);}catch(e){}location.replace(BRAND==='lg'?'lg.html':'cuckoo.html');}
 if(CUST){}else if(EMP&&!FORCE_GATE)startBeat();else{if(EMP)startBeat();openGate();}
