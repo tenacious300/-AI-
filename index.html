@@ -2283,8 +2283,10 @@ function startBeat(){fbInit();setTimeout(function(){bestLoad();},0);if(beatStart
 var EMP_TMP=null;
 /* 이용 약관: 로그인 후 동의해야 입장 (사번별로 이 기기에 한 번) */
 var TERMS_V='1';
-function termsOk(e){var t=lsGet('calcTerms')||{};return t[e]===TERMS_V;}
-function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){var t=lsGet('calcTerms')||{};t[e]=TERMS_V;lsPut('calcTerms',t);$('#termsPop').classList.remove('on');try{fuLog('terms');}catch(x){}done&&done();};}
+/* 로그인할 때마다 + 새로 열 때마다(창 단위) 동의 → 서버 '약관동의' 시트에 기록 */
+function termsOk(e){try{return sessionStorage.getItem('calcTermsS')===e;}catch(x){return false;}}
+function termsOpen(e,done){$('#termsPop').classList.add('on');$('#termsOk').onclick=function(){try{sessionStorage.setItem('calcTermsS',e);}catch(x){}$('#termsPop').classList.remove('on');
+  if(!window.TEST_MODE)gsr('termsAgree',{emp:e,dev:devName(),b:BRAND},function(){},function(){});done&&done();};}
 function meSave(me,emp){lsPut('calcMe',me?{emp:emp||EMP,name:me.name,br:me.br,rank:me.rank}:null);}
 function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 /* 관리자가 ⚡ 강제 업데이트를 누르면, 그 전에 로그인한 화면은 로그아웃 → 사번 다시 입력 (담은 모델은 유지) */
@@ -2298,7 +2300,7 @@ function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase
   $('#empIn').style.borderColor='';
   if(HAS_GS&&!enter._ok){var bt=$('#empGo');bt.disabled=true;$('#empErr').textContent='확인 중…';
     gsr('checkEmp',{emp:v,dev:devName(),did:DID},function(r){bt.disabled=false;$('#empErr').textContent='';if(r&&r.ok===false){if(r.reason==='roster')rosterReject();else showBlocked();return;}if(r&&r.me!==undefined){EMP_TMP=v;meSave(r.me,v);}enter._ok=1;enter();enter._ok=0;},function(){bt.disabled=false;$('#empErr').textContent='';enter._ok=1;enter();enter._ok=0;});return;}
-  if(!termsOk(v)){termsOpen(v,function(){enter._ok=1;enter();enter._ok=0;});return;}
+  if(!enter._t){termsOpen(v,function(){enter._ok=1;enter._t=1;enter();enter._ok=0;enter._t=0;});return;}
   var changed=EMP&&EMP!==v;EMP=v;
   try{if($('#empKeep').checked)localStorage.setItem('calcEmp',v);else localStorage.removeItem('calcEmp');}catch(e){}
   lsPut('calcLoginAt',Date.now());try{sessionStorage.setItem('calcEmpS',v);}catch(e){}

@@ -1038,7 +1038,7 @@ function uniq(arr){var o=[];arr.forEach(function(v){if(o.indexOf(v)<0)o.push(v);
 
 /* ---------- 사번 확인 (삼성 · LG 계산기와 같은 사번) ---------- */
 var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS');}catch(e){}
-try{var _t=JSON.parse(localStorage.getItem('calcTerms')||'{}');if(EMP&&_t[EMP]!=='1')location.replace('./?brand=ck');}catch(e){}
+try{if(EMP&&sessionStorage.getItem('calcTermsS')!==EMP)location.replace('./?brand=ck');}catch(e){}
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
 $('#meBtn').onclick=function(){location.href='./?gate=1&brand=ck';};

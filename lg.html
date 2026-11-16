@@ -1085,7 +1085,7 @@ function md(s){if(!s)return '';var p=s.split('-');return (+p[1])+'/'+(+p[2]);}
 
 /* ---------- 사번 확인 (삼성 계산기와 같은 사번 사용) ---------- */
 var EMP=null;try{EMP=localStorage.getItem('calcEmp')||sessionStorage.getItem('calcEmpS');}catch(e){}
-try{var _t=JSON.parse(localStorage.getItem('calcTerms')||'{}');if(EMP&&_t[EMP]!=='1')location.replace('./?brand=lg');}catch(e){}
+try{if(EMP&&sessionStorage.getItem('calcTermsS')!==EMP)location.replace('./?brand=lg');}catch(e){}
 if(!EMP||!/^[0-9]{6}$/.test(EMP)||lsGet('calcBlocked')){$('#gate').classList.add('on');}
 $('#meBtn').textContent='👤 '+(EMP||'사번');
 $('#meBtn').onclick=function(){location.href='./?gate=1&brand=lg';};
