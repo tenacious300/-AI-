@@ -1195,6 +1195,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <h2>AI 구독 계산기</h2>
   <p>사번을 입력하고 계산기를 골라 주세요</p>
   <input type="text" id="empIn" placeholder="사번 입력" autocomplete="off" maxlength="15" inputmode="numeric" enterkeyhint="go">
+  <div id="pinNote" style="display:none;margin-top:8px;background:#eef4ff;color:#1d4ed8;border-radius:12px;padding:9px 12px;font-size:13px;font-weight:700;line-height:1.45">🔐 보안 강화로 입장할 때 PIN 4자리가 필요해요<br><span style="font-weight:500">처음이면 새로 정해요 · 잊었으면 관리자에게 초기화 요청</span></div>
   <div id="pinBox" style="display:none;margin-top:8px"><div id="pinMsg" style="font-size:13px;color:var(--sub);margin-bottom:6px"></div>
     <input type="password" id="pinIn" placeholder="PIN 4자리" autocomplete="off" maxlength="4" inputmode="numeric" enterkeyhint="go">
     <input type="password" id="pin2In" placeholder="PIN 한 번 더" autocomplete="off" maxlength="4" inputmode="numeric" enterkeyhint="go" style="display:none;margin-top:6px">
@@ -2302,7 +2303,7 @@ function meGet(){var m=lsGet('calcMe');return m&&m.emp===EMP?m:null;}
 function forceRelog(){if(!EMP)return;EMP=null;try{localStorage.removeItem('calcEmp');}catch(e){}lsPut('calcMe',null);lsPut('calcLoginAt',null);showMe();openGate();
   $('#empErr').innerHTML='<span style="color:#1d4ed8">🔄 새 버전 '+VERSION+'으로 업데이트되어 로그아웃됐어요.<br>사번을 다시 입력해 주세요.</span>';}
 function showMe(){$('#meBtn').textContent=EMP?'👤 '+EMP:'👤 사번';var lb=document.getElementById('logoutBtn');if(lb)lb.style.display=EMP?'':'none';}
-function openGate(){$('#gate').classList.add('on');$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
+function openGate(){$('#gate').classList.add('on');pinNote();$('#empIn').value=EMP||'';$('#empErr').textContent='';setTimeout(function(){$('#empIn').focus();},60);}
 function rosterReject(){$('#empErr').innerHTML='등록되지 않은 사번이에요.<br><small style="font-weight:500">명부에 없는 사번은 입장할 수 없어요. 소속 관리자에게 등록을 요청해 주세요.</small>';$('#empIn').style.borderColor='#dc2626';}
 function enter(){var v=$('#empIn').value.replace(/[^0-9A-Za-z]/g,'').toUpperCase();
   if(!empOk(v)){$('#empErr').textContent='사번은 숫자 6자리로 입력해 주세요';$('#empIn').style.borderColor='#dc2626';$('#empIn').focus();return;}
@@ -2333,6 +2334,8 @@ var PIN={emp:'',mode:''};
 function pinAsk(mode,msg,err){PIN.mode=mode;$('#pinBox').style.display='';$('#pinMsg').innerHTML=err?'<b style="color:#dc2626">'+esc(msg)+'</b>':esc(msg);$('#pin2In').style.display=mode==='new'?'':'none';$('#pinIn').value='';$('#pin2In').value='';$('#pinIn').focus();}
 /* PIN 필수가 켜졌는데 이 기기에 입장 열쇠(토큰)가 없으면 한 번 PIN 확인 */
 function pinForce(){if(pinForce.d)return;pinForce.d=1;var e=EMP;openGate();$('#empIn').value=e;enter();setTimeout(function(){if(!$('#pinMsg').textContent)return;$('#pinMsg').innerHTML='🔐 보안 강화로 PIN 확인이 필요해요<br>'+$('#pinMsg').innerHTML;},1500);}
+/* PIN 필수가 켜져 있으면 사번 입력 화면에 고정 안내 (테스트 화면은 항상 PIN이라 항상 보임) */
+function pinNote(){if(window.TEST_MODE){$('#pinNote').style.display='';return;}gsr('pinInfo',{},function(r){$('#pinNote').style.display=r&&r.on?'':'none';},function(){});}
 function TOK(){var t=lsGet('calcTok');return t&&t.emp===EMP?t.tok:'';}
 $('#pinIn').addEventListener('keydown',function(e){if(e.key==='Enter'){if(PIN.mode==='new'&&!$('#pin2In').value)$('#pin2In').focus();else enter();}});
 $('#pin2In').addEventListener('keydown',function(e){if(e.key==='Enter')enter();});

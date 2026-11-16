@@ -49,7 +49,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, adminQuoteLog: adminQuoteLog,
@@ -1298,6 +1298,8 @@ function pinCheck_(emp, arg) {
     return { ok: true, tok: pinIssue_(sh, row, emp) };
   } finally { try { lock.releaseLock(); } catch (e) {} }
 }
+/** 사번 입력 화면 안내용: PIN 필수가 켜졌는지만 알려 줌 */
+function pinInfo() { return { on: pinRequired_() }; }
 /** 관리자: PIN 필수 켜기 · 끄기 (켜면 모든 화면에서 PIN 입장 · 토큰 없는 보관함 요청 차단) */
 function adminPinRequiredSet(arg) {
   arg = arg || {};
