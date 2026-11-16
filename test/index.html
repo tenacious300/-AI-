@@ -1298,8 +1298,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.55',VER_DATE='2026.11.16';
+var VERSION='v8.56',VER_DATE='2026.11.16';
 var CHANGELOG=[
+  ['v8.56','11.16',['🛒 판매순위 창: 판매가는 삼성닷컴, 월 구독료는 전자랜드 단가표 금액(최장 약정 · 담기와 같은 조건)으로 표시']],
   ['v8.55','11.16',['🛒 판매순위 버튼: 삼성닷컴 AI 구독 품목별 판매량순(최근 31일) · 모델명 · 판매가 · 월 구독료를 한눈에 보고 바로 담기','🏬 구매 채널(전자랜드 약 5%) 표시 삭제 · 구독포인트 5% 계산은 그대로']],
   ['v8.54','11.16',['🛒 삼성 추천에 삼성닷컴 AI 구독 판매량순(최근 31일) 반영: 판매 상위 모델을 먼저 보여주고 \'삼성닷컴 판매 n위\' 표시 · 매일 새벽 자동 갱신']],
   ['v8.53','11.16',['💡 삼성 추천: 구독료 할인 · 포인트 · 구독페스티벌 · 우승기념 추가판촉까지 반영한 체감 월 요금으로 비교, 판촉 모델 우선 · 🏆 표시','💡 LG 추천: 오늘 진행 중인 활성화 · 프로모션 할인까지 반영한 요금으로 비교, 프로모션 모델 우선 · 🔥 표시(종료일 포함)']],
@@ -3090,16 +3091,18 @@ function aiAdd(code){var m=byCode[code];if(!m)return;var c=catOf(m),Y=maxYears(c
 /* 🛒 삼성닷컴 AI 구독 판매순위 창: 품목별 판매량순(최근 31일) · 모델명 · 판매가 · 월 구독료 (data/ss-rank.js · 매일 새벽 자동 갱신) */
 var RK={cat:null};
 function rankCats(){var R=window.SS_RANK;if(!R||!R.cats)return [];var seen={},o=[];D.cats.concat(Object.keys(R.cats)).forEach(function(c){if(seen[c]||!R.cats[c]||!R.cats[c].length)return;if(c==='건조기'&&R.cats['세탁기']&&R.cats['세탁기'].join()===R.cats['건조기'].join())return;seen[c]=1;o.push(c);});return o;}
+/* 월 구독료: 전자랜드 단가표에서 담기와 같은 조건(최장 약정 · 가장 싼 케어) */
+function rankMon(c){var m=byCode[c];if(!m)return null;var Y=maxYears(catOf(m)),ps=m[3].filter(function(p){return p[0]===Y;});if(!ps.length)ps=m[3];var p=ps.reduce(function(a,b){return a[2]<=b[2]?a:b;});return {mon:p[2],y:p[0],type:D.types[p[1]]};}
 function rankRender(){var R=window.SS_RANK,cats=rankCats();
   if(!cats.length){$('#rankBar').innerHTML='';$('#rankBody').innerHTML='<div class="empty" style="margin:16px">판매순위를 아직 받지 못했어요. 매일 새벽 3시 20분에 삼성닷컴에서 받아 와요.</div>';return;}
   if(cats.indexOf(RK.cat)<0)RK.cat=cats[0];
   $('#rankBar').innerHTML='<div class="chips" style="flex-wrap:wrap;margin:0">'+cats.map(function(c){return '<button class="chip sm '+(c===RK.cat?'on':'')+'" data-rkc="'+esc(c)+'">'+esc(c==='세탁기'&&R.cats['건조기']&&R.cats['세탁기'].join()===R.cats['건조기'].join()?'세탁기 · 건조기':c)+'</button>';}).join('')+'</div>';
   var I=R.info||{},L=R.cats[RK.cat]||[],W=function(n){return n?Number(n).toLocaleString()+'원':'-';};
-  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">삼성닷컴 기준 '+esc(R.at||'')+' · 최근 31일 판매 수량 순위 (삼성이 매일 02시 갱신) · 판매가 · 월 구독료는 삼성닷컴 표시 금액</div>'
-    +'<table class="rk-t"><tr><th>순위</th><th>모델</th><th style="text-align:right">판매가</th><th style="text-align:right">월 구독료</th><th class="rk-pc"></th></tr>'
+  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">삼성닷컴 기준 '+esc(R.at||'')+' · 최근 31일 판매 수량 순위 (삼성이 매일 02시 갱신) · 판매가는 삼성닷컴 표시 금액 · 월 구독료는 전자랜드 단가표 (최장 약정 · 가장 싼 케어, 담기와 같은 조건)</div>'
+    +'<table class="rk-t"><tr><th>순위</th><th>모델</th><th style="text-align:right">판매가</th><th style="text-align:right">월 구독료<br><small style="font-weight:500">전자랜드</small></th><th class="rk-pc"></th></tr>'
     +L.map(function(c,i){var f=I[c]||[],inCalc=!!byCode[c];
       var ab=inCalc?'<button class="rk-add" data-rka="'+esc(c)+'">담기</button>':'<small style="color:#94a3b8;font-size:11px">계산기 없음</small>';
-      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div><div class="rk-mb">'+ab+'</div></td><td class="n">'+W(f[1])+'</td><td class="n rk-m">'+(f[2]?'월 '+W(f[2])+(f[3]?'<small>'+f[3]+'년 · '+esc(f[4]||'')+'</small>':''):'-')+'</td>'
+      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div><div class="rk-mb">'+ab+'</div></td><td class="n">'+W(f[1])+'</td><td class="n rk-m">'+(function(){var q=rankMon(c);return q?'월 '+W(q.mon)+'<small>'+q.y+'년 · '+esc(q.type)+'</small>':'-';})()+'</td>'
         +'<td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
   Array.prototype.forEach.call(document.querySelectorAll('#rankBar [data-rkc]'),function(b){b.onclick=function(){RK.cat=b.dataset.rkc;rankRender();$('#rankBody').scrollTop=0;};});
   Array.prototype.forEach.call(document.querySelectorAll('#rankBody [data-rka]'),function(b){b.onclick=function(){aiAdd(b.dataset.rka);b.disabled=true;b.textContent='담았어요';fuLog('rank:add');};});}
