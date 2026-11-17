@@ -1321,8 +1321,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.66',VER_DATE='2026.11.17';
+var VERSION='v8.67',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.67','11.17',['삼성 제휴카드: 하나카드 · 광주은행 BC 카드 이미지 추가']],
   ['v8.66','11.17',['일시불 비교 · 체감가+일시불 비교 견적서: 간격 · 사진 크기를 줄여 2~3품목까지 한 장에 인쇄']],
   ['v8.65','11.17',['일시불 비교 · 체감가+일시불 비교 견적서 인쇄: 비교 박스가 통째로 다음 장으로 넘어가 1장에 큰 빈칸이 생기던 문제 수정']],
   ['v8.64','11.17',['삼성닷컴 제품 정보(사진·이름·기준가)를 기기에 하루 저장해 두 번째부터 빠르게 열려요','LG 단가 데이터 크기를 1.6MB → 0.66MB로 줄여 LG 계산기 첫 로딩이 빨라져요']],
@@ -1539,7 +1540,7 @@ var CARDS=[
    note:'프로모션(캐시백) 36개월'}
 ];
 var USAGES=[30,50,70,80,100,120,150,200,250,350,500];
-var SSCARD_IMG=window.TEST_MODE?'../sscard/':'sscard/',SSCARD_X={samsung:{img:'samsung',full:'삼성카드 삼성 AI 구독'},kb:{img:'kb',full:'KB국민 삼성 AI 구독'},lotte:{img:'lotte',full:'롯데 DiGi LOCA 삼성 AI 구독'},woori:{img:'woori',full:'우리카드 삼성전자'},hana:{full:'하나카드',color:'#0f766e'},kj:{full:'광주은행 BC',color:'#1d4ed8'}};
+var SSCARD_IMG=window.TEST_MODE?'../sscard/':'sscard/',SSCARD_X={samsung:{img:'samsung',full:'삼성카드 삼성 AI 구독'},kb:{img:'kb',full:'KB국민 삼성 AI 구독'},lotte:{img:'lotte',full:'롯데 DiGi LOCA 삼성 AI 구독'},woori:{img:'woori',full:'우리카드 삼성전자'},hana:{img:'hana',full:'하나카드',color:'#0f766e'},kj:{img:'kj',full:'광주은행 BC',color:'#1d4ed8'}};
 /* ---------- 제휴카드 혜택 블록형 UX : 내 견적 기준 카드별 할인을 계산해 혜택 큰 순으로 나열 ---------- */
 var CXO={open:'',init:0};
 function cxFace(src,label,color,w){w=w||80;var h=Math.round(w*0.72);
