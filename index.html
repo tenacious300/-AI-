@@ -269,6 +269,7 @@ body.preview{background:#e5e7eb;padding:0}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(34,197,94,.6)}70%{box-shadow:0 0 0 7px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
 .adm-pw{display:flex;gap:8px;margin-top:14px}
 .adm-pw input{flex:1}
+.aed-nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:12px}.aed-nav input[type=date]{padding:7px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-weight:700}.aed-dw{font-weight:700;color:var(--sub);font-size:13px}.aed-trend{display:flex;gap:4px;align-items:flex-end;margin-top:12px;overflow-x:auto;padding-bottom:2px}.aed-trend button{flex:1;min-width:34px;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:4px 0;border-radius:8px;font:inherit}.aed-trend button i{display:block;width:70%;max-width:26px;background:#c7d2fe;border-radius:4px 4px 0 0}.aed-trend button.on{background:#eef2ff}.aed-trend button.on i{background:#4f46e5}.aed-trend b{font-size:11.5px}.aed-trend small{font-size:10.5px;color:var(--sub)}.aed-bd{display:inline-block;border:1px solid;border-radius:99px;padding:1px 7px;font-size:11.5px;font-weight:700;margin:1px 0}.aed-mail{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px;padding:12px 14px;border-radius:12px;background:#f0f9ff;border:1px solid #bae6fd;font-size:13.5px;line-height:1.5}
 .ae-tbl{width:100%;border-collapse:collapse;font-size:13px}.ae-tbl th,.ae-tbl td{padding:8px 6px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left;vertical-align:middle}
 .ae-tbl th{color:var(--sub);font-weight:700;font-size:12px;background:var(--soft);position:sticky;top:0}.ae-tbl td.n{text-align:right}
 .ae-tbl .bs{font-size:12px;line-height:1.35}.ae-tbl .bs b{font-size:13px}.ae-tbl .bs small{color:var(--sub)}.ae-tbl .z{color:#cbd5e1}
@@ -1319,8 +1320,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.71',VER_DATE='2026.11.17';
+var VERSION='v8.72',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.72','11.17',['🧾 사번별 이용에 📅 일별 기록 추가: 날짜별로 사번마다 접속 시간 · 실사용 · 조회 · 담기 · 캡처 · 인쇄 · 보관 · 쓴 계산기 확인, 이름을 누르면 그 직원의 날짜별 기록','매일 밤 9시 오늘 · 누적 이용 기록을 정리한 엑셀을 관리자 메일로 자동 발송 (일별 기록 화면에서 주소 변경 · 지금 보내기 · 켜기/끄기)']],
   ['v8.71','11.17',['🛒 구독 판매순위(삼성 · LG): 순위 옆에 직전 순위 대비 변동 표시 (▲ 상승 · ▼ 하락 · NEW 새로 진입 · - 그대로), 품목별 1위에도 표시']],
   ['v8.70','11.17',['⚙ 관리자 코드를 admin.js로 분리: 관리자 모드를 열 때만 불러와 직원 화면이 더 가볍게 열려요 (index.html 515KB → 370KB)']],
   ['v8.69','11.17',['추천 팝업 \'다시 보지 않기\' · 다시 켜기를 기록해 관리자 기능 사용 · 사번별 이용에서 확인']],

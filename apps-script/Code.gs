@@ -49,7 +49,7 @@ var API_FUNCS = {
   adminListQuotes: adminListQuotes, adminDeleteQuote: adminDeleteQuote,
   checkEmp: checkEmp, adminRoster: adminRoster, adminSaveRoster: adminSaveRoster, adminRosterMode: adminRosterMode, adminRosterEx: adminRosterEx,
   getDataVer: getDataVer,
-  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo, adminPinList: adminPinList,
+  getBest: getBest, adminBest: adminBest, adminFeatures: adminFeatures, adminEmpUsage: adminEmpUsage, adminEmpDaily: adminEmpDaily, adminEmpHistory: adminEmpHistory, adminReportSet: adminReportSet, termsAgree: termsAgree, pinInfo: pinInfo, adminPinReset: adminPinReset, adminPinRequiredSet: adminPinRequiredSet, adminPinInfo: adminPinInfo, adminPinList: adminPinList,
   getCardPolicy: getCardPolicy, cardPolImage: cardPolImage, adminCardPolicyUpload: adminCardPolicyUpload, adminCardPolicySet: adminCardPolicySet, adminSetMinVer: adminSetMinVer,
   adminBlock: adminBlock, adminUnblock: adminUnblock, adminSendMsg: adminSendMsg,
   logQuote: logQuote, getPairs: getPairs, recFb: recFb, adminQuoteLog: adminQuoteLog,
@@ -213,6 +213,7 @@ function heartbeat(info) {
     }
   }
   try { mvMaybeFlush_(); } catch (e) {}
+  try { dayMaybeSnap_(); } catch (e) {}
   var res = { online: online, nid: noticeId_(), mv: minVer_(), mva: minVerAt_() };
   try {
     var memp = cleanEmp_(info.emp), mraw = memp && CacheService.getScriptCache().get('msg_' + memp);
@@ -1673,3 +1674,434 @@ function adminBannerSet(arg) {
   return { ok: true, b: c };
 }
 
+
+
+/* ===================== 사번별 일별 이용 기록 + 매일 밤 9시 엑셀 메일 =====================
+ * - '일별이용' 시트에 날짜 × 사번 한 줄씩 영구 보관 (실사용 시간 · 조회 · 담기 · 캡처는 캐시에만 있어서 30분마다 시트로 옮겨 둠)
+ * - 관리자 화면 '🧾 사번별 이용 > 📅 일별 기록'에서 날짜별 · 사번별로 확인
+ * - 매일 21시: 오늘 · 누적 기록을 보기 좋게 정리한 엑셀(.xlsx)을 관리자 메일로 발송
+ * 처음 한 번: Apps Script 편집기에서 setupDailyReport 함수를 실행해 권한 허용 (메일 발송 · 예약 실행 권한) */
+var DAY_SHEET = '일별이용';
+var DAY_HEAD = ['날짜', '사번', '이름', '지점', '첫 접속', '마지막 접속', '접속 횟수', '실사용(분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 기능', 'LG 기능', '쿠쿠 기능', '이용 계산기', '기기'];
+var REPORT_TO_DEFAULT = 'kiss5586@gmail.com';
+var REPORT_FOLDER_NAME = 'AI구독계산기_일일리포트';
+var BRAND_N = ['삼성', 'LG', '쿠쿠'];
+
+function daySheet_() {
+  var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(DAY_SHEET);
+  if (!sh) {
+    sh = ss.insertSheet(DAY_SHEET);
+    sh.getRange(1, 1, 1, DAY_HEAD.length).setValues([DAY_HEAD]).setFontWeight('bold').setBackground('#dbeafe');
+    sh.setFrozenRows(1);
+    sh.getRange('A:F').setNumberFormat('@');   // 날짜 · 사번 · 시각은 글자 그대로
+  }
+  return sh;
+}
+function dayFmt_(d) { return d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6, 8); }
+function dayNorm_(v) { var s = String(v || '').replace(/[^0-9]/g, ''); return s.length >= 8 ? s.slice(0, 8) : ''; }
+function dayEmpty_() { return { f: '', l: '', n: 0, am: 0, v: 0, ad: 0, c: 0, p: 0, s: 0, b: [0, 0, 0], u: [0, 0, 0], dev: '' }; }
+function dayUsedTxt_(u) { return BRAND_N.filter(function (x, i) { return u[i]; }).join('·'); }
+
+/** 기능통계 시트(+아직 시트에 안 들어간 캐시) → { 날짜: { 사번: { b:[브랜드별 기능 횟수], u:[쓴 브랜드], ad, q, cap } } } */
+function fuEmpDays_(from, to) {
+  var out = {};
+  var add = function (d, k, emps, cn) {
+    d = dayNorm_(d); k = String(k);
+    if (!d || !emps || d < from || d > to || k.indexOf(':') >= 0) return;
+    var lg = k === 'lg' || k.indexOf('L_') === 0, ckb = k.indexOf('K_') === 0, b = lg ? 1 : ckb ? 2 : 0, kk = (k.indexOf('L_') === 0 || ckb) ? k.slice(2) : k;
+    var D = out[d] || (out[d] = {});
+    String(emps).split(',').forEach(function (e) {
+      e = cleanEmp_(e); if (!e) return;
+      var o = D[e] || (D[e] = { b: [0, 0, 0], u: [0, 0, 0], ad: 0, q: 0, cap: 0 }), c = Number(cn && cn[e]) || 1;
+      o.u[b] = 1;
+      if (kk !== 'open' && k !== 'lg') o.b[b] += c;
+      if (kk === 'add') o.ad += c;
+      if (kk === 'print' || kk === 'save' || kk === 'copy') o.q += c;
+      if (kk === 'capture') o.cap += c;
+    });
+  };
+  var sh = fuSheet_(), n = sh.getLastRow();
+  if (n >= 2) sh.getRange(2, 1, n - 1, 5).getValues().forEach(function (r) { add(r[0], r[1], r[3], fuCntParse_(r[4])); });
+  var buf = JSON.parse(CacheService.getScriptCache().get('fubuf') || '{}');
+  Object.keys(buf).forEach(function (k) { var p = k.split('|'); add(p[0], p[1], buf[k][1], buf[k][2]); });
+  return out;
+}
+
+/** 저장소(접속 기록) + 캐시(실사용 · 조회 · 담기 · 캡처) + 기능통계로 그날 사번별 기록 만들기 */
+function dayLive_(d, Fd, allProps) {
+  var P = {}, U = {};
+  try { P = JSON.parse((allProps ? allProps['emps_' + d] : PropertiesService.getScriptProperties().getProperty('emps_' + d)) || '{}'); } catch (e) {}
+  try { U = JSON.parse(CacheService.getScriptCache().get('ua_' + d) || '{}'); } catch (e) {}
+  Fd = Fd || {};
+  var keys = {}, out = {};
+  [P, U, Fd].forEach(function (o) { Object.keys(o).forEach(function (k) { keys[k] = 1; }); });
+  Object.keys(keys).forEach(function (e) {
+    var p = P[e] || {}, u = U[e] || [0, 0, 0, 0], f = Fd[e] || { b: [0, 0, 0], u: [0, 0, 0], ad: 0, q: 0, cap: 0 }, r = dayEmpty_();
+    r.f = p.first || ''; r.l = p.last || ''; r.n = Number(p.n) || 0; r.dev = p.dev || '';
+    r.am = Math.round((Number(u[0]) || 0) / 60); r.v = Number(u[1]) || 0; r.ad = Math.max(Number(u[2]) || 0, f.ad); r.c = Math.max(Number(u[3]) || 0, f.cap);
+    r.p = Number(p.p) || 0; r.s = Number(p.s) || 0; r.b = f.b.slice(); r.u = f.u.slice();
+    if (!r.u[0] && !r.u[1] && !r.u[2] && (r.n || r.am || r.v)) r.u[0] = 1;   // 기능 기록이 없으면 삼성(기본 화면)으로
+    out[e] = r;
+  });
+  return out;
+}
+/** 같은 날 기록 두 개 합치기 (숫자는 큰 값 · 첫 접속은 이른 값 · 마지막은 늦은 값) */
+function dayMerge_(a, b) {
+  var out = {};
+  [a || {}, b || {}].forEach(function (src) {
+    Object.keys(src).forEach(function (e) {
+      var x = src[e], o = out[e];
+      if (!o) { out[e] = JSON.parse(JSON.stringify(x)); return; }
+      ['n', 'am', 'v', 'ad', 'c', 'p', 's'].forEach(function (k) { o[k] = Math.max(o[k] || 0, x[k] || 0); });
+      if (x.f && (!o.f || x.f < o.f)) o.f = x.f;
+      if (x.l && (!o.l || x.l > o.l)) o.l = x.l;
+      for (var i = 0; i < 3; i++) { o.b[i] = Math.max(o.b[i] || 0, x.b[i] || 0); o.u[i] = (o.u[i] || x.u[i]) ? 1 : 0; }
+      if (x.dev) o.dev = x.dev;
+    });
+  });
+  return out;
+}
+/** 일별이용 시트 읽기 → { 날짜: { 사번: 기록 } } */
+function dayRead_(from, to) {
+  var sh = daySheet_(), n = sh.getLastRow(), out = {};
+  if (n < 2) return out;
+  sh.getRange(2, 1, n - 1, DAY_HEAD.length).getDisplayValues().forEach(function (r) {
+    var d = dayNorm_(r[0]), e = cleanEmp_(r[1]);
+    if (!d || !e || d < from || d > to) return;
+    var used = String(r[16] || ''), x = dayEmpty_();
+    x.f = r[4]; x.l = r[5]; x.n = Number(r[6]) || 0; x.am = Number(r[7]) || 0; x.v = Number(r[8]) || 0; x.ad = Number(r[9]) || 0; x.c = Number(r[10]) || 0;
+    x.p = Number(r[11]) || 0; x.s = Number(r[12]) || 0; x.b = [Number(r[13]) || 0, Number(r[14]) || 0, Number(r[15]) || 0];
+    x.u = BRAND_N.map(function (b, i) { return used.indexOf(b) >= 0 || x.b[i] > 0 ? 1 : 0; }); x.dev = r[17];
+    (out[d] || (out[d] = {}))[e] = x;
+  });
+  return out;
+}
+/** 기간 기록: 시트 + (오늘 · 시트에 아직 없는 날은 실시간 계산) */
+function dayRange_(from, to) {
+  var S = dayRead_(from, to), F = fuEmpDays_(from, to), t = today_(), all = PropertiesService.getScriptProperties().getProperties(), out = {}, ds = {};
+  Object.keys(S).forEach(function (d) { ds[d] = 1; });
+  Object.keys(F).forEach(function (d) { ds[d] = 1; });
+  Object.keys(all).forEach(function (k) { var m = /^emps_(\d{8})$/.exec(k); if (m && m[1] >= from && m[1] <= to) ds[m[1]] = 1; });
+  if (t >= from && t <= to) ds[t] = 1;
+  Object.keys(ds).forEach(function (d) {
+    var v = (d === t || !S[d]) ? dayMerge_(S[d], dayLive_(d, F[d], all)) : S[d];
+    if (Object.keys(v).length) out[d] = v;
+  });
+  return out;
+}
+/** 그날 기록을 시트에 저장 (이미 있으면 바꿔 씀) */
+function daySnap_(d, F, all) {
+  F = F || fuEmpDays_(d, d);
+  var sh = daySheet_(), n = sh.getLastRow(), old = dayRead_(d, d)[d] || {};
+  var rec = dayMerge_(old, dayLive_(d, F[d], all));
+  var R = rosterMap_(), emps = Object.keys(rec);
+  if (!emps.length) return 0;
+  emps.sort(function (a, b) { return (rec[a].f || '99') < (rec[b].f || '99') ? -1 : 1; });
+  var rows = emps.map(function (e) {
+    var x = rec[e], m = R[e] || [];
+    return [dayFmt_(d), e, m[0] || '', m[1] || '', x.f, x.l, x.n, x.am, x.v, x.ad, x.c, x.p, x.s, x.b[0], x.b[1], x.b[2], dayUsedTxt_(x.u), x.dev];
+  });
+  // 그날 줄 지우기 (아래쪽부터 연속 구간 단위)
+  if (n >= 2) {
+    var col = sh.getRange(2, 1, n - 1, 1).getDisplayValues(), runs = [], st = -1;
+    for (var i = 0; i <= col.length; i++) {
+      var hit = i < col.length && dayNorm_(col[i][0]) === d;
+      if (hit && st < 0) st = i;
+      if (!hit && st >= 0) { runs.push([st + 2, i - st]); st = -1; }
+    }
+    for (var j = runs.length - 1; j >= 0; j--) sh.deleteRows(runs[j][0], runs[j][1]);
+  }
+  var at = sh.getLastRow() + 1;
+  sh.getRange(at, 1, rows.length, 6).setNumberFormat('@');
+  sh.getRange(at, 1, rows.length, DAY_HEAD.length).setValues(rows);
+  return rows.length;
+}
+/** 30분마다 한 번 (하트비트에서) 오늘 기록을 시트로 옮겨 둠 — 캐시가 사라져도 남도록 */
+function dayMaybeSnap_() {
+  var cache = CacheService.getScriptCache();
+  if (cache.get('daySnapT')) return;
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(2000)) return;
+  try {
+    if (cache.get('daySnapT')) return;
+    cache.put('daySnapT', '1', 1800);
+    daySnap_(today_());
+  } catch (e) {
+  } finally { lock.releaseLock(); }
+}
+/** 지난 날 중 시트에 없는 날 채우기 + 오래된 접속 기록(저장소) 정리 */
+function dayBackfill_() {
+  var props = PropertiesService.getScriptProperties(), all = props.getProperties(), t = today_(), S = dayRead_('00000000', t), F = null, n = 0;
+  var keep = mvDay_(10);   // 접속 현황 탭(최근 7일)이 쓰는 기록은 남김
+  Object.keys(all).forEach(function (k) {
+    var m = /^emps_(\d{8})$/.exec(k); if (!m || m[1] >= t) return;
+    if (!S[m[1]] || m[1] === mvDay_(1)) { F = F || fuEmpDays_('00000000', t); daySnap_(m[1], F, all); if (!S[m[1]]) n++; }
+    else if (m[1] < keep) { try { props.deleteProperty(k); } catch (e) {} }
+  });
+  return n;
+}
+
+/** 관리자: 하루 사번별 기록 + 최근 14일 추이 */
+function adminEmpDaily(arg) {
+  arg = arg || {};
+  if (!pwOk_(arg.pw)) return { ok: false };
+  var t = today_(), d = dayNorm_(arg.date) || t;
+  if (d > t) d = t;
+  var dt = new Date(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8)), 12);
+  var from = Utilities.formatDate(new Date(dt.getTime() - 13 * 86400000), TZ, 'yyyyMMdd');
+  var A = dayRange_(from, d), cur = A[d] || {}, trend = [];
+  for (var i = 13; i >= 0; i--) {
+    var k = Utilities.formatDate(new Date(dt.getTime() - i * 86400000), TZ, 'yyyyMMdd'), o = A[k] || {}, s = { d: k, u: 0, am: 0, ad: 0, q: 0 };
+    Object.keys(o).forEach(function (e) { var x = o[e]; s.u++; s.am += x.am; s.ad += x.ad; s.q += x.p + x.s; });
+    trend.push(s);
+  }
+  var rows = Object.keys(cur).map(function (e) { var x = cur[e]; x.e = e; return x; });
+  return { ok: true, date: d, today: t, rows: rows, trend: trend, roster: rosterMap_(), report: reportInfo_(), at: Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') };
+}
+/** 관리자: 한 사번의 날짜별 기록 */
+function adminEmpHistory(arg) {
+  arg = arg || {};
+  if (!pwOk_(arg.pw)) return { ok: false };
+  var emp = cleanEmp_(arg.emp), days = [30, 90].indexOf(Number(arg.days)) >= 0 ? Number(arg.days) : 0;
+  if (!emp) return { ok: false };
+  var A = dayRange_(days ? mvDay_(days - 1) : '00000000', today_()), list = [];
+  Object.keys(A).sort().reverse().forEach(function (d) { var x = A[d][emp]; if (x) { x.d = d; list.push(x); } });
+  return { ok: true, emp: emp, days: days, list: list };
+}
+
+/* ---------- 매일 21시 엑셀 메일 ---------- */
+function reportTo_() { return PropertiesService.getScriptProperties().getProperty('REPORT_TO') || REPORT_TO_DEFAULT; }
+function reportInfo_() {
+  var p = PropertiesService.getScriptProperties(), on = false;
+  try { on = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'dailyReport'; }); } catch (e) { on = null; }   // null = 아직 권한 허용 전
+  return { to: reportTo_(), on: on, last: p.getProperty('REPORT_LAST') || '', err: p.getProperty('REPORT_ERR') || '' };
+}
+/** 처음 한 번 편집기에서 실행: 권한 허용 + 매일 21시 발송 · 23시 45분 기록 저장 예약 + 지난 기록 채우기 + 테스트 메일 */
+function setupDailyReport() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (['dailyReport', 'daySnapNight'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('dailyReport').timeBased().everyDays(1).atHour(21).nearMinute(0).inTimezone(TZ).create();
+  ScriptApp.newTrigger('daySnapNight').timeBased().everyDays(1).atHour(23).nearMinute(45).inTimezone(TZ).create();
+  var n = dayBackfill_();
+  var r = sendDailyReport_('[테스트] ');
+  Logger.log('예약 완료 · 지난 기록 ' + n + '일 채움 · 테스트 메일 → ' + reportTo_() + ' (' + r + ')');
+}
+/** 자정 직전 오늘 기록 마무리 저장 */
+function daySnapNight() { try { daySnap_(today_()); } catch (e) {} }
+/** 예약 실행 (매일 21시) */
+function dailyReport() { sendDailyReport_(''); }
+/** 관리자: 받는 주소 바꾸기 · 예약 켜기/끄기 · 지금 보내기 */
+function adminReportSet(arg) {
+  arg = arg || {};
+  if (!pwOk_(arg.pw)) return { ok: false };
+  var p = PropertiesService.getScriptProperties();
+  if (arg.to != null) {
+    var to = String(arg.to).split(/[,;\s]+/).filter(function (x) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); }).slice(0, 5).join(',');
+    if (!to) return { ok: false, msg: '메일 주소를 확인해 주세요' };
+    p.setProperty('REPORT_TO', to);
+  }
+  try {
+    if (arg.on === true && !reportInfo_().on) { ScriptApp.newTrigger('dailyReport').timeBased().everyDays(1).atHour(21).nearMinute(0).inTimezone(TZ).create(); ScriptApp.newTrigger('daySnapNight').timeBased().everyDays(1).atHour(23).nearMinute(45).inTimezone(TZ).create(); }
+    if (arg.on === false) ScriptApp.getProjectTriggers().forEach(function (t) { if (['dailyReport', 'daySnapNight'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
+  } catch (e) { return { ok: false, msg: '권한 허용이 필요해요. Apps Script 편집기에서 setupDailyReport를 한 번 실행해 주세요.', info: reportInfo_() }; }
+  if (arg.send) {
+    var r = sendDailyReport_('[수동] ');
+    if (r !== 'ok') return { ok: false, msg: r, info: reportInfo_() };
+  }
+  return { ok: true, info: reportInfo_() };
+}
+
+/** 엑셀 만들고 메일 보내기 → 'ok' 또는 오류 문구 */
+function sendDailyReport_(tag) {
+  var p = PropertiesService.getScriptProperties();
+  try {
+    try { daySnap_(today_()); } catch (e) {}
+    try { dayBackfill_(); } catch (e) {}
+    var R = buildReport_(today_());
+    MailApp.sendEmail({ to: reportTo_(), subject: tag + R.subject, htmlBody: R.html, attachments: [R.blob], name: 'AI 구독 계산기' });
+    p.setProperty('REPORT_LAST', Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') + ' → ' + reportTo_());
+    p.deleteProperty('REPORT_ERR');
+    return 'ok';
+  } catch (e) {
+    var m = String(e && e.message || e).slice(0, 300);
+    p.setProperty('REPORT_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + m);
+    return m;
+  }
+}
+function reportFolder_() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('reportFolderId');
+  try { if (id) return DriveApp.getFolderById(id); } catch (e) {}
+  var it = DriveApp.getFoldersByName(REPORT_FOLDER_NAME), f = it.hasNext() ? it.next() : DriveApp.createFolder(REPORT_FOLDER_NAME);
+  props.setProperty('reportFolderId', f.getId());
+  return f;
+}
+/** 표 하나 쓰기: 제목 줄 꾸미기 · 줄무늬 · 칸 너비 */
+function rpTable_(sh, row, head, rows, color) {
+  var w = head.length;
+  if (rows.length) head.forEach(function (h, i) { if (h === '사번') sh.getRange(row + 1, i + 1, rows.length, 1).setNumberFormat('@'); });   // 사번 앞자리 0 유지
+  sh.getRange(row, 1, 1, w).setValues([head]).setFontWeight('bold').setFontColor('#ffffff').setBackground(color || '#1d4ed8')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
+  sh.setRowHeight(row, 30);
+  if (rows.length) {
+    var rg = sh.getRange(row + 1, 1, rows.length, w);
+    rg.setValues(rows).setVerticalAlignment('middle');
+    for (var i = 1; i < rows.length; i += 2) sh.getRange(row + 1 + i, 1, 1, w).setBackground('#f8fafc');
+  }
+  sh.getRange(row, 1, rows.length + 1, w).setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+  return row + rows.length + 1;
+}
+function rpTitle_(sh, row, text, sub) {
+  sh.getRange(row, 1).setValue(text).setFontSize(13).setFontWeight('bold').setFontColor('#0f172a');
+  if (sub) sh.getRange(row + 1, 1).setValue(sub).setFontColor('#64748b').setFontSize(9);
+  return row + (sub ? 2 : 1);
+}
+function rpHeat_(sh, a1, color) {
+  var rules = sh.getConditionalFormatRules();
+  rules.push(SpreadsheetApp.newConditionalFormatRule().setGradientMinpointWithValue('#ffffff', SpreadsheetApp.InterpolationType.NUMBER, '0')
+    .setGradientMaxpoint(color || '#3b82f6').setRanges([sh.getRange(a1)]).build());
+  sh.setConditionalFormatRules(rules);
+}
+function rpPct_(a, b) { return b ? Math.round(a / b * 1000) / 10 : 0; }
+function rpMin_(m) { m = Number(m) || 0; return m >= 60 ? Math.floor(m / 60) + '시간 ' + (m % 60) + '분' : m + '분'; }
+
+/** 리포트 엑셀 만들기 → { blob, subject, html } */
+function buildReport_(t) {
+  var A = dayRange_('00000000', t), R = rosterMap_(), dates = Object.keys(A).sort();
+  var yd = mvDay_(1), all = PropertiesService.getScriptProperties().getProperties();
+  var nm = function (e) { return (R[e] || [])[0] || ''; }, br = function (e) { return (R[e] || [])[1] || (R[e] ? '(지점 없음)' : '(명부 없음)'); }, rk = function (e) { return (R[e] || [])[2] || ''; };
+  var daySum = function (d) {
+    var o = A[d] || {}, s = { u: 0, n: 0, am: 0, v: 0, ad: 0, c: 0, p: 0, s: 0, b: [0, 0, 0] };
+    Object.keys(o).forEach(function (e) { var x = o[e]; s.u++; s.n += x.n; s.am += x.am; s.v += x.v; s.ad += x.ad; s.c += x.c; s.p += x.p; s.s += x.s; for (var i = 0; i < 3; i++) if (x.u[i]) s.b[i]++; });
+    s.peak = Number(all['peak_' + d] || 0); s.visits = Number(all['visits_' + d] || 0);
+    return s;
+  };
+  // 누적 (사번별)
+  var C = {};
+  dates.forEach(function (d) {
+    Object.keys(A[d]).forEach(function (e) {
+      var x = A[d][e], o = C[e] || (C[e] = { days: 0, d7: 0, first: d, last: d, n: 0, am: 0, v: 0, ad: 0, c: 0, p: 0, s: 0, bd: [0, 0, 0], bn: [0, 0, 0] });
+      o.days++; if (d >= mvDay_(6)) o.d7++; if (d < o.first) o.first = d; if (d > o.last) o.last = d;
+      ['n', 'am', 'v', 'ad', 'c', 'p', 's'].forEach(function (k) { o[k] += x[k] || 0; });
+      for (var i = 0; i < 3; i++) { if (x.u[i]) o.bd[i]++; o.bn[i] += x.b[i] || 0; }
+    });
+  });
+  var T = daySum(t), Y = daySum(yd), rosterN = Object.keys(R).length, cumUsers = Object.keys(C).length;
+  var tdy = A[t] || {};
+
+  var name = 'AI구독계산기_이용리포트_' + dayFmt_(t);
+  var ss = SpreadsheetApp.create(name);
+  try { DriveApp.getFileById(ss.getId()).moveTo(reportFolder_()); } catch (e) {}
+
+  /* 1. 요약 */
+  var sh = ss.getSheets()[0]; sh.setName('요약'); sh.setHiddenGridlines(true);
+  var row = rpTitle_(sh, 1, '📊 AI 구독 계산기 이용 리포트 — ' + dayFmt_(t) + ' (' + Utilities.formatDate(new Date(), TZ, 'HH:mm') + ' 기준)',
+    '명부 ' + rosterN + '명 · 기록 시작 ' + (dates[0] ? dayFmt_(dates[0]) : '-') + ' · 실사용 시간은 화면을 실제로 보고 있던 시간 (11/17 이후 정확)');
+  row++;
+  var kp = [['이용 인원 (명)', T.u, Y.u], ['명부 대비 이용률 (%)', rpPct_(T.u, rosterN), rpPct_(Y.u, rosterN)], ['접속 횟수', T.n, Y.n], ['실사용 합계 (분)', T.am, Y.am],
+    ['모델 조회', T.v, Y.v], ['모델 담기', T.ad, Y.ad], ['견적 캡처', T.c, Y.c], ['인쇄', T.p, Y.p], ['보관', T.s, Y.s],
+    ['삼성 이용 인원', T.b[0], Y.b[0]], ['LG 이용 인원', T.b[1], Y.b[1]], ['쿠쿠 이용 인원', T.b[2], Y.b[2]], ['최대 동시 접속', T.peak, Y.peak]];
+  var k0 = row;
+  row = rpTable_(sh, row, ['항목', '오늘 ' + dayFmt_(t).slice(5), '어제 ' + dayFmt_(yd).slice(5), '증감'], kp.map(function (r) { return [r[0], r[1], r[2], r[1] - r[2]]; }));
+  var dRg = sh.getRange(k0 + 1, 4, kp.length, 1);
+  sh.setConditionalFormatRules([
+    SpreadsheetApp.newConditionalFormatRule().whenNumberGreaterThan(0).setFontColor('#15803d').setRanges([dRg]).build(),
+    SpreadsheetApp.newConditionalFormatRule().whenNumberLessThan(0).setFontColor('#dc2626').setRanges([dRg]).build()]);
+  sh.getRange(k0 + 1, 2, kp.length, 3).setNumberFormat('#,##0.##;-#,##0.##;0').setHorizontalAlignment('right');
+  sh.getRange(k0 + 1, 1, kp.length, 1).setFontWeight('bold');
+  row++;
+  row = rpTitle_(sh, row, '누적 (기록 시작 이후)');
+  row = rpTable_(sh, row, ['누적 이용 인원', '명부 대비 (%)', '누적 이용일 합계', '누적 실사용', '누적 담기', '누적 인쇄 + 보관'],
+    [[cumUsers, rpPct_(cumUsers, rosterN), dates.reduce(function (a, d) { return a + Object.keys(A[d]).length; }, 0),
+      rpMin_(Object.keys(C).reduce(function (a, e) { return a + C[e].am; }, 0)), Object.keys(C).reduce(function (a, e) { return a + C[e].ad; }, 0),
+      Object.keys(C).reduce(function (a, e) { return a + C[e].p + C[e].s; }, 0)]], '#0f766e');
+  row++;
+  // 지점별
+  var B = {};
+  Object.keys(R).concat(Object.keys(C)).forEach(function (e) {
+    var k = br(e), b = B[k] || (B[k] = { k: k, n: 0, seen: {}, td: 0, cum: 0, d7: 0, am: 0, amT: 0 });
+    if (b.seen[e]) return; b.seen[e] = 1;
+    if (R[e]) b.n++;
+    if (tdy[e]) { b.td++; b.amT += tdy[e].am; }
+    if (C[e]) { b.cum++; b.am += C[e].am; if (C[e].d7) b.d7++; }
+  });
+  var BL = Object.keys(B).map(function (k) { return B[k]; }).sort(function (a, b) { return b.n - a.n || (a.k < b.k ? -1 : 1); });
+  row = rpTitle_(sh, row, '지점별 이용 현황', '이용률 = 이용 인원 ÷ 명부 인원');
+  var b0 = row;
+  row = rpTable_(sh, row, ['지점', '명부 인원', '오늘 이용', '오늘 이용률 (%)', '오늘 실사용 (분)', '최근 7일 이용', '누적 이용', '누적 이용률 (%)', '누적 실사용 (분)'],
+    BL.map(function (b) { return [b.k, b.n, b.td, rpPct_(b.td, b.n), b.amT, b.d7, b.cum, rpPct_(b.cum, b.n), b.am]; }), '#7c3aed');
+  if (BL.length) { rpHeat_(sh, 'D' + (b0 + 1) + ':D' + (b0 + BL.length), '#a78bfa'); rpHeat_(sh, 'H' + (b0 + 1) + ':H' + (b0 + BL.length), '#a78bfa'); }
+  sh.setColumnWidth(1, 190); for (var ci = 2; ci <= 9; ci++) sh.setColumnWidth(ci, 105);
+
+  /* 2. 오늘 사번별 */
+  var s2 = ss.insertSheet('오늘 사번별');
+  var L2 = Object.keys(tdy).sort(function (a, b) { return br(a) < br(b) ? -1 : br(a) > br(b) ? 1 : (tdy[b].am - tdy[a].am); });
+  rpTable_(s2, 1, ['지점', '이름', '직책', '사번', '첫 접속', '마지막 접속', '접속 횟수', '실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 기능', 'LG 기능', '쿠쿠 기능', '이용 계산기', '기기'],
+    L2.map(function (e) { var x = tdy[e]; return [br(e), nm(e), rk(e), e, x.f, x.l, x.n, x.am, x.v, x.ad, x.c, x.p, x.s, x.b[0], x.b[1], x.b[2], dayUsedTxt_(x.u), x.dev]; }));
+  if (L2.length) { rpHeat_(s2, 'H2:H' + (L2.length + 1), '#60a5fa'); s2.getRange(1, 1, L2.length + 1, 18).createFilter(); }
+  s2.setFrozenRows(1); s2.setFrozenColumns(2);
+
+  /* 3. 누적 사번별 (명부 전원 · 미사용 포함) */
+  var s3 = ss.insertSheet('누적 사번별'), seen = {}, L3 = [];
+  Object.keys(R).concat(Object.keys(C)).forEach(function (e) { if (!seen[e]) { seen[e] = 1; L3.push(e); } });
+  L3.sort(function (a, b) { return br(a) < br(b) ? -1 : br(a) > br(b) ? 1 : ((C[b] ? C[b].days : 0) - (C[a] ? C[a].days : 0)) || (nm(a) < nm(b) ? -1 : 1); });
+  rpTable_(s3, 1, ['지점', '이름', '직책', '사번', '상태', '오늘 이용', '누적 이용일', '최근 7일 이용일', '첫 이용일', '마지막 이용일', '누적 실사용 (분)', '접속 횟수', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 이용일', 'LG 이용일', '쿠쿠 이용일'],
+    L3.map(function (e) {
+      var o = C[e], st = !o ? '미사용' : o.d7 ? (o.d7 >= 3 ? '활발' : '최근 사용') : '7일 넘게 미사용';
+      return o ? [br(e), nm(e), rk(e), e, st, tdy[e] ? 'O' : '', o.days, o.d7, dayFmt_(o.first), dayFmt_(o.last), o.am, o.n, o.v, o.ad, o.c, o.p, o.s, o.bd[0], o.bd[1], o.bd[2]]
+        : [br(e), nm(e), rk(e), e, st, '', 0, 0, '', '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    }), '#0f766e');
+  if (L3.length) {
+    var st3 = s3.getRange('E2:E' + (L3.length + 1)), rules3 = [];
+    [['미사용', '#fee2e2', '#991b1b'], ['7일 넘게 미사용', '#ffedd5', '#9a3412'], ['활발', '#dcfce7', '#166534'], ['최근 사용', '#e0f2fe', '#075985']].forEach(function (c) {
+      rules3.push(SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo(c[0]).setBackground(c[1]).setFontColor(c[2]).setBold(true).setRanges([st3]).build()); });
+    s3.setConditionalFormatRules(rules3);
+    rpHeat_(s3, 'G2:G' + (L3.length + 1), '#34d399'); rpHeat_(s3, 'K2:K' + (L3.length + 1), '#60a5fa');
+    s3.getRange(1, 1, L3.length + 1, 20).createFilter();
+  }
+  s3.setFrozenRows(1); s3.setFrozenColumns(2);
+
+  /* 4. 일별 추이 */
+  var s4 = ss.insertSheet('일별 추이'), D4 = dates.slice().reverse();
+  rpTable_(s4, 1, ['날짜', '요일', '이용 인원', '이용률 (%)', '접속 횟수', '실사용 (분)', '1인당 실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 이용', 'LG 이용', '쿠쿠 이용', '최대 동시 접속'],
+    D4.map(function (d) { var s = daySum(d), dw = '일월화수목금토'.charAt(new Date(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8))).getDay());
+      return [dayFmt_(d), dw, s.u, rpPct_(s.u, rosterN), s.n, s.am, s.u ? Math.round(s.am / s.u) : 0, s.v, s.ad, s.c, s.p, s.s, s.b[0], s.b[1], s.b[2], s.peak]; }), '#0369a1');
+  if (D4.length) { rpHeat_(s4, 'C2:C' + (D4.length + 1), '#38bdf8'); rpHeat_(s4, 'F2:F' + (D4.length + 1), '#60a5fa'); }
+  s4.setFrozenRows(1);
+
+  /* 5. 사번 × 날짜 (최근 31일 실사용 분 · 실사용 기록 전 날은 접속 횟수 대신 1) */
+  var s5 = ss.insertSheet('사번×날짜'), D5 = [];
+  for (var i = 30; i >= 0; i--) D5.push(mvDay_(i));
+  var L5 = L3.filter(function (e) { return C[e] && D5.some(function (d) { return A[d] && A[d][e]; }); });
+  rpTable_(s5, 1, ['지점', '이름', '사번', '31일 이용일'].concat(D5.map(function (d) { return Number(d.slice(4, 6)) + '/' + Number(d.slice(6, 8)); })),
+    L5.map(function (e) { var cnt = 0, cells = D5.map(function (d) { var x = A[d] && A[d][e]; if (!x) return ''; cnt++; return x.am || 1; }); return [br(e), nm(e), e, cnt].concat(cells); }), '#334155');
+  if (L5.length) { rpHeat_(s5, s5.getRange(2, 5, L5.length, D5.length).getA1Notation(), '#2563eb'); rpHeat_(s5, 'D2:D' + (L5.length + 1), '#34d399'); }
+  for (var c5 = 5; c5 <= 4 + D5.length; c5++) s5.setColumnWidth(c5, 44);
+  s5.setFrozenRows(1); s5.setFrozenColumns(3);
+  s5.getRange(L5.length + 3, 1).setValue('칸의 숫자 = 그날 실사용(분), 1 = 들어왔지만 실사용 시간 기록 전이거나 1분 미만, 빈칸 = 안 들어옴 · 진할수록 오래 사용').setFontColor('#64748b');
+
+  /* 6. 일별 원본 */
+  var s6 = ss.insertSheet('일별 원본'), raw = [];
+  D4.forEach(function (d) { Object.keys(A[d]).sort(function (a, b) { return br(a) < br(b) ? -1 : 1; }).forEach(function (e) { var x = A[d][e];
+    raw.push([dayFmt_(d), br(e), nm(e), e, x.f, x.l, x.n, x.am, x.v, x.ad, x.c, x.p, x.s, x.b[0], x.b[1], x.b[2], dayUsedTxt_(x.u)]); }); });
+  rpTable_(s6, 1, ['날짜', '지점', '이름', '사번', '첫 접속', '마지막 접속', '접속 횟수', '실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 기능', 'LG 기능', '쿠쿠 기능', '이용 계산기'], raw, '#475569');
+  if (raw.length) s6.getRange(1, 1, raw.length + 1, 17).createFilter();
+  s6.setFrozenRows(1);
+
+  [s2, s3, s4, s6].forEach(function (s) { try { s.autoResizeColumns(1, s.getLastColumn()); for (var c = 1; c <= s.getLastColumn(); c++) s.setColumnWidth(c, Math.max(70, Math.min(170, s.getColumnWidth(c) + 14))); } catch (e) {} });
+  try { s5.autoResizeColumns(1, 3); } catch (e) {}
+  SpreadsheetApp.flush();
+
+  var blob = UrlFetchApp.fetch('https://docs.google.com/spreadsheets/d/' + ss.getId() + '/export?format=xlsx', { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() } })
+    .getBlob().setName(name + '.xlsx');
+
+  // 메일 본문 (요약)
+  var td = function (v, s) { return '<td style="padding:6px 10px;border:1px solid #e2e8f0;' + (s || '') + '">' + v + '</td>'; };
+  var dlt = function (a, b) { var d = a - b; return d > 0 ? '<span style="color:#15803d">▲' + d + '</span>' : d < 0 ? '<span style="color:#dc2626">▼' + (-d) + '</span>' : '-'; };
+  var html = '<div style="font-family:Apple SD Gothic Neo,Malgun Gothic,sans-serif;color:#0f172a;max-width:640px">'
+    + '<h2 style="margin:0 0 4px">📊 AI 구독 계산기 이용 리포트</h2><div style="color:#64748b;margin-bottom:14px">' + dayFmt_(t) + ' ' + Utilities.formatDate(new Date(), TZ, 'HH:mm') + ' 기준 · 명부 ' + rosterN + '명</div>'
+    + '<table style="border-collapse:collapse;font-size:14px"><tr style="background:#1d4ed8;color:#fff">' + td('항목') + td('오늘') + td('어제') + td('증감') + '</tr>'
+    + kp.map(function (r) { return '<tr>' + td('<b>' + r[0] + '</b>') + td(r[1], 'text-align:right') + td(r[2], 'text-align:right;color:#64748b') + td(dlt(r[1], r[2]), 'text-align:right') + '</tr>'; }).join('')
+    + '</table><p style="margin:14px 0 6px"><b>누적</b> 이용 인원 ' + cumUsers + '명 (명부의 ' + rpPct_(cumUsers, rosterN) + '%) · 기록 ' + dates.length + '일</p>'
+    + '<p style="margin:0 0 6px"><b>오늘 많이 쓴 직원</b> ' + Object.keys(tdy).sort(function (a, b) { return tdy[b].am - tdy[a].am; }).slice(0, 5).map(function (e) { return (nm(e) || e) + '(' + br(e) + ' ' + rpMin_(tdy[e].am) + ')'; }).join(', ') + '</p>'
+    + '<p style="color:#64748b;font-size:12px;margin-top:16px">첨부 엑셀: 요약 · 오늘 사번별 · 누적 사번별(미사용 직원 포함) · 일별 추이 · 사번×날짜 · 일별 원본<br>구글 드라이브 \'' + REPORT_FOLDER_NAME + '\' 폴더에도 같은 시트가 보관돼요.</p></div>';
+  return { blob: blob, subject: 'AI 구독 계산기 이용 리포트 ' + dayFmt_(t) + ' — 오늘 ' + T.u + '명 이용', html: html };
+}

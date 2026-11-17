@@ -107,7 +107,7 @@ function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기'
 function afBrandTag(){return AFEAT.brand==='ss'?'삼성_':AFEAT.brand==='lg'?'LG_':AFEAT.brand==='ck'?'쿠쿠_':'';}
 function admFeatLoad(){AFEAT.data=null;gsr('adminFeatures',{pw:ADM.pw,brand:AFEAT.brand,days:AFEAT.days==='d'?1:AFEAT.days,date:AFEAT.days==='d'?(AFEAT.date||todayStr().replace(/-/g,'')):''},function(r){AFEAT.data=r&&r.ok?r:{ok:false};if(ADM.tab==='feat')admRender();},function(){AFEAT.data={ok:false};if(ADM.tab==='feat')admRender();});}
 /* ---------- 🧾 사번별 이용 : 삼성 · LG 둘 다 써 봤는지 ---------- */
-var AEMP={days:30,data:null,basis:'d',st:'all',br:'',q:'',open:''};
+var AEMP={days:30,data:null,basis:'d',st:'all',br:'',q:'',open:'',mode:'day',date:'',dd:null,dq:'',dbr:'',dsort:'am',dnone:false,dopen:'',hist:{},hdays:30};
 var AEXTRA={lump:['⚖️','일시불 비교'],fav:['⭐','즐겨찾기'],logout:['🚪','로그아웃']};
 function aeFn(k,lg){if(k==='win')return ['🏆',lg===2?'반값 모델 보기':lg?'활성화 모델 보기':'판촉 모델 보기'];if(k==='lumpitem')return ['🛒','일시불 품목 넣기'];return FNAME[k]||AEXTRA[k]||null;}
 function aeTop(f,lg){var k=Object.keys(f||{}).filter(function(k){return aeFn(k,lg)&&k!=='logout';}).sort(function(a,b){return f[b]-f[a];});return k;}
@@ -206,13 +206,14 @@ function admBnBind(){
       if(r&&r.ok){ABN.cfg[b]=r.b;toast(ABN_N[b]+' 배너를 저장했어요'+(window.TEST_MODE?' (테스트 화면)':''));if(b==='ss'&&window.__bnApply)window.__bnApply(r.b);admRender();}
       else{toast((r&&r.msg)||'저장하지 못했어요');s.textContent=ABN_N[b]+' 배너 저장';}},function(){s.disabled=false;s.textContent=ABN_N[b]+' 배너 저장';toast('저장하지 못했어요');});};
 }
-function admEmpLoad(){AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
+function admEmpLoad(){if(AEMP.mode==='day'){aedLoad();return;}AEMP.data=null;gsr('adminEmpUsage',{pw:ADM.pw,days:AEMP.days},function(r){AEMP.data=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.data={ok:false};if(ADM.tab==='emp')admRender();});}
 function aeList(){var R=AEMP.data,ro=R.roster||{},rows=R.rows||{},seen={},L=[],bi={d:[0,4,8],a:[1,5,9],q:[2,6,10]}[AEMP.basis];
   var push=function(e){if(seen[e])return;seen[e]=1;var r=rows[e]||[0,0,0,'',0,0,0,'',0,0,0,''],m=ro[e],s=r[bi[0]]>0,l=r[bi[1]]>0,k=(r[bi[2]]||0)>0;if(r.length<12)r=r.concat([0,0,0,'']);
     var fe=(R.feats||{})[e]||[{},{},{}],cn=(R.cnts||{})[e]||[[0,0,0],[0,0,0],[0,0,0]],fn=(R.featN||{})[e]||[{},{},{}];L.push({c:cn,fn:fn,f:fe,k:k,e:e,name:m?m[0]||'':'',br:m?(m[1]||''):'',rank:m?m[2]||'':'',inR:!!m,r:r,s:s,l:l,st:s&&l?'both':s?'ss':l?'lg':'none'});};
   Object.keys(ro).forEach(push);Object.keys(rows).forEach(push);return L;}
 function aeMd(d){return d?(+d.slice(4,6))+'/'+(+d.slice(6,8)):'';}
-function admEmpHtml(){var R=AEMP.data,h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><div class="chips" style="margin:0">'+[[7,'7일'],[30,'30일'],[90,'90일'],[0,'전체 기간']].map(function(x){return '<button class="chip sm '+(AEMP.days===x[0]?'on':'')+'" data-aed="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="aeCsv">⬇ CSV</button></div>'
+function admEmpHtml(){return aeModeHtml()+(AEMP.mode==='day'?aedHtml():aeSumHtml());}
+function aeSumHtml(){var R=AEMP.data,h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px"><div class="chips" style="margin:0">'+[[7,'7일'],[30,'30일'],[90,'90일'],[0,'전체 기간']].map(function(x){return '<button class="chip sm '+(AEMP.days===x[0]?'on':'')+'" data-aed="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><button class="btn line sm" id="aeCsv">⬇ CSV</button></div>'
    +'<div class="afb">'+[['d','들어와서 사용'],['a','모델 담기'],['q','견적 냄 (인쇄·복사·보관)']].map(function(x){return '<button class="'+(AEMP.basis===x[0]?'on':'')+'" data-aeb="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';
   if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
   if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
@@ -244,7 +245,7 @@ function aeDetail(x){var col=function(f,lg,r,o){f=f||{};var N=(x.fn&&x.fn[lg])||
     return '<div style="flex:1;min-width:230px;background:#fff;border-radius:10px;padding:10px 12px;border-top:3px solid '+c+'"><b style="color:'+c+'">'+(lg===2?'쿠쿠':lg?'LG':'삼성')+'</b> <small style="color:var(--sub)">'+(r[o]?'이용 '+r[o]+'일 · '+((x.c&&x.c[lg]||[0])[0])+'회 · 마지막 '+aeMd(r[o+3]):'이 기간 사용 없음')+'</small>'
       +(ks.length?ks.map(function(k){var n=aeFn(k,lg);return '<div style="display:grid;grid-template-columns:22px 1fr 80px 64px;gap:6px;align-items:center;margin-top:6px;font-size:12.5px"><span>'+n[0]+'</span><span>'+n[1]+'</span><div class="ae-bar" style="min-width:0;height:8px"><i style="width:'+Math.round(v(k)/mx*100)+'%;background:'+c+'"></i></div><b style="text-align:right;white-space:nowrap">'+v(k)+'회 <small style="font-weight:500;color:var(--sub)">'+f[k]+'일</small></b></div>';}).join('')
         :'<div style="margin-top:8px;font-size:12.5px;color:var(--sub)">'+(r[o]?'들어오기만 하고 기능은 안 썼어요':'—')+'</div>')+'</div>';};
-  return '<tr><td colspan="8" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+col(x.f[2],2,x.r,8)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">굵은 숫자는 그 기능을 쓴 횟수, 옆 작은 숫자는 쓴 날 수예요 (11/16 이전 기록은 하루 1회로 셈)</div></div></td></tr>';}
+  return '<tr><td colspan="8" style="background:#f8fafc;white-space:normal;padding:10px"><div style="position:sticky;left:10px;max-width:calc(100vw - 72px)"><div style="display:flex;gap:10px;flex-wrap:wrap">'+col(x.f[0],0,x.r,0)+col(x.f[1],1,x.r,4)+col(x.f[2],2,x.r,8)+'</div><div style="font-size:11.5px;color:var(--sub);margin-top:6px">굵은 숫자는 그 기능을 쓴 횟수, 옆 작은 숫자는 쓴 날 수예요 (11/16 이전 기록은 하루 1회로 셈)</div>'+aehHtml(x.e)+'</div></td></tr>';}
 /* ✅ 약관 동의 탭: 명부 기준으로 동의 · 미동의를 한눈에 (원본은 구글 시트 '약관동의' 탭) */
 var ATM={days:30,data:null,st:'all',br:'',q:'',view:'terms',pin:null};
 function admTmLoad(){ATM.data=null;ATM.pin=null;gsr('adminPinList',ADM.pw,function(r){ATM.pin=r&&r.ok?r:{ok:false};if(ADM.tab==='terms')admRender();},function(){ATM.pin={ok:false};if(ADM.tab==='terms')admRender();});gsr('adminEmpUsage',{pw:ADM.pw,days:ATM.days},function(r){ATM.data=r&&r.ok?r:{ok:false};if(ADM.tab==='terms')admRender();},function(){ATM.data={ok:false};if(ADM.tab==='terms')admRender();});}
@@ -281,7 +282,7 @@ function admTmBind(){
   var s=$('#tmBr');if(s)s.onchange=function(){ATM.br=s.value;admRender();};
   var qi=$('#tmQ');if(qi)qi.oninput=function(){ATM.q=qi.value;var p=qi.selectionStart;admRender();var n=$('#tmQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(x){}}};
   var cv=$('#tmCsv');if(cv)cv.onclick=function(){if(!ATM.data||!ATM.data.ok)return;csvDown([['사번','이름','지점','직책','약관 동의','동의 횟수','마지막 동의','PIN','PIN 정한 시각','명부']].concat(admTmList().map(function(x){return [x.e,x.name,x.br,x.rank,x.t?'동의':'미동의',x.t?x.t[1]:0,x.t?x.t[0]:'',x.pa!==undefined?'정함':'안 정함',x.pa||'',x.inR?'O':'X'];})),'약관동의_'+(ATM.days?ATM.days+'일':'전체')+'_'+todayStr().replace(/-/g,'')+'.csv');};}
-function admEmpBind(){
+function admEmpBind(){aeModeBind();if(AEMP.mode==='day'){aedBind();return;}aehBind();
   Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-aeo]'),function(b){b.onclick=function(){AEMP.open=AEMP.open===b.dataset.aeo?'':b.dataset.aeo;var sc=b.closest('.scroll'),top=sc?sc.scrollTop:0;admRender();var n=document.querySelector('#admBody tr[data-aeo="'+b.dataset.aeo+'"]'),s2=n&&n.closest('.scroll');if(s2)s2.scrollTop=top;};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aed]'),function(b){b.onclick=function(){var v=+b.dataset.aed;if(AEMP.days===v)return;AEMP.days=v;admEmpLoad();admRender();};});
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aeb]'),function(b){b.onclick=function(){AEMP.basis=b.dataset.aeb;admRender();};});
@@ -845,3 +846,81 @@ function admBind(t){
 /* index.html이 부르는 입구 (관리자 열기 · 다시 그리기 · 단가 정보) */
 ADMX={admLogin:admLogin,admRender:admRender,admInfo:admInfo};
 //# sourceURL=admin.js
+
+/* ===== 🧾 사번별 이용 > 📅 일별 기록 (v8.72) =====
+   날짜를 골라 그날 사번별 접속 · 실사용 · 조회 · 담기 · 캡처 · 인쇄 · 보관 · 계산기별 사용을 확인
+   이름을 누르면 그 직원의 날짜별 기록 (최근 30일 · 90일 · 전체) */
+function aeModeHtml(){return '<div class="afb" style="margin-top:12px">'+[['day','📅 일별 기록'],['sum','📊 기간 합계']].map(function(x){return '<button class="'+(AEMP.mode===x[0]?'on':'')+'" data-aem="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div>';}
+function aeModeBind(){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aem]'),function(b){b.onclick=function(){if(AEMP.mode===b.dataset.aem)return;AEMP.mode=b.dataset.aem;if(AEMP.mode==='day'){if(!AEMP.dd)aedLoad();}else if(!AEMP.data)admEmpLoad();admRender();};});}
+function aedToday(){return todayStr().replace(/-/g,'');}
+function aedLoad(){AEMP.dd=null;gsr('adminEmpDaily',{pw:ADM.pw,date:AEMP.date||aedToday()},function(r){AEMP.dd=r&&r.ok?r:{ok:false};if(r&&r.ok)AEMP.date=r.date;if(ADM.tab==='emp')admRender();},function(){AEMP.dd={ok:false};if(ADM.tab==='emp')admRender();});}
+function aedShift(d,n){var t=new Date(+d.slice(0,4),+d.slice(4,6)-1,+d.slice(6,8)+n);return t.getFullYear()+('0'+(t.getMonth()+1)).slice(-2)+('0'+t.getDate()).slice(-2);}
+function aedDw(d){return '일월화수목금토'.charAt(new Date(+d.slice(0,4),+d.slice(4,6)-1,+d.slice(6,8)).getDay());}
+function aedBrands(x){var c=['#1428a0','#a50034','#c8102e'],n=['삼성','LG','쿠쿠'],o=[];for(var i=0;i<3;i++)if(x.u&&x.u[i])o.push('<span class="aed-bd" style="border-color:'+c[i]+';color:'+c[i]+'">'+n[i]+(x.b&&x.b[i]?' '+x.b[i]:'')+'</span>');return o.join(' ')||'<span style="color:#cbd5e1">—</span>';}
+function aedRows(){var R=AEMP.dd,ro=R.roster||{},L=(R.rows||[]).map(function(x){var m=ro[x.e];x.name=m?m[0]||'':'';x.br=m?(m[1]||'(지점 없음)'):'(명부 없음)';x.rank=m?m[2]||'':'';x.inR=!!m;x.none=false;return x;});
+  if(AEMP.dnone){var seen={};L.forEach(function(x){seen[x.e]=1;});Object.keys(ro).forEach(function(e){if(!seen[e])L.push({e:e,name:ro[e][0]||'',br:ro[e][1]||'(지점 없음)',rank:ro[e][2]||'',inR:true,none:true,n:0,am:0,v:0,ad:0,c:0,p:0,s:0,b:[0,0,0],u:[0,0,0],f:'',l:'',dev:''});});}
+  return L;}
+function aedHtml(){var R=AEMP.dd,d=AEMP.date||aedToday(),td=aedToday();
+  var h='<div class="aed-nav"><button class="btn line sm" data-aeds="-1">◀ 전날</button><input type="date" id="aedDate" value="'+afDs(d)+'" max="'+afDs(td)+'"><span class="aed-dw">('+aedDw(d)+')'+(d===td?' 오늘':'')+'</span><button class="btn line sm" data-aeds="1"'+(d>=td?' disabled':'')+'>다음날 ▶</button>'+(d!==td?'<button class="btn line sm" data-aedt="1">오늘</button>':'')+'<button class="btn line sm" id="aedCsv" style="margin-left:auto">⬇ CSV</button></div>';
+  if(!R)return h+'<div class="empty" style="margin-top:12px">불러오는 중…</div>';
+  if(!R.ok)return h+'<div class="warn" style="margin-top:12px">불러오지 못했어요. Code.gs가 최신인지 확인해 주세요.</div>';
+  var ro=R.roster||{},rn=Object.keys(ro).length,all=(R.rows||[]),S={u:all.length,am:0,ad:0,q:0,inR:0};all.forEach(function(x){S.am+=x.am||0;S.ad+=x.ad||0;S.q+=(x.p||0)+(x.s||0);if(ro[x.e])S.inR++;});
+  var tr=R.trend||[],prev=tr.length>1?tr[tr.length-2]:null,dl=function(a,b){if(b==null)return '';var v=a-b;return v>0?'<em style="color:#15803d">▲'+v+'</em>':v<0?'<em style="color:#dc2626">▼'+(-v)+'</em>':'<em>-</em>';};
+  h+='<div class="adm-kpi">'+[['이용 인원',S.u+'명',dl(S.u,prev&&prev.u)],['명부 대비',rn?Math.round(S.inR/rn*100)+'%':'-','<em>'+S.inR+'/'+rn+'</em>'],['실사용 합계',fmtMin(S.am),''],['모델 담기',S.ad+'회',dl(S.ad,prev&&prev.ad)],['견적 (인쇄 · 보관)',S.q+'회',dl(S.q,prev&&prev.q)]].map(function(x){return '<div><span>'+x[0]+'</span><b>'+x[1]+'</b>'+x[2]+'</div>';}).join('')+'</div>';
+  /* 14일 추이 (막대를 누르면 그 날짜로) */
+  var mx=Math.max.apply(null,[1].concat(tr.map(function(t){return t.u;})));
+  h+='<div class="aed-trend">'+tr.map(function(t){return '<button data-aedday="'+t.d+'" class="'+(t.d===d?'on':'')+'" title="'+aeMd(t.d)+' '+t.u+'명 · 실사용 '+fmtMin(t.am)+'"><i style="height:'+Math.max(3,Math.round(t.u/mx*56))+'px"></i><b>'+t.u+'</b><small>'+aeMd(t.d)+'</small></button>';}).join('')+'</div><div class="hint" style="margin:2px 0 0">최근 14일 이용 인원 · 막대를 누르면 그 날짜로 이동</div>';
+  h+=aedMailHtml(R.report);
+  /* 목록 */
+  var L=aedRows(),q=AEMP.dq.trim().toLowerCase(),BR={};L.forEach(function(x){BR[x.br]=1;});
+  var F=L.filter(function(x){return (!AEMP.dbr||x.br===AEMP.dbr)&&(!q||(x.e+' '+x.name+' '+x.br+' '+x.rank).toLowerCase().indexOf(q)>=0);});
+  var so=AEMP.dsort;F.sort(function(a,b){if(a.none!==b.none)return a.none?1:-1;return so==='first'?((a.f||'99')<(b.f||'99')?-1:1):so==='br'?(a.br<b.br?-1:a.br>b.br?1:(b.am-a.am)):so==='ad'?((b.ad+b.p+b.s)-(a.ad+a.p+a.s)):((b.am-a.am)||(b.n-a.n));});
+  h+='<div class="ae-tools"><select id="aedBr"><option value="">전체 지점</option>'+Object.keys(BR).sort().map(function(b){return '<option'+(AEMP.dbr===b?' selected':'')+'>'+esc(b)+'</option>';}).join('')+'</select><input type="search" id="aedQ" placeholder="사번 · 이름 · 지점 검색" value="'+esc(AEMP.dq)+'" autocomplete="off"></div>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px"><div class="chips" style="margin:0">'+[['am','실사용 많은 순'],['first','먼저 온 순'],['ad','담기 · 견적 많은 순'],['br','지점 순']].map(function(x){return '<button class="chip sm '+(so===x[0]?'on':'')+'" data-aedo="'+x[0]+'">'+x[1]+'</button>';}).join('')+'</div><label style="margin-left:auto;font-size:13px;display:flex;align-items:center;gap:4px"><input type="checkbox" id="aedNone"'+(AEMP.dnone?' checked':'')+'> 안 들어온 직원도 보기</label></div>';
+  var used=F.filter(function(x){return !x.none;}).length;
+  h+='<div class="adm-sec">'+aeMd(d)+'('+aedDw(d)+') 사번별 기록 <small>'+used+'명 이용'+(AEMP.dnone?' · '+(F.length-used)+'명 미접속':'')+' · 이름을 누르면 날짜별 기록</small></div>';
+  h+='<div class="scroll" style="margin-top:6px;max-height:600px;border:1px solid var(--line);border-radius:12px"><table class="ae-tbl"><tr><th>이름 · 사번</th><th>지점</th><th>접속 시간</th><th style="text-align:right">실사용</th><th style="text-align:right">접속</th><th>조회 · 담기 · 캡처</th><th>인쇄 · 보관</th><th>쓴 계산기 (기능 횟수)</th><th>기기</th></tr>'
+    +(F.length?F.slice(0,500).map(function(x){var op=AEMP.dopen===x.e;
+      if(x.none)return '<tr data-aedo-e="'+esc(x.e)+'" style="cursor:pointer;color:#94a3b8'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small>'+esc(x.e)+'</small></td><td>'+esc(x.br)+'</td><td colspan="7">이날 안 들어옴</td></tr>'+(op?'<tr><td colspan="9" style="background:#f8fafc;white-space:normal;padding:10px">'+aehHtml(x.e)+'</td></tr>':'');
+      return '<tr data-aedo-e="'+esc(x.e)+'" style="cursor:pointer'+(op?';background:#eef2ff':'')+'"><td><b>'+(op?'▾ ':'▸ ')+esc(x.name||'-')+'</b><br><small style="color:var(--sub)">'+esc(x.e)+'</small>'+(x.inR?'':' <small style="color:#ea580c">명부 없음</small>')+'</td><td>'+esc(x.br)+'<br><small style="color:var(--sub)">'+esc(x.rank)+'</small></td><td>'+(x.f?esc(x.f)+' → '+esc(x.l):'<span style="color:#cbd5e1">-</span>')+'</td><td class="n"><b>'+fmtMin(x.am)+'</b></td><td class="n">'+(x.n||0)+'회</td><td>'+(x.v||0)+' · '+(x.ad||0)+' · '+(x.c||0)+'</td><td>'+(x.p||0)+' · '+(x.s||0)+'</td><td>'+aedBrands(x)+'</td><td><small>'+esc(x.dev||'')+'</small></td></tr>'
+        +(op?'<tr><td colspan="9" style="background:#f8fafc;white-space:normal;padding:10px">'+aehHtml(x.e)+'</td></tr>':'');}).join(''):'<tr><td colspan="9" style="text-align:center;color:var(--sub);padding:24px">'+(q||AEMP.dbr?'해당하는 직원이 없어요':'이날 이용 기록이 없어요')+'</td></tr>')
+    +'</table></div>';
+  h+='<div class="note">· 실사용은 계산기 화면을 실제로 보고 있던 시간이에요 (다른 앱 · 꺼진 화면 제외). 시간 기록은 이 기능을 넣은 11/17부터 날짜별로 남고, 그 전 날짜는 접속 · 담기 · 견적만 보여요.<br>· 기록은 30분마다 구글 시트 \'일별이용\' 탭에 저장돼요 (날짜 · 사번 한 줄씩).<br>· 접속 횟수는 계산기를 새로 연 횟수, 계산기 칸의 숫자는 그 계산기에서 기능을 쓴 횟수예요. · '+esc(R.at)+' 기준</div>';
+  return h;}
+function aedMailHtml(I){I=I||{};var st=I.on===true?'<b style="color:#15803d">● 켜짐</b>':I.on===false?'<b style="color:#64748b">○ 꺼짐</b>':'<b style="color:#ea580c">⚠ 권한 허용 필요</b>';
+  return '<div class="aed-mail"><div style="flex:1;min-width:220px"><b>📧 매일 밤 9시 엑셀 리포트</b> '+st+'<br><small>받는 주소 <b>'+esc(I.to||'')+'</b>'+(I.last?' · 마지막 발송 '+esc(I.last.split(' → ')[0]):'')+'</small>'
+    +(I.on==null?'<br><small style="color:#ea580c">Apps Script 편집기에서 <b>setupDailyReport</b> 함수를 한 번 실행해 권한을 허용하면 켜져요.</small>':'')+(I.err?'<br><small style="color:#dc2626">최근 오류: '+esc(I.err)+'</small>':'')
+    +'<br><small style="color:var(--sub)">첨부: 요약 · 오늘 사번별 · 누적 사번별(미사용 포함) · 일별 추이 · 사번×날짜 · 일별 원본</small></div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn line sm" id="aedMailTo">주소 변경</button><button class="btn line sm" id="aedMailNow">지금 보내기</button>'+(I.on===true?'<button class="btn line sm" data-aedon="0">끄기</button>':I.on===false?'<button class="btn sm" data-aedon="1">켜기</button>':'')+'</div></div>';}
+function aedMailSet(arg,btn,ok){arg.pw=ADM.pw;if(btn){btn.disabled=true;btn.textContent='처리 중…';}
+  gsr('adminReportSet',arg,function(r){if(r&&r.info&&AEMP.dd)AEMP.dd.report=r.info;toast(r&&r.ok?ok:((r&&r.msg)||'처리하지 못했어요'));if(ADM.tab==='emp')admRender();},function(){toast('처리하지 못했어요');if(ADM.tab==='emp')admRender();});}
+function aedBind(){
+  var go=function(d){var td=aedToday();if(!d||d>td)d=td;AEMP.date=d;AEMP.dopen='';aedLoad();admRender();};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aeds]'),function(b){b.onclick=function(){go(aedShift(AEMP.date||aedToday(),+b.dataset.aeds));};});
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aedt]'),function(b){b.onclick=function(){go(aedToday());};});
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aedday]'),function(b){b.onclick=function(){if(b.dataset.aedday!==AEMP.date)go(b.dataset.aedday);};});
+  var di=$('#aedDate');if(di)di.onchange=function(){if(this.value)go(this.value.replace(/-/g,''));};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aedo]'),function(b){b.onclick=function(){AEMP.dsort=b.dataset.aedo;admRender();};});
+  var nb=$('#aedNone');if(nb)nb.onchange=function(){AEMP.dnone=this.checked;admRender();};
+  var sb=$('#aedBr');if(sb)sb.onchange=function(){AEMP.dbr=this.value;admRender();};
+  var qi=$('#aedQ');if(qi)qi.oninput=function(){AEMP.dq=this.value;var p=this.selectionStart;admRender();var n=$('#aedQ');if(n){n.focus();try{n.setSelectionRange(p,p);}catch(e){}}};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody tr[data-aedo-e]'),function(b){b.onclick=function(){var e=b.getAttribute('data-aedo-e');AEMP.dopen=AEMP.dopen===e?'':e;if(AEMP.dopen&&!AEMP.hist[e])aehLoad(e);var sc=b.closest('.scroll'),top=sc?sc.scrollTop:0;admRender();var n=document.querySelector('#admBody .scroll');if(n)n.scrollTop=top;};});
+  var mt=$('#aedMailTo');if(mt)mt.onclick=function(){var cur=(AEMP.dd&&AEMP.dd.report&&AEMP.dd.report.to)||'';var v=prompt('리포트를 받을 메일 주소 (여러 명은 쉼표로 구분, 최대 5명)',cur);if(v==null||!v.trim()||v.trim()===cur)return;aedMailSet({to:v.trim()},mt,'받는 주소를 바꿨어요');};
+  var mn=$('#aedMailNow');if(mn)mn.onclick=function(){if(!confirm('지금까지의 기록으로 엑셀 리포트를 만들어 '+((AEMP.dd&&AEMP.dd.report&&AEMP.dd.report.to)||'관리자 메일')+'로 보낼까요?\n(30초쯤 걸려요)'))return;aedMailSet({send:true},mn,'리포트 메일을 보냈어요');};
+  Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aedon]'),function(b){b.onclick=function(){var on=b.dataset.aedon==='1';aedMailSet({on:on},b,on?'매일 밤 9시 자동 발송을 켰어요':'자동 발송을 껐어요');};});
+  aehBind();
+  var cv=$('#aedCsv');if(cv)cv.onclick=function(){var R=AEMP.dd;if(!R||!R.ok)return;csvDown([['날짜','사번','이름','지점','직책','첫 접속','마지막 접속','접속 횟수','실사용(분)','모델 조회','모델 담기','견적 캡처','인쇄','보관','삼성 기능','LG 기능','쿠쿠 기능','이용 계산기','기기']].concat(aedRows().map(function(x){return [afDs(R.date),x.e,x.name,x.br,x.rank,x.f,x.l,x.n,x.am,x.v,x.ad,x.c,x.p,x.s,x.b[0],x.b[1],x.b[2],x.none?'미접속':['삼성','LG','쿠쿠'].filter(function(n,i){return x.u[i];}).join('·'),x.dev];})),'사번별일별_'+R.date+'.csv');};}
+/* 한 사번의 날짜별 기록 */
+function aehLoad(e){AEMP.hist[e]=null;gsr('adminEmpHistory',{pw:ADM.pw,emp:e,days:AEMP.hdays},function(r){AEMP.hist[e]=r&&r.ok?r:{ok:false};if(ADM.tab==='emp')admRender();},function(){AEMP.hist[e]={ok:false};if(ADM.tab==='emp')admRender();});}
+function aehHtml(e){var H=AEMP.hist[e];
+  var top='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px"><b style="font-size:13px">📅 날짜별 기록</b><div class="chips" style="margin:0">'+[[30,'30일'],[90,'90일'],[0,'전체']].map(function(x){return '<button class="chip sm '+(H!==undefined&&AEMP.hdays===x[0]?'on':'')+'" data-aehd="'+x[0]+'" data-aehe="'+esc(e)+'">'+x[1]+'</button>';}).join('')+'</div></div>';
+  if(H===undefined)return top.replace('📅 날짜별 기록</b>','📅 날짜별 기록</b> <small style="color:var(--sub)">기간을 누르면 불러와요</small>');
+  if(!H)return top+'<div style="font-size:12.5px;color:var(--sub);margin-top:6px">불러오는 중…</div>';
+  if(!H.ok)return top+'<div class="warn" style="margin-top:6px">불러오지 못했어요.</div>';
+  var L=H.list||[];if(!L.length)return top+'<div style="font-size:12.5px;color:var(--sub);margin-top:6px">이 기간 이용 기록이 없어요.</div>';
+  var sm={am:0,ad:0,q:0};L.forEach(function(x){sm.am+=x.am||0;sm.ad+=x.ad||0;sm.q+=(x.p||0)+(x.s||0);});
+  var mx=Math.max.apply(null,[1].concat(L.map(function(x){return x.am||0;})));
+  return top+'<div style="font-size:12.5px;margin-top:6px">이용 <b>'+L.length+'일</b> · 실사용 <b>'+fmtMin(sm.am)+'</b> · 담기 <b>'+sm.ad+'회</b> · 견적 <b>'+sm.q+'회</b></div>'
+    +'<div class="scroll" style="margin-top:6px;max-height:300px;background:#fff;border-radius:10px"><table class="ae-tbl"><tr><th>날짜</th><th>접속 시간</th><th>실사용</th><th style="text-align:right">접속</th><th>조회 · 담기 · 캡처</th><th>인쇄 · 보관</th><th>쓴 계산기</th></tr>'
+    +L.map(function(x){return '<tr><td><b>'+aeMd(x.d)+'</b> <small style="color:var(--sub)">('+aedDw(x.d)+')</small></td><td>'+(x.f?esc(x.f)+' → '+esc(x.l):'-')+'</td><td><div style="display:flex;align-items:center;gap:6px"><div class="ae-bar" style="min-width:60px;height:7px"><i style="width:'+Math.round((x.am||0)/mx*100)+'%;background:#6366f1"></i></div><b>'+fmtMin(x.am)+'</b></div></td><td class="n">'+(x.n||0)+'회</td><td>'+(x.v||0)+' · '+(x.ad||0)+' · '+(x.c||0)+'</td><td>'+(x.p||0)+' · '+(x.s||0)+'</td><td>'+aedBrands(x)+'</td></tr>';}).join('')+'</table></div>';}
+function aehBind(){Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aehd]'),function(b){b.onclick=function(ev){ev.stopPropagation();AEMP.hdays=+b.dataset.aehd;AEMP.hist={};aehLoad(b.dataset.aehe);admRender();};});}

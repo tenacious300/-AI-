@@ -59,6 +59,13 @@ jobs:
         working-directory: apps-script
         run: clasp push -f
 
+      - name: 권한 설정 확인 (appsscript.json)
+        working-directory: apps-script
+        run: cat appsscript.json || true
+
+      # 커밋 메시지에 [hold-deploy]가 있으면 코드만 올리고 웹앱 배포는 보류
+      # (새 권한이 필요한 기능: 편집기에서 권한 허용 후 Actions 탭에서 'Run workflow'로 배포)
       - name: 웹앱 새 버전 배포 (주소 유지)
+        if: ${{ !contains(github.event.head_commit.message || '', '[hold-deploy]') }}
         working-directory: apps-script
         run: clasp deploy -i "$DEPLOYMENT_ID" -d "GitHub 자동 배포 ${GITHUB_SHA::7}"
