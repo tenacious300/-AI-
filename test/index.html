@@ -1315,8 +1315,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.63',VER_DATE='2026.11.17';
+var VERSION='v8.64',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.64','11.17',['삼성닷컴 제품 정보(사진·이름·기준가)를 기기에 하루 저장해 두 번째부터 빠르게 열려요','LG 단가 데이터 크기를 1.6MB → 0.66MB로 줄여 LG 계산기 첫 로딩이 빨라져요']],
   ['v8.63','11.17',['📋 LG 스펙 비교 추가: LG닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 (우리 LG 단가표 모델 · 매주 자동 갱신)']],
   ['v8.62','11.17',['📋 삼성 스펙 비교 추가: 삼성닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 · 코스 목록은 그 모델에만 있는 것 표시 · 세트 상품은 본체 스펙 (매주 자동 갱신)','💰 \'비교하기\'를 \'가격 비교\'로 이름 변경 · 오른쪽 옆 탭 글씨와 크기를 키움 (삼성 · LG · 쿠쿠)']],
   ['v8.61','11.17',['🖨 견적서 인쇄: \'카드 적용 월 실 납부액 (첫 달)\' 줄을 노란색 굵은 테두리 박스로 강조 (삼성 · LG · 쿠쿠)']],
@@ -1459,8 +1460,11 @@ function listPrice(x,code){var num=function(v){var n=typeof v==='number'?v:+Stri
   var g=(x&&x.groupedProductList||[]).filter(function(o){return String(o.modelCode||'').toUpperCase()===code;})[0];
   v=num(g&&g.msrp_price);return v?{v:v,k:'grouped.msrp_price'}:null;}
 function lumpAuto(){var ch=false;S.cart.forEach(function(c){if(c.lumpManual)return;var o=INFO[c.code];var v=o&&o.st==='ok'&&o.lp>=c.mon*10?o.lp:0;if(v&&c.lump!==v){c.lump=v;ch=true;}});return ch;}
+var IC=(function(){var d=new Date().toISOString().slice(0,10),c={d:d,m:{}};try{var j=JSON.parse(localStorage.getItem('ssInfo')||'null');if(j&&j.d===d&&j.m)c=j;}catch(e){}return c;})(),ICt=0;
+function icSave(){clearTimeout(ICt);ICt=setTimeout(function(){try{localStorage.setItem('ssInfo',JSON.stringify(IC));}catch(e){try{IC.m={};localStorage.removeItem('ssInfo');}catch(e2){}}},500);}
 function fetchInfo(code,force){
   if(INFO[code]&&INFO[code].p&&!(force&&INFO[code].st==='fail'))return INFO[code].p;
+  if(!force&&IC.m[code]){var c=INFO[code]=Object.assign({st:'ok'},IC.m[code]);c.p=Promise.resolve(c);return c.p;}
   var o=INFO[code]={st:'loading'};var CU=String(code).toUpperCase();
   var body='clientCode=b2c&storeID=1&countryCode=sec&startIndex=0&requestCount=30&clientName=scom&projection='+encodeURIComponent('["*"]')+'&keyword='+encodeURIComponent(code)+'&siteCd=sec&version=v2&firstSearchYN=true';
   var to=new Promise(function(res){setTimeout(function(){res('timeout');},8000);});
@@ -1472,7 +1476,7 @@ function fetchInfo(code,force){
     var lp=listPrice(x,CU);
     return {name:x.name||x.productDisplayName||'',img:img,stock:x.stockStatus||'',pdp:x.pdpURL||'',lp:lp?lp.v:0,lpk:lp?lp.k:''};
   }).catch(function(){return 'timeout';});
-  o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';}else o.st=(v==='none'?'none':'fail');render();return o;});
+  o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';IC.m[code]=v;icSave();}else o.st=(v==='none'?'none':'fail');render();return o;});
   return o.p;
 }
 var SEARCH_BASE='https:\/\/www.samsung.com/sec/aisearch/?searchvalue=';
