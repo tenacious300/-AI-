@@ -27,6 +27,13 @@ def fake(fn):
         return {'ok': True, 'todayEmps': [], 'online': 1, 'sessions': [], 'days': [], 'blocks': [], 'rmap': {}, 'rex': {}, 'nrlog': [], 'total': 0, 'at': 'now'}
     if fn == 'adminEmpUsage':
         return {'ok': True, 'from': '20261017', 'to': '20261116', 'at': 'now', 'rows': {}, 'roster': {EMP: ['테스트', BR, '사원']}, 'terms': {EMP: ['2026-11-16 17:00:00', 1]}}
+    if fn == 'adminEmpDaily':
+        rows = [{'e': EMP, 'f': '09:02', 'l': '20:40', 'n': 3, 'am': 62, 'v': 14, 'ad': 5, 'c': 2, 'p': 2, 's': 1, 'b': [5, 2, 0], 'u': [1, 1, 0], 'dev': 'iPhone'}]
+        return {'ok': True, 'date': '20261117', 'today': '20261117', 'rows': rows, 'roster': {EMP: ['테스트', BR, '사원'], '100200': ['미접속', BR, '사원']},
+                'trend': [{'d': '202611%02d' % (4 + i), 'u': i % 5, 'am': i * 10, 'ad': i, 'q': 1} for i in range(14)],
+                'report': {'to': 'kiss5586@gmail.com', 'on': None, 'last': '', 'err': ''}, 'at': 'now'}
+    if fn == 'adminEmpHistory':
+        return {'ok': True, 'emp': EMP, 'days': 30, 'list': [{'d': '20261117', 'f': '09:02', 'l': '20:40', 'n': 3, 'am': 62, 'v': 14, 'ad': 5, 'c': 2, 'p': 2, 's': 1, 'b': [5, 2, 0], 'u': [1, 1, 0]}]}
     if fn in ('listQuotes',):
         return []
     return {'ok': True, 'me': {'name': '테스트', 'br': BR, 'rank': '사원'}}
