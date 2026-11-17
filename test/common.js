@@ -106,7 +106,7 @@ function recAfterAdd(code){if(REC.off||REC.busy||!window.REC_PAGE)return;recLoad
   var shown=r.up.concat(r.dn).map(function(x){return x.code;}).concat(r.withL.map(function(w){return w.x.code;})),okL=[],sent=false;
   var fb=function(){if(sent)return;sent=true;try{gsrCommon('recFb',{brand:REC_PAGE.brand,shown:shown,ok:okL,test:!!window.TEST_MODE},function(){});}catch(e){}
     shown.forEach(function(c){var f=REC.fb[c]||(REC.fb[c]=[0,0]);f[0]++;});okL.forEach(function(c){var f=REC.fb[c]||(REC.fb[c]=[0,0]);f[1]++;});};
-  var close=function(){fb();if(d.querySelector('#rcOff').checked){REC.off=true;try{localStorage.setItem('recOff','1');}catch(e){}PG.toast('추천을 껐어요 · 💰 최저 조합 버튼 옆에서 다시 켤 수 있어요');}d.remove();};
+  var close=function(){fb();if(d.querySelector('#rcOff').checked){REC.off=true;try{localStorage.setItem('recOff','1');}catch(e){}try{PG.fuLog('rec:off');}catch(e){}PG.toast('추천을 껐어요 · 💰 최저 조합 버튼 옆에서 다시 켤 수 있어요');}d.remove();};
   d.querySelector('.rc-x').onclick=close;d.onclick=function(e){if(e.target===d)close();};
   d.querySelector('.rc-body').onclick=function(e){var b=e.target.closest('button');if(!b)return;REC.busy=true;
     okL.push(b.dataset.swap||b.dataset.add);try{if(b.dataset.swap){var i=REC_PAGE.cart().lastIndexOf(me.code);if(i>=0)REC_PAGE.removeAt(i);REC_PAGE.add(b.dataset.swap);PG.fuLog('rec:swap');}
@@ -121,7 +121,7 @@ function recBest(){if(!window.REC_PAGE||!REC_PAGE.best)return;var b=REC_PAGE.bes
     +'</div>'+(sv>0?'<div class="rc-sum">모두 바꾸면 <b>월 '+recWon(sv)+'</b> 줄어요 <small>(약정 기간이 길어질 수 있어요)</small></div><button class="rc-b big" id="rcApply">이 조합으로 바꾸기</button>':'<div class="rc-sum">지금 담은 조합이 이미 가장 저렴해요</div>')
     +'<label class="rc-off"><input type="checkbox" id="rcOn"'+(REC.off?'':' checked')+'> 모델 담을 때 추천 팝업 보기</label><button class="rc-x">닫기</button></div>';
   var d=document.createElement('div');d.className='rc-ov';d.innerHTML=h;document.body.appendChild(d);
-  var close=function(){REC.off=!d.querySelector('#rcOn').checked;try{localStorage.setItem('recOff',REC.off?'1':'');}catch(e){}d.remove();};
+  var close=function(){var was=REC.off;REC.off=!d.querySelector('#rcOn').checked;if(was!==REC.off)try{PG.fuLog(REC.off?'rec:off':'rec:on');}catch(e){}try{localStorage.setItem('recOff',REC.off?'1':'');}catch(e){}d.remove();};
   d.querySelector('.rc-x').onclick=close;d.onclick=function(e){if(e.target===d)close();};
   var ap=d.querySelector('#rcApply');if(ap)ap.onclick=function(){b.apply();PG.fuLog('rec:best');PG.toast('월 '+recWon(sv)+' 줄어드는 조합으로 바꿨어요');close();};
   PG.fuLog('rec:bestshow');}
