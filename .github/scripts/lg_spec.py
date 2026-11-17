@@ -43,6 +43,28 @@ def paths(cat):
         if k in cat: return p
     return []
 
+ALL_PATHS = sorted({x for _, ps in PATHS for x in ps})
+TOK = re.compile(r'\\?"(sku|modelUrlPath)\\?"\s*:\s*\\?"([^"\\]+)')
+
+def url_map():
+    """품목 목록 페이지에 들어 있는 모델 → 실제 상품 주소 (TV · 노트북처럼 주소가 모델명과 다른 품목용)"""
+    m, last = {}, None
+    for p in ALL_PATHS:
+        try: t = get('https://www.lge.co.kr/category/care-solutions/' + p); time.sleep(0.4)
+        except Exception as e: print('목록 실패', p, e); continue
+        for k, v in TOK.findall(t):
+            if k == 'sku': last = v
+            elif last:
+                m.setdefault(last.upper(), v.split('?')[0]); last = None
+    return m
+
+def guesses(code, p):
+    """모델 주소 후보: 목록에서 찾은 주소 → 모델명만 → 모델명 + 뒤 코드(.A 뺀 것, 노트북 방식)"""
+    b, _, suf = code.partition('.')
+    out = ['/care-solutions/%s/%s' % (p, b.lower())]
+    if suf: out.append('/care-solutions/%s/%s' % (p, (b + (suf[1:] if suf.startswith('A') else suf)).lower()))
+    return out
+
 def fname(c): return re.sub(r'[^A-Za-z0-9._-]', '_', c)
 
 def main():
@@ -51,21 +73,24 @@ def main():
     outdir = os.path.join(ROOT, 'data/spec/lg'); os.makedirs(outdir, exist_ok=True)
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d')
     cache, index, ok, miss = {}, {}, 0, 0
+    um = url_map(); print('목록에서 찾은 상품 주소', len(um))
     for m in d['m']:
         code, cat = m[0], d['cats'][m[1]]
         base = code.split('.')[0].lower()
-        if base not in cache:
-            cache[base] = None
-            for p in paths(cat):
+        cand = ([um[code.upper()]] if code.upper() in um else []) + [u for p in paths(cat) for u in guesses(code, p)]
+        key = cand[0] if cand else base
+        if key not in cache:
+            cache[key] = None
+            for u in dict.fromkeys(cand):
                 try:
-                    h = get('https://www.lge.co.kr/care-solutions/%s/%s' % (p, base)); time.sleep(0.4)
+                    h = get('https://www.lge.co.kr' + u); time.sleep(0.4)
                 except Exception:
                     continue
                 sp = parse(h)
                 if len(sp) >= 5:
                     tm = re.search(r'<title>([^<|]*)', h)
-                    cache[base] = (sp, html.unescape(tm.group(1)).strip() if tm else '', p); break
-        got = cache[base]
+                    cache[key] = (sp, html.unescape(tm.group(1)).strip() if tm else '', u); break
+        got = cache[key]
         if not got: miss += 1; continue
         sp, name, p = got
         with open(os.path.join(outdir, fname(code) + '.json'), 'w', encoding='utf-8') as f:
