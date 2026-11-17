@@ -37,6 +37,19 @@ def parse(t):
             if k: out.append([sec, clean(k.group(1)), clean(v.group(1)) if v else ''])
     return out
 
+def fetch_spec(g):
+    """일반 상품은 바로, 패키지(에어컨 세트 · 청소기 패키지 등)는 구성품 목록에서 첫 번째(본체) 스펙"""
+    sp = parse(get(SPEC, {'goodsId': g}))
+    if sp: return sp, ''
+    parts = re.findall(r'data-cstrt-goods-id="(G\d+)"[^>]*data-disp-nm="([^"]*)"', get('https://www.samsung.com/sec/xhr/goods/goodsSpec', {'goodsId': g, 'goodsTpCd': '20'}))
+    if not parts: return [], ''
+    time.sleep(0.2)
+    sp = parse(get(SPEC, {'goodsId': parts[0][0], 'goodsTpCd': '20'}))
+    return sp, ' + '.join(html.unescape(n) for _, n in parts)
+
+def fname(c):   # 파일 이름에 못 쓰는 글자 (예: HW-Q990H/KR) → _
+    return re.sub(r'[^A-Za-z0-9._-]', '_', c)
+
 def calc_models():
     t = open(os.path.join(ROOT, 'data/price.js'), encoding='utf-8').read()
     d = json.loads(t[t.index('{'):t.rindex('}') + 1])
@@ -73,11 +86,11 @@ def main():
         if not src: miss += 1; continue
         try:
             if src not in cache:
-                cache[src] = parse(get(SPEC, {'goodsId': gid[src]})); time.sleep(0.25)
-            sp = cache[src]
+                cache[src] = fetch_spec(gid[src]); time.sleep(0.25)
+            sp, parts = cache[src]
             if not sp: fail += 1; continue
-            with open(os.path.join(outdir, c + '.json'), 'w', encoding='utf-8') as f:
-                json.dump({'code': c, 'src': src, 'name': name.get(src, ''), 'at': now, 'spec': sp}, f, ensure_ascii=False, separators=(',', ':'))
+            with open(os.path.join(outdir, fname(c) + '.json'), 'w', encoding='utf-8') as f:
+                json.dump({'code': c, 'src': src, 'name': name.get(src, ''), 'parts': parts, 'at': now, 'spec': sp}, f, ensure_ascii=False, separators=(',', ':'))
             index[c] = src; ok += 1
         except Exception as e:
             fail += 1; print('스펙 실패', c, e)
