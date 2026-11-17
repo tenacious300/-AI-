@@ -417,7 +417,7 @@ body.preview{background:#e5e7eb;padding:0}
 .stog.feel-b{border-color:rgba(251,113,133,.6);color:#fda4af;margin:10px 0 0}.pm-opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font:inherit}.pm-opt b{display:block;font-size:16px;margin-bottom:4px;color:var(--ink)}.pm-opt span{font-size:13px;color:var(--sub)}.pm-opt:hover{border-color:#2563eb;background:#eff6ff}.pm-opt.feel:hover{border-color:#e11d48;background:#fff1f2}
 .pq .feel{margin-top:14px;border:2px solid #e11d48;border-radius:8px;padding:10px 14px}.pq .feel h3{margin:0 0 6px;font-size:14px;color:#e11d48}.pq .feel .fr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #f3c4cf}.pq .feel .fb{font-weight:800;font-size:17px;color:#e11d48;border-bottom:0;padding-top:6px}.pq .feel small{color:#555}
 .pm-opt.lump:hover{border-color:#0284c7;background:#f0f9ff}
-.pq .lump{margin-top:12px;border:2px solid #0284c7;border-radius:8px;padding:8px 12px;break-inside:avoid}
+.pq .lump{margin-top:12px;border:2px solid #0284c7;border-radius:8px;padding:8px 12px;break-inside:auto}.pq .lump>*,.pq .lump .why,.pq .lump table,.pq .lump .calc,.pq .lump .pbars{break-inside:avoid}.pq .lump h3{break-after:avoid}
 .pq .lump td,.pq .lump th{padding:4px 8px}
 .pq .lump .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .pq .lump h3 small{font-weight:500;color:#555;font-size:12px}
@@ -433,6 +433,12 @@ body.preview{background:#e5e7eb;padding:0}
 .pq .lump .calc{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-bottom:6px}
 .pq .lump .calc .fr{font-size:12px}
 .pq .lump .fcol .fh{font-weight:800;color:#e11d48;font-size:12.5px;padding:2px 0 3px;border-bottom:1px solid #fecdd3}.pq .lump .fcol .fh small{font-weight:500;color:#9f1239;font-size:11px}.pq .lump .fcol .fr{border-bottom-color:#fecdd3}.pq .lump .fcol .fb{color:#e11d48;font-size:16px;font-weight:800;border-bottom:0;padding-top:4px}
+.pq.cpt{font-size:11.5px}.pq.cpt h1{font-size:19px}.pq.cpt .hd{padding-bottom:5px;margin-bottom:7px}.pq.cpt .cond{margin-bottom:7px}
+.pq.cpt th,.pq.cpt td{padding:3px 6px}.pq.cpt th{font-size:11px}.pq.cpt .pimg,.pq.cpt .noimg{width:52px;height:52px}.pq.cpt .pn{font-size:12px}
+.pq.cpt .tot{margin-top:7px;gap:2px 22px}.pq.cpt .tot div{padding:2px 0}.pq.cpt .tot .em{font-size:13.5px}.pq.cpt .tot .em.pay{padding:5px 10px!important;margin-top:3px;font-size:14px}
+.pq.cpt .lump{margin-top:8px;padding:6px 10px}.pq.cpt .lump h3{font-size:13px;margin:0 0 5px}.pq.cpt .lump .why{gap:6px;margin-bottom:5px}.pq.cpt .lump .why>div{padding:3px 8px}.pq.cpt .lump .why b{font-size:13.5px}
+.pq.cpt .lump td,.pq.cpt .lump th{padding:2px 6px}.pq.cpt .lump .calc{margin:4px 0}.pq.cpt .lump .calc .fr{font-size:11.5px;padding:1px 0}.pq.cpt .pbars{margin:5px 0 4px;padding:5px 10px;gap:4px}.pq.cpt .pt{height:9px}
+.pq.cpt .verdict{padding:5px 10px;font-size:13px}.pq.cpt .nt{margin-top:8px;font-size:10px;line-height:1.45}
 .pq .lump .verdict{background:#0369a1;color:#fff;border-radius:8px;padding:7px 12px;font-size:15px;margin:4px 0}
 .pq .lump .verdict.good{background:#047857}
 .pq .lump .verdict small{color:#e0f2fe;font-size:12px}
@@ -1459,8 +1465,11 @@ function listPrice(x,code){var num=function(v){var n=typeof v==='number'?v:+Stri
   var g=(x&&x.groupedProductList||[]).filter(function(o){return String(o.modelCode||'').toUpperCase()===code;})[0];
   v=num(g&&g.msrp_price);return v?{v:v,k:'grouped.msrp_price'}:null;}
 function lumpAuto(){var ch=false;S.cart.forEach(function(c){if(c.lumpManual)return;var o=INFO[c.code];var v=o&&o.st==='ok'&&o.lp>=c.mon*10?o.lp:0;if(v&&c.lump!==v){c.lump=v;ch=true;}});return ch;}
+var IC=(function(){var d=new Date().toISOString().slice(0,10),c={d:d,m:{}};try{var j=JSON.parse(localStorage.getItem('ssInfo')||'null');if(j&&j.d===d&&j.m)c=j;}catch(e){}return c;})(),ICt=0;
+function icSave(){clearTimeout(ICt);ICt=setTimeout(function(){try{localStorage.setItem('ssInfo',JSON.stringify(IC));}catch(e){try{IC.m={};localStorage.removeItem('ssInfo');}catch(e2){}}},500);}
 function fetchInfo(code,force){
   if(INFO[code]&&INFO[code].p&&!(force&&INFO[code].st==='fail'))return INFO[code].p;
+  if(!force&&IC.m[code]){var c=INFO[code]=Object.assign({st:'ok'},IC.m[code]);c.p=Promise.resolve(c);return c.p;}
   var o=INFO[code]={st:'loading'};var CU=String(code).toUpperCase();
   var body='clientCode=b2c&storeID=1&countryCode=sec&startIndex=0&requestCount=30&clientName=scom&projection='+encodeURIComponent('["*"]')+'&keyword='+encodeURIComponent(code)+'&siteCd=sec&version=v2&firstSearchYN=true';
   var to=new Promise(function(res){setTimeout(function(){res('timeout');},8000);});
@@ -1472,7 +1481,7 @@ function fetchInfo(code,force){
     var lp=listPrice(x,CU);
     return {name:x.name||x.productDisplayName||'',img:img,stock:x.stockStatus||'',pdp:x.pdpURL||'',lp:lp?lp.v:0,lpk:lp?lp.k:''};
   }).catch(function(){return 'timeout';});
-  o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';}else o.st=(v==='none'?'none':'fail');render();return o;});
+  o.p=Promise.race([req,to]).then(function(v){if(v&&typeof v==='object'){Object.assign(o,v);o.st='ok';IC.m[code]=v;icSave();}else o.st=(v==='none'?'none':'fail');render();return o;});
   return o.p;
 }
 var SEARCH_BASE='https:\/\/www.samsung.com/sec/aisearch/?searchvalue=';
@@ -2058,7 +2067,7 @@ function buildPrint(mode){
   if(chP)T.push(['구독포인트 (약 5%)','+'+chP.toLocaleString()+'P']);
   var allP=fp+wp+chP+PKp.pts;
   T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(allP?' + '+allP.toLocaleString()+'P':'')]);
-  var html='<div class="pq"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
+  var html='<div class="pq'+(mode==='lump'||mode==='feellump'?' cpt':'')+'"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
     +'<div class="cond"><span>고객 유형: <b>'+({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust]||'신규')+'</b></span><span>제휴카드: <b>'+(MC?MC.per.map(function(p){return p.name+' · 월 '+p.u+'만원↑';}).join(' / '):card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
     +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')
