@@ -1318,8 +1318,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.67',VER_DATE='2026.11.17';
+var VERSION='v8.68',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.68','11.17',['관리자 기능 사용: 구독 판매순위 · 스펙 비교 · 추천 팝업 · 최저 조합 · 단가 변경 요약도 집계에 표시']],
   ['v8.67','11.17',['삼성 제휴카드: 하나카드 · 광주은행 BC 카드 이미지 추가']],
   ['v8.66','11.17',['일시불 비교 · 체감가+일시불 비교 견적서: 간격 · 사진 크기를 줄여 2~3품목까지 한 장에 인쇄']],
   ['v8.65','11.17',['일시불 비교 · 체감가+일시불 비교 견적서 인쇄: 비교 박스가 통째로 다음 장으로 넘어가 1장에 큰 빈칸이 생기던 문제 수정']],
@@ -2513,7 +2514,7 @@ function admCsv(){var L=(ADM.stat&&ADM.stat.todayEmps)||[];var rows=[['사번','
   csvDown(rows,'접속기록_'+todayStr()+'.csv');}
 function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
-var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['💰','가격 비교'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교'],install:['📲','앱 설치 완료'],instguide:['📲','앱 설치 안내 보기']};
+var FNAME={rank:['🛒','구독 판매순위 보기'],'rank:add':['🛒','판매순위에서 담기'],spec:['📋','스펙 비교'],rec:['💡','추천 팝업'],'rec:show':['💡','추천 팝업 뜸'],'rec:add':['💡','추천 모델 담기'],'rec:swap':['💡','추천 모델로 바꾸기'],'rec:best':['💰','최저 조합 찾기'],'rec:bestshow':['💰','최저 조합 결과 보기'],pricediff:['📢','단가 변경 요약 보기'],capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['💰','가격 비교'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교'],install:['📲','앱 설치 완료'],instguide:['📲','앱 설치 안내 보기']};
 var AFEAT={days:7,data:null,brand:''};
 var LGCARD_N={shinhan:'신한 더구독케어',wooripl:'우리 Platinum',woori:'우리 LG전자',lotte:'롯데 구독엔로카',kb:'KB국민 LG전자',hyundai:'현대 LG전자',hana:'하나 플러스',nh:'NH 올원 BEST',best:'광주/전북 베스트케어'};
 function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기':AFEAT.brand==='ss'?'판촉 모델 보기':AFEAT.brand==='ck'?'반값 모델 보기':'판촉 · 활성화 · 반값 모델 보기';if(k==='cardpol'&&AFEAT.brand==='ck')return '카드 혜택표 보기';return FNAME[k][1];}
