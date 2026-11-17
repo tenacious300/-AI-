@@ -8,7 +8,7 @@
   1. 사번으로 입장 (약관 동의 팝업 통과)
   2. 모델 검색 → 담기 → 견적 금액이 0원이 아닌지
   3. 📸 견적 캡처 → 이미지 파일이 만들어지는지 · 지점명 표시
-  4. (삼성) 관리자 비밀번호 → 탭을 하나씩 모두 열어 보기
+  4. (삼성) 관리자 비밀번호 → 탭을 하나씩 모두 열어 보기 (관리자 코드 admin.js는 이때 처음 불러옴)
   5. 화면 오류(자바스크립트 에러)가 하나도 없는지
 필요: pip install playwright && playwright install chromium
 """
@@ -70,6 +70,7 @@ async def run():
                 await pg.goto(U + page + ('?brand=ss' if page == 'index.html' else ''))
                 await pg.wait_for_timeout(1500)
                 ok(not await pg.is_visible('#gate'), '사번으로 바로 입장')
+                ok(not await pg.evaluate("performance.getEntriesByType('resource').some(function(e){return /admin\\.js/.test(e.name);})"), '직원 화면은 관리자 코드(admin.js)를 내려받지 않음')
                 if await pg.is_visible('#termsPop'):
                     await pg.click('#termsOk'); await pg.wait_for_timeout(300)
                 code = await pg.evaluate(first)
@@ -110,7 +111,7 @@ async def run():
             await pg.route('**/*', route)
             await pg.goto(U + 'index.html'); await pg.wait_for_timeout(1200)
             try:
-                await pg.click('#gateAdm'); await pg.wait_for_timeout(300)
+                await pg.click('#gateAdm'); await pg.wait_for_selector('#admPw', timeout=5000)  # admin.js를 불러온 뒤 비밀번호 칸이 나옴
                 await pg.fill('#admPw', '1234'); await pg.click('#admGo'); await pg.wait_for_timeout(1200)
                 tabs = await pg.eval_on_selector_all('#admTabs .chip', 'b=>b.map(x=>x.dataset.v)')
                 for t in tabs:

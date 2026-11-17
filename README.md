@@ -6,6 +6,7 @@
 | 파일 | 내용 |
 |---|---|
 | `index.html` | 계산기 화면 |
+| `admin.js` | ⚙ 관리자 모드 코드 (삼성 · LG · 쿠쿠 공통) — 관리자를 열 때만 불러와서 직원 화면은 내려받지 않음 |
 | `config.js` | Apps Script API 주소 설정 (`window.API_URL`) |
 | `data/price.js` | 기본 단가표 (월별 교체 가능) |
 | `data/promo.js` | 기본 추가 판촉 대상 모델 |
@@ -44,4 +45,5 @@
 - 버전업: `python3 tools/bump.py next "바뀐 점 1" "바뀐 점 2"` — 6개 파일 버전 번호 + 수정 내역 한 줄을 한 번에 (번호 지정은 `v8.50`)
 - 테스트와 정식이 같은지 확인: `python3 tools/promote.py check`
 - 정식에서 급하게 바로 고쳤다면 `python3 tools/promote.py totest` 로 테스트에도 맞춰 둔다
+- 관리자 화면 코드는 `admin.js`(테스트는 `test/admin.js`)에 둔다. index.html 계산기 코드 안에서 실행돼서 계산기 변수 · 함수를 그대로 쓰고, index.html은 입구(`admLogin` · `admRender` · `admInfo`)만 `ADMX`로 부른다
 - 세 계산기 공통 기능은 `common.js`에 둔다. 페이지 코드는 함수로 감싸져 있어서, 페이지가 `window.PG`(meGet · esc · toast · fuLog · markAct · emp)로 필요한 걸 넘겨 준다
