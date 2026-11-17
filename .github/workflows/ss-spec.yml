@@ -1,11 +1,16 @@
-name: 삼성닷컴 스펙 갱신
+name: 삼성 · LG 스펙 갱신
 
-# 계산기 삼성 모델의 스펙을 삼성닷컴에서 받아 data/spec/ss/ 에 저장 (📋 스펙 비교용)
+# 계산기 삼성 · LG 모델 스펙을 삼성닷컴 · LG닷컴에서 받아 data/spec/ss · data/spec/lg 에 저장 (📋 스펙 비교용)
 # 매주 월요일 04:10(한국 시간) · Actions 탭에서 'Run workflow'로 바로 실행도 가능
 on:
+  workflow_dispatch:
+    inputs:
+      only:
+        description: '하나만 (ss / lg / 비우면 둘 다)'
+        required: false
+        default: ''
   schedule:
     - cron: '10 19 * * 0'
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,11 +23,13 @@ concurrency:
 jobs:
   spec:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
       - name: 삼성닷컴 스펙 받기
-        run: python3 .github/scripts/ss_spec.py
+        run: if [ "${{ inputs.only }}" != "lg" ]; then python3 .github/scripts/ss_spec.py || true; fi
+      - name: LG닷컴 스펙 받기 (우리 LG 단가표 모델)
+        run: if [ "${{ inputs.only }}" != "ss" ]; then python3 .github/scripts/lg_spec.py || true; fi
       - name: 바뀐 게 있으면 커밋 · 페이지 다시 만들기
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -31,6 +38,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/spec
-          git commit -q -m "삼성닷컴 스펙 갱신"
+          git commit -q -m "삼성 · LG 스펙 갱신"
           for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
           curl -s -o /dev/null -w "pages build 요청: %{http_code}\n" -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${{ github.repository }}/pages/builds" || true
