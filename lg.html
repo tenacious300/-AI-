@@ -197,6 +197,7 @@ details.fold[open]>summary::after{content:'접기 ▴'}
 .pq .tot{margin-top:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px 24px}
 .pq .tot div{display:flex;justify-content:space-between;border-bottom:1px dashed #ccd;padding:4px 0}
 .pq .tot .em{font-weight:800;font-size:15px;border-bottom:2px solid #111}
+.pq .tot .em.pay{border:3px solid #eab308;border-bottom:3px solid #eab308;background:#fef9c3;border-radius:6px;padding:9px 12px!important;margin-top:6px;font-size:16px;font-weight:900;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .pq .nt{margin-top:14px;color:#555;font-size:11px;line-height:1.6}
 .pq .staff{margin-top:3px;font-size:13px;color:#111}.pq .staff small{color:#666;margin-left:4px}
 body.preview>*:not(#printArea){display:none!important}
@@ -1732,7 +1733,7 @@ function buildPrint(mode){
     +'<div class="cond"><span>고객 유형: <b>'+CUSTN[S.cust]+(S.cust==='sb'?' '+S.sbN:'')+'</b></span><span>제휴카드: <b>'+esc(cardLine(t))+'</b></span></div>'
     +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')
-    +'<div class="em"><span>'+(card&&cs.tier?'카드 적용 월 실 납부액 (첫 달)':'월 납부액')+'</span><span>'+won(t.net)+'</span></div></div>'
+    +'<div class="em pay"><span>'+(card&&cs.tier?'카드 적용 월 실 납부액 (첫 달)':'월 납부액')+'</span><span>'+won(t.net)+'</span></div></div>'
     +'<div class="nt">※ 본 견적은 참고용이며 실제 계약 금액과 다를 수 있습니다. 구독 가능 여부와 최종 금액은 계약 시 확인해 주세요.<br>※ 활성화(요금 인하)·제휴카드 프로모션은 기간 한정입니다. 선납 후 월 요금은 100원 미만 버림.</div></div>';
   var fN=t.feelN,sameN=t.sameN,fT=t.feelT,fM=t.feelM,totPay=t.totPay;
   if(mode==='feel'||mode==='feellump'){
@@ -2097,7 +2098,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.60';
+var VERSION='v8.61';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
