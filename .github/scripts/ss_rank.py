@@ -27,6 +27,18 @@ def fetch(no, info):
         info[p['mdlCode']] = [p.get('goodsNm') or '', int(p.get('salePrice') or 0), int(p.get('monSsbPrc') or 0), int(m.get('cntrPrd') or 0), m.get('svcTpCdNm') or '']
     return [p['mdlCode'] for p in L]
 
+def prev_of(path, var, cats, at):
+    """순위 변동 비교용: 직전 파일과 순위가 달라졌으면 직전 순위를 prev 로, 같으면 기존 prev 를 그대로 둠
+       (하루에 여러 번 돌려도 '마지막으로 순위가 바뀌기 전'과 비교돼요)"""
+    try:
+        t = open(path, encoding='utf-8').read()
+        old = json.loads(t[t.index('{'):t.rindex('}') + 1])
+    except Exception:
+        return {}
+    if old.get('cats') and old['cats'] != cats:
+        return {'prev': old['cats'], 'prevAt': old.get('at', '')}
+    return {k: old[k] for k in ('prev', 'prevAt') if k in old}
+
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     got, cache, fail, info = {}, {}, [], {}
@@ -41,7 +53,8 @@ def main():
     if total < 100:   # 거의 못 받았으면 기존 파일 유지
         print('받은 모델이 너무 적어요 (%d) → 기존 파일 유지' % total); sys.exit(0 if lg_ok else 1)
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-    body = 'window.SS_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info}, ensure_ascii=False, separators=(',', ':')) + ';\n'
+    pv = prev_of(os.path.join(root, 'data/ss-rank.js'), 'SS_RANK', got, now)
+    body = 'window.SS_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info, **pv}, ensure_ascii=False, separators=(',', ':')) + ';\n'
     head = '/* 삼성닷컴 AI 구독 품목별 판매량순 (최근 31일 판매 수량) · .github/scripts/ss_rank.py 가 매일 자동 갱신 */\n'
     for p in ('data/ss-rank.js', 'test/data/ss-rank.js'):
         with open(os.path.join(root, p), 'w', encoding='utf-8') as f: f.write(head + body)
@@ -81,7 +94,8 @@ def lg_main(root):
     if total < 50:
         print('LG 받은 모델이 너무 적어요 (%d) → 기존 파일 유지' % total); return False
     now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M')
-    body = 'window.LG_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info}, ensure_ascii=False, separators=(',', ':')) + ';\n'
+    pv = prev_of(os.path.join(root, 'data/lg-rank.js'), 'LG_RANK', got, now)
+    body = 'window.LG_RANK=' + json.dumps({'at': now, 'fail': fail, 'cats': got, 'info': info, **pv}, ensure_ascii=False, separators=(',', ':')) + ';\n'
     head = '/* LG전자 베스트 랭킹 · 가전 구독 품목별 순위 · .github/scripts/ss_rank.py 가 매일 자동 갱신 */\n'
     for p in ('data/lg-rank.js', 'test/data/lg-rank.js'):
         with open(os.path.join(root, p), 'w', encoding='utf-8') as f: f.write(head + body)

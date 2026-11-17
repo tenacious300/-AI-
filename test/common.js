@@ -125,3 +125,9 @@ function recBest(){if(!window.REC_PAGE||!REC_PAGE.best)return;var b=REC_PAGE.bes
   d.querySelector('.rc-x').onclick=close;d.onclick=function(e){if(e.target===d)close();};
   var ap=d.querySelector('#rcApply');if(ap)ap.onclick=function(){b.apply();PG.fuLog('rec:best');PG.toast('월 '+recWon(sv)+' 줄어드는 조합으로 바꿨어요');close();};
   PG.fuLog('rec:bestshow');}
+
+/* 🛒 판매순위 변동: 직전 순위(R.prev · ss_rank.py 가 순위가 바뀔 때마다 저장)와 비교 → ▲2 · ▼1 · NEW · - */
+function rkMove(R,cat,code,i){var P=R&&R.prev&&R.prev[cat];if(!P||!P.length)return '';var j=P.indexOf(code);
+  if(j<0)return '<span class="rk-mv nw">NEW</span>';var d=j-i;
+  return d>0?'<span class="rk-mv up">▲'+d+'</span>':d<0?'<span class="rk-mv dn">▼'+(-d)+'</span>':'<span class="rk-mv eq">-</span>';}
+function rkPrevNote(R){return R&&R.prev&&R.prevAt?' · 옆 ▲▼는 직전 순위('+String(R.prevAt).slice(5).replace('-','.')+') 대비':'';}

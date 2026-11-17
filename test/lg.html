@@ -874,6 +874,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .rk-mb{display:none;margin-top:6px}@media(max-width:600px){.rk-t .rk-pc{display:none}.rk-mb{display:block}.rk-t td,.rk-t th{padding:8px 4px}}
 @media(max-width:600px){.rk-t{font-size:12px;table-layout:fixed}.rk-t th:nth-child(1),.rk-t td:nth-child(1){width:34px}.rk-t th:nth-child(3),.rk-t td:nth-child(3){width:74px}.rk-t th:nth-child(4),.rk-t td:nth-child(4){width:82px}.rk-t td.n{white-space:normal;word-break:keep-all}.rk-nm{font-size:12px;word-break:break-all}.rk-no{min-width:22px;height:22px;font-size:12px}}
 #rankDrawer{max-width:calc(100% - 44px)}
+.rk-mv{display:block;margin-top:3px;font-size:10.5px;font-weight:800;line-height:1;text-align:center;min-width:26px}.rk-mv.up{color:#e11d48}.rk-mv.dn{color:#2563eb}.rk-mv.eq{color:#94a3b8}.rk-mv.nw{color:#f59e0b;font-size:9.5px}.pl .rk-mv{display:inline;margin:0 0 0 4px;min-width:0}
 .tb .tabs{padding:4px}.tb .tabs button{font-size:15px!important;padding:8px 16px!important;min-height:42px}
 .tbh .rk-all{margin-left:4px!important;order:0;font-weight:800;color:#0f766e;white-space:nowrap}.tbh .rk-all+.per{margin-left:auto}
 @media(max-width:600px){.tbh .rk-all{white-space:normal!important;font-size:12px!important;line-height:1.25;width:76px;text-align:left;padding:2px 4px!important;flex:none}.tbh .rk-all+.per{display:none}}
@@ -1990,18 +1991,18 @@ function rankMon(code){var m=BY[code];if(!m)return null;var v=null;candRows(m).f
 function rankBar(el){var RC=rankCats(),R=window.LG_RANK;
   var h='<div class="tbh"><div class="tabs"><button data-tbt="hot">🔥 많이 찾는</button><button class="on" data-tbt="rank">🛒 구독 판매순위</button></div><button class="more rk-all" data-rkopen="">품목별 순위 전체보기 ›</button><div class="per"><span>품목별 1위 · LG닷컴 가전 구독 랭킹</span></div></div>';
   h+=!RC.length?'<div class="empty2">판매순위를 아직 받지 못했어요 (매일 새벽 갱신)</div>'
-    :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row">'+RC.map(function(c){var k=R.cats[c][0],f=(R.info||{})[k]||[],cc=lgCode(k),q=cc?rankMon(cc):null;return '<button class="pl" data-rkopen="'+esc(c)+'"><i>'+esc(c)+'</i><b>'+esc(String(k).split('.')[0])+'</b><s>'+(q?'월 '+won(q):esc(String(f[0]||'').slice(0,14)))+'</s></button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
+    :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row">'+RC.map(function(c){var k=R.cats[c][0],f=(R.info||{})[k]||[],cc=lgCode(k),q=cc?rankMon(cc):null;return '<button class="pl" data-rkopen="'+esc(c)+'"><i>'+esc(c)+rkMove(R,c,k,0)+'</i><b>'+esc(String(k).split('.')[0])+'</b><s>'+(q?'월 '+won(q):esc(String(f[0]||'').slice(0,14)))+'</s></button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
   el.innerHTML=h;hScroll(el.querySelector('.rw'));tbBind(el);}
 function rankRender(){var R=window.LG_RANK,cats=rankCats();
   if(!cats.length){$('#rankBar').innerHTML='';$('#rankBody').innerHTML='<div class="empty" style="margin:16px">판매순위를 아직 받지 못했어요. 매일 새벽 3시 20분에 LG닷컴에서 받아 와요.</div>';return;}
   if(cats.indexOf(RK.cat)<0)RK.cat=cats[0];
   $('#rankBar').innerHTML='<div class="chips" style="flex-wrap:wrap;margin:0">'+cats.map(function(c){return '<button class="chip sm '+(c===RK.cat?'on':'')+'" data-rkc="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div>';
   var I=R.info||{},L=R.cats[RK.cat]||[],W=function(n){return n?Number(n).toLocaleString()+'원':'-';};
-  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">LG닷컴 베스트 랭킹(가전 구독) '+esc(R.at||'')+' 기준 · LG닷컴 월 구독료는 LG닷컴 표시 할인가 · 전자랜드 월 구독료는 단가표 + 진행 중 활성화 반영 최저 요금</div>'
+  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">LG닷컴 베스트 랭킹(가전 구독) '+esc(R.at||'')+' 기준 · LG닷컴 월 구독료는 LG닷컴 표시 할인가 · 전자랜드 월 구독료는 단가표 + 진행 중 활성화 반영 최저 요금'+esc(rkPrevNote(R))+'</div>'
     +'<table class="rk-t"><tr><th>순위</th><th>모델</th><th style="text-align:right">LG닷컴<br><small style="font-weight:500">월 구독료</small></th><th style="text-align:right">월 구독료<br><small style="font-weight:500">전자랜드</small></th><th class="rk-pc"></th></tr>'
     +L.map(function(c,i){var f=I[c]||[],cc=lgCode(c),q=cc?rankMon(cc):null;
       var ab=cc?'<button class="rk-add" data-rka="'+esc(cc)+'">담기</button>':'<small style="color:#94a3b8;font-size:11px">계산기 없음</small>';
-      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div></td><td class="n">'+(f[2]?'월 '+W(f[2]):'-')+(f[1]&&f[1]!==f[2]?'<small style="display:block;color:#94a3b8;text-decoration:line-through">'+W(f[1])+'</small>':'')+'</td><td class="n">'+(q?'월 '+W(q):'-')+'</td><td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
+      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span>'+rkMove(R,RK.cat,c,i)+'</td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div></td><td class="n">'+(f[2]?'월 '+W(f[2]):'-')+(f[1]&&f[1]!==f[2]?'<small style="display:block;color:#94a3b8;text-decoration:line-through">'+W(f[1])+'</small>':'')+'</td><td class="n">'+(q?'월 '+W(q):'-')+'</td><td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
   Array.prototype.forEach.call(document.querySelectorAll('#rankBar [data-rkc]'),function(b){b.onclick=function(){RK.cat=b.dataset.rkc;rankRender();$('#rankBody').scrollTop=0;};});
   Array.prototype.forEach.call(document.querySelectorAll('#rankBody [data-rka]'),function(b){b.onclick=function(){REC.busy=true;try{pickModel(b.dataset.rka);$('#addBtn').onclick();}finally{REC.busy=false;}b.disabled=true;b.textContent='담았어요';fuLog('rank:add');};});}
 var INST=null;
@@ -2150,7 +2151,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.70';
+var VERSION='v8.71';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);

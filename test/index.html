@@ -948,6 +948,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .rk-t{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden}.rk-t th{background:#f1f5f9;color:#475569;font-size:12px;font-weight:700;padding:8px 6px;text-align:left;position:sticky;top:0}.rk-t td{padding:9px 6px;border-top:1px solid #f1f5f9;vertical-align:top}.rk-t td.n{text-align:right;white-space:nowrap}.rk-no{display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:8px;background:#e2e8f0;font-weight:900;font-size:13px}.rk-no.t3{background:#0f766e;color:#fff}.rk-nm{font-size:12.5px;color:#334155;line-height:1.35}.rk-cd{font-size:11.5px;color:#64748b;margin-top:2px}.rk-add{border:0;border-radius:8px;background:#3182f6;color:#fff;font-weight:800;font-size:12px;padding:6px 9px;cursor:pointer;white-space:nowrap}.rk-add:disabled{background:#cbd5e1}.rk-m small{display:block;color:#64748b;font-size:11px}
 .rk-mb{display:none;margin-top:6px}@media(max-width:600px){.rk-t .rk-pc{display:none}.rk-mb{display:block}.rk-t td,.rk-t th{padding:8px 4px}}
 #rankDrawer{max-width:calc(100% - 44px)}
+.rk-mv{display:block;margin-top:3px;font-size:10.5px;font-weight:800;line-height:1;text-align:center;min-width:26px}.rk-mv.up{color:#e11d48}.rk-mv.dn{color:#2563eb}.rk-mv.eq{color:#94a3b8}.rk-mv.nw{color:#f59e0b;font-size:9.5px}.pl .rk-mv{display:inline;margin:0 0 0 4px;min-width:0}
 @media(max-width:600px){.rk-t{font-size:12px;table-layout:fixed}.rk-t th:nth-child(1),.rk-t td:nth-child(1){width:34px}.rk-t th:nth-child(3),.rk-t td:nth-child(3){width:74px}.rk-t th:nth-child(4),.rk-t td:nth-child(4){width:82px}.rk-t td.n{white-space:normal;word-break:keep-all}.rk-nm{font-size:12px;word-break:break-all}.rk-no{min-width:22px;height:22px;font-size:12px}}
 .tb .tabs{padding:4px}.tb .tabs button,.tb .tabs button[data-tbt]{font-size:15px!important;padding:8px 16px!important;min-height:42px}
 .tbh .rk-all{margin-left:4px!important;order:0;font-weight:800;color:#0f766e;white-space:nowrap}.tbh .rk-all+.per{margin-left:auto}
@@ -1321,8 +1322,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.70',VER_DATE='2026.11.17';
+var VERSION='v8.71',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.71','11.17',['🛒 구독 판매순위(삼성 · LG): 순위 옆에 직전 순위 대비 변동 표시 (▲ 상승 · ▼ 하락 · NEW 새로 진입 · - 그대로), 품목별 1위에도 표시']],
   ['v8.70','11.17',['⚙ 관리자 코드를 admin.js로 분리: 관리자 모드를 열 때만 불러와 직원 화면이 더 가볍게 열려요 (index.html 515KB → 370KB)']],
   ['v8.69','11.17',['추천 팝업 \'다시 보지 않기\' · 다시 켜기를 기록해 관리자 기능 사용 · 사번별 이용에서 확인']],
   ['v8.68','11.17',['관리자 기능 사용: 구독 판매순위 · 스펙 비교 · 추천 팝업 · 최저 조합 · 단가 변경 요약도 집계에 표시']],
@@ -2467,7 +2469,7 @@ function bestRender(){var el=$('#bestSec');if(!el)return;var r=BEST.data[BEST.da
     var RC=rankCats(),SR=window.SS_RANK;
     h+='<button class="more rk-all" data-rkopen="">품목별 순위 전체보기 ›</button><div class="per"><span>품목별 1위 · 삼성닷컴 최근 31일 판매량</span></div></div>';
     h+=!RC.length?'<div class="empty2">판매순위를 아직 받지 못했어요 (매일 새벽 갱신)</div>'
-      :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row">'+RC.map(function(c){var k=SR.cats[c][0],f=(SR.info||{})[k]||[],q=rankMon(k);return '<button class="pl ai" data-rkopen="'+esc(c)+'"><i>'+esc(c==='세탁기'&&SR.cats['건조기']&&SR.cats['세탁기'].join()===SR.cats['건조기'].join()?'세탁기·건조기':c)+'</i><b>'+esc(k)+'</b><s>'+(q?'월 '+won(q.mon):esc(String(f[0]||'').slice(0,14)))+'</s></button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
+      :'<div class="rw"><button class="arr l" aria-label="이전">‹</button><div class="row">'+RC.map(function(c){var k=SR.cats[c][0],f=(SR.info||{})[k]||[],q=rankMon(k);return '<button class="pl ai" data-rkopen="'+esc(c)+'"><i>'+esc(c==='세탁기'&&SR.cats['건조기']&&SR.cats['세탁기'].join()===SR.cats['건조기'].join()?'세탁기·건조기':c)+rkMove(SR,c,k,0)+'</i><b>'+esc(k)+'</b><s>'+(q?'월 '+won(q.mon):esc(String(f[0]||'').slice(0,14)))+'</s></button>';}).join('')+'</div><button class="arr r" aria-label="다음">›</button></div>';
   }else{
     var T=aiTop();
     h+='<div class="per"><span>품목별 1위 · 최장 계약 기준</span></div><button class="more" data-aiopen="">품목별 TOP3 ›</button></div>';
@@ -2647,11 +2649,11 @@ function rankRender(){var R=window.SS_RANK,cats=rankCats();
   if(cats.indexOf(RK.cat)<0)RK.cat=cats[0];
   $('#rankBar').innerHTML='<div class="chips" style="flex-wrap:wrap;margin:0">'+cats.map(function(c){return '<button class="chip sm '+(c===RK.cat?'on':'')+'" data-rkc="'+esc(c)+'">'+esc(c==='세탁기'&&R.cats['건조기']&&R.cats['세탁기'].join()===R.cats['건조기'].join()?'세탁기 · 건조기':c)+'</button>';}).join('')+'</div>';
   var I=R.info||{},L=R.cats[RK.cat]||[],W=function(n){return n?Number(n).toLocaleString()+'원':'-';};
-  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">삼성닷컴 기준 '+esc(R.at||'')+' · 최근 31일 판매 수량 순위 (삼성이 매일 02시 갱신) · 판매가는 삼성닷컴 표시 금액 · 월 구독료는 전자랜드 단가표 (최장 약정 · 가장 싼 케어, 담기와 같은 조건)</div>'
+  $('#rankBody').innerHTML='<div class="hint" style="margin:0 0 8px">삼성닷컴 기준 '+esc(R.at||'')+' · 최근 31일 판매 수량 순위 (삼성이 매일 02시 갱신) · 판매가는 삼성닷컴 표시 금액 · 월 구독료는 전자랜드 단가표 (최장 약정 · 가장 싼 케어, 담기와 같은 조건)'+esc(rkPrevNote(R))+'</div>'
     +'<table class="rk-t"><tr><th>순위</th><th>모델</th><th style="text-align:right">판매가</th><th style="text-align:right">월 구독료<br><small style="font-weight:500">전자랜드</small></th><th class="rk-pc"></th></tr>'
     +L.map(function(c,i){var f=I[c]||[],inCalc=!!byCode[c];
       var ab=inCalc?'<button class="rk-add" data-rka="'+esc(c)+'">담기</button>':'<small style="color:#94a3b8;font-size:11px">계산기 없음</small>';
-      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span></td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div><div class="rk-mb">'+ab+'</div></td><td class="n">'+W(f[1])+'</td><td class="n rk-m">'+(function(){var q=rankMon(c);return q?'월 '+W(q.mon)+'<small>'+q.y+'년 · '+esc(q.type)+'</small>':'-';})()+'</td>'
+      return '<tr><td><span class="rk-no'+(i<3?' t3':'')+'">'+(i+1)+'</span>'+rkMove(R,RK.cat,c,i)+'</td><td><div class="rk-nm">'+esc(f[0]||'')+'</div><div class="rk-cd">'+esc(c)+'</div><div class="rk-mb">'+ab+'</div></td><td class="n">'+W(f[1])+'</td><td class="n rk-m">'+(function(){var q=rankMon(c);return q?'월 '+W(q.mon)+'<small>'+q.y+'년 · '+esc(q.type)+'</small>':'-';})()+'</td>'
         +'<td class="rk-pc">'+ab+'</td></tr>';}).join('')+'</table>';
   Array.prototype.forEach.call(document.querySelectorAll('#rankBar [data-rkc]'),function(b){b.onclick=function(){RK.cat=b.dataset.rkc;rankRender();$('#rankBody').scrollTop=0;};});
   Array.prototype.forEach.call(document.querySelectorAll('#rankBody [data-rka]'),function(b){b.onclick=function(){aiAdd(b.dataset.rka);b.disabled=true;b.textContent='담았어요';fuLog('rank:add');};});}
