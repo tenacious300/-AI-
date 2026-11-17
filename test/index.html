@@ -420,7 +420,7 @@ body.preview{background:#e5e7eb;padding:0}
 .stog.feel-b{border-color:rgba(251,113,133,.6);color:#fda4af;margin:10px 0 0}.pm-opt{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;font:inherit}.pm-opt b{display:block;font-size:16px;margin-bottom:4px;color:var(--ink)}.pm-opt span{font-size:13px;color:var(--sub)}.pm-opt:hover{border-color:#2563eb;background:#eff6ff}.pm-opt.feel:hover{border-color:#e11d48;background:#fff1f2}
 .pq .feel{margin-top:14px;border:2px solid #e11d48;border-radius:8px;padding:10px 14px}.pq .feel h3{margin:0 0 6px;font-size:14px;color:#e11d48}.pq .feel .fr{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #f3c4cf}.pq .feel .fb{font-weight:800;font-size:17px;color:#e11d48;border-bottom:0;padding-top:6px}.pq .feel small{color:#555}
 .pm-opt.lump:hover{border-color:#0284c7;background:#f0f9ff}
-.pq .lump{margin-top:12px;border:2px solid #0284c7;border-radius:8px;padding:8px 12px;break-inside:avoid}
+.pq .lump{margin-top:12px;border:2px solid #0284c7;border-radius:8px;padding:8px 12px;break-inside:auto}.pq .lump>*,.pq .lump .why,.pq .lump table,.pq .lump .calc,.pq .lump .pbars{break-inside:avoid}.pq .lump h3{break-after:avoid}
 .pq .lump td,.pq .lump th{padding:4px 8px}
 .pq .lump .cols{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .pq .lump h3 small{font-weight:500;color:#555;font-size:12px}
@@ -1315,8 +1315,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.64',VER_DATE='2026.11.17';
+var VERSION='v8.65',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.65','11.17',['일시불 비교 · 체감가+일시불 비교 견적서 인쇄: 비교 박스가 통째로 다음 장으로 넘어가 1장에 큰 빈칸이 생기던 문제 수정']],
   ['v8.64','11.17',['삼성닷컴 제품 정보(사진·이름·기준가)를 기기에 하루 저장해 두 번째부터 빠르게 열려요','LG 단가 데이터 크기를 1.6MB → 0.66MB로 줄여 LG 계산기 첫 로딩이 빨라져요']],
   ['v8.63','11.17',['📋 LG 스펙 비교 추가: LG닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 (우리 LG 단가표 모델 · 매주 자동 갱신)']],
   ['v8.62','11.17',['📋 삼성 스펙 비교 추가: 삼성닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 · 코스 목록은 그 모델에만 있는 것 표시 · 세트 상품은 본체 스펙 (매주 자동 갱신)','💰 \'비교하기\'를 \'가격 비교\'로 이름 변경 · 오른쪽 옆 탭 글씨와 크기를 키움 (삼성 · LG · 쿠쿠)']],
