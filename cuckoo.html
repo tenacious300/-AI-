@@ -920,7 +920,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   </section>
 
   <section class="card" id="secCart">
-    <h2><span class="num">3</span>담은 모델 <span class="cnt" id="cartCnt"></span><button class="btn line sm" id="cmpOpen2" style="margin-left:8px;color:#0f766e;border-color:#99f6e4">⚖️ 비교하기</button></h2>
+    <h2><span class="num">3</span>담은 모델 <span class="cnt" id="cartCnt"></span><button class="btn line sm" id="cmpOpen2" style="margin-left:8px;color:#0f766e;border-color:#99f6e4">💰 가격 비교</button></h2>
     <div id="cart"></div>
   </section>
 
@@ -1011,13 +1011,13 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 <div class="toast" id="toast"></div>
 <div class="ia-bg" id="iaModal" role="dialog" aria-label="앱으로 설치"><div class="ia"><button class="ia-x" id="iaX" aria-label="닫기">✕</button><div id="iaBody"></div></div></div>
 <div class="side-tabs">
-  <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
+  <button class="care-tab c2" id="cmpTab">💰 가격 비교<span class="bd" id="cmpBd" style="display:none"></span></button>
   <button class="care-tab c3" id="winTab">🎁 반값 모델</button>
   <button class="care-tab" id="cpTab" style="background:#0f766e">💳 카드 혜택</button>
 </div>
 <div class="drawer-bg" id="careBg"></div>
 <aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
-  <div class="drawer-h"><b>⚖️ 월 구독료 비교</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="drawer-h"><b>💰 가격 비교 <small style="font-weight:500;color:var(--sub)">월 구독료</small></b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="drawer-b" id="cmpBody"></div>
 </aside>
 <aside class="drawer" id="winDrawer" aria-label="반값 할인 모델">
@@ -1769,7 +1769,7 @@ renderAll();syncData();startBeat();
 </script>
 <script>
 /* ===== 버전 표시 · 새 버전 자동 업데이트 (삼성 계산기와 같은 방식) ===== */
-var VERSION='v8.61';
+var VERSION='v8.62';
 (function(){
   var $=function(q){return document.querySelector(q);},top=$('.top .top-in');if(!top||$('#verBtn'))return;
   var v=document.createElement('button');v.className='ver';v.id='verBtn';v.tabIndex=-1;v.textContent=VERSION;top.insertBefore(v,top.firstChild);
@@ -1861,6 +1861,11 @@ var VERSION='v8.61';
 .mbox{border:1px solid #e5e7eb;border-radius:14px;padding:11px 13px;margin-top:10px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .mbox>.lbl,.mbox>div>.lbl:first-child{margin-top:0!important}
 #secCond .cond{gap:12px;margin-top:12px}#secCond .cond>.mbox{margin-top:0}
+/* 옆 탭 크게 (잘 보이도록) */
+.side-tabs:not(.open) .care-tab{font-size:14.5px!important;padding:10px 10px!important;letter-spacing:.5px!important;white-space:nowrap;flex-shrink:0}
+@media(min-width:900px){.side-tabs:not(.open){top:84px!important;bottom:auto!important;max-height:calc(100vh - 96px);overflow-y:auto;overflow-x:visible;padding-left:8px}}
+.side-tabs.open .care-tab{font-size:16px!important;padding:14px 20px 14px 18px!important;min-width:190px!important}
+.side-tog{font-size:15px!important;padding:16px 11px!important}
 </style>
 <script>
 (function(){function go(){

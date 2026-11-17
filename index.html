@@ -943,6 +943,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 .tb .tabs{padding:4px}.tb .tabs button,.tb .tabs button[data-tbt]{font-size:15px!important;padding:8px 16px!important;min-height:42px}
 .tbh .rk-all{margin-left:4px!important;order:0;font-weight:800;color:#0f766e;white-space:nowrap}.tbh .rk-all+.per{margin-left:auto}
 @media(max-width:600px){.tbh .rk-all{white-space:normal!important;font-size:12px!important;line-height:1.25;width:76px;text-align:left;padding:2px 4px!important;flex:none}.tbh .rk-all+.per{display:none}}
+.sp-sel{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.sp-chip{display:inline-flex;align-items:center;gap:6px;background:#ede9fe;color:#5b21b6;border-radius:999px;padding:6px 6px 6px 12px;font-weight:800;font-size:13px}.sp-chip button{border:0;background:#fff;border-radius:999px;width:22px;height:22px;cursor:pointer;color:#7c3aed;font-weight:900}
+.sp-add{position:relative;flex:1;min-width:150px}.sp-add input{width:100%;border:1px solid #ddd6fe;border-radius:10px;padding:8px 10px;font-size:13px}.sp-sug{position:absolute;left:0;right:0;top:100%;z-index:5;background:#fff;border:1px solid #e5e7eb;border-radius:10px;box-shadow:0 8px 20px rgba(0,0,0,.12);max-height:240px;overflow:auto}.sp-sug button{display:block;width:100%;text-align:left;border:0;background:none;padding:8px 10px;font-size:13px;cursor:pointer}.sp-sug button:hover{background:#f5f3ff}.sp-sug small{color:#64748b;margin-left:6px}
+.sp-t{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:13px;table-layout:fixed}.sp-t th,.sp-t td{padding:9px 8px;border-top:1px solid #f1f5f9;vertical-align:top;text-align:left;word-break:keep-all;overflow-wrap:anywhere}.sp-t thead th{background:#f5f3ff;color:#4c1d95;font-weight:900;border-top:0}.sp-t th.k{width:28%;color:#475569;font-weight:700;font-size:12.5px}.sp-t th.k small{display:block;color:#94a3b8;font-weight:500;font-size:11px}
+.sp-t tr.d td{background:#fffbeb;font-weight:800;color:#111827}.sp-t tr.d th.k{background:#fffbeb}.sp-plus{color:#15803d;font-weight:800}.sp-minus{color:#b91c1c;font-weight:800;text-decoration:line-through}.sp-sec{font-size:13px;font-weight:900;margin:14px 0 6px;color:#4c1d95}.sp-nm{display:block;font-size:11.5px;font-weight:500;color:#6b7280;margin-top:2px}
 </style>
 </head>
 <body>
@@ -1031,7 +1035,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
 
   <section class="card" id="secCart">
     <div class="loaded" id="loadedBar"><span id="loadedTxt"></span><button id="loadedNew">새 견적으로 시작</button></div>
-    <h2><span class="num">3</span>담은 모델 <span class="cnt" id="cartCnt"></span><button class="btn line sm" id="cmpOpen2" style="margin-left:8px;color:#0f766e;border-color:#99f6e4">⚖️ 비교하기</button></h2>
+    <h2><span class="num">3</span>담은 모델 <span class="cnt" id="cartCnt"></span><button class="btn line sm" id="cmpOpen2" style="margin-left:8px;color:#0f766e;border-color:#99f6e4">💰 가격 비교</button></h2>
     <div id="cart"></div>
   </section>
 
@@ -1124,6 +1128,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
       <button class="btn sm" id="saveBtn">💾 견적 보관</button>
       <button class="btn sm" id="printBtn">🖨 견적 인쇄</button>
       <button class="btn sm" id="bestBtn">💰 최저 조합 찾기</button>
+      <button class="btn sm" id="specBtn">📋 스펙 비교</button>
       <button class="btn sm" id="copyBtn">견적 복사</button>
       <button class="btn sm" id="resetBtn">초기화</button>
     </div>
@@ -1163,7 +1168,8 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <button class="care-tab" id="careTab">케어 가이드</button>
   <button class="care-tab c4" id="aiTab" style="display:none">🎯 혜택 TOP</button>
   <button class="care-tab" id="rankTab" style="background:#0f766e">🛒 구독 판매순위</button>
-  <button class="care-tab c2" id="cmpTab">비교하기<span class="bd" id="cmpBd" style="display:none"></span></button>
+  <button class="care-tab" id="specTab" style="background:#7c3aed">📋 스펙 비교</button>
+  <button class="care-tab c2" id="cmpTab">💰 가격 비교<span class="bd" id="cmpBd" style="display:none"></span></button>
   <button class="care-tab" id="xTab" style="background:#be185d">삼성 vs LG</button>
   <button class="care-tab c3" id="winTab"><span id="winTabTxt">우승기념 모델</span></button>
 </div>
@@ -1173,13 +1179,18 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   <div class="ai-top" id="aiTopBar"></div>
   <div class="drawer-b" id="aiBody" style="background:#f8fafc"></div>
 </aside>
+<aside class="drawer wide" id="specDrawer" aria-label="스펙 비교">
+  <div class="drawer-h"><b>📋 스펙 비교 <small style="font-weight:500;color:var(--sub)">삼성닷컴 기준</small></b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="ai-top" id="specBar"></div>
+  <div class="drawer-b" id="specBody" style="background:#f8fafc"></div>
+</aside>
 <aside class="drawer wide" id="rankDrawer" aria-label="삼성닷컴 판매순위">
   <div class="drawer-h"><b>🛒 삼성닷컴 AI 구독 판매순위</b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="ai-top" id="rankBar"></div>
   <div class="drawer-b" id="rankBody" style="background:#f8fafc"></div>
 </aside>
 <aside class="drawer wide" id="cmpDrawer" aria-label="월 구독료 비교">
-  <div class="drawer-h"><b>⚖️ 월 구독료 비교</b><button class="dclose" aria-label="닫기">✕</button></div>
+  <div class="drawer-h"><b>💰 가격 비교 <small style="font-weight:500;color:var(--sub)">월 구독료</small></b><button class="dclose" aria-label="닫기">✕</button></div>
   <div class="drawer-b" id="cmpBody"></div>
 </aside>
 <aside class="drawer wide" id="xDrawer" aria-label="삼성 · LG 비교" style="width:min(1100px,100vw)">
@@ -1301,8 +1312,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.61',VER_DATE='2026.11.17';
+var VERSION='v8.62',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.62','11.17',['📋 삼성 스펙 비교 추가: 삼성닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 · 코스 목록은 그 모델에만 있는 것 표시 · 세트 상품은 본체 스펙 (매주 자동 갱신)','💰 \'비교하기\'를 \'가격 비교\'로 이름 변경 · 오른쪽 옆 탭 글씨와 크기를 키움 (삼성 · LG · 쿠쿠)']],
   ['v8.61','11.17',['🖨 견적서 인쇄: \'카드 적용 월 실 납부액 (첫 달)\' 줄을 노란색 굵은 테두리 박스로 강조 (삼성 · LG · 쿠쿠)']],
   ['v8.60','11.17',['📋 이용 약관 동의를 사번마다 하루 한 번만 (같은 날 다시 열면 바로 입장 · 다음 날 처음 열 때 다시 동의)']],
   ['v8.59','11.17',['🛒 삼성 · LG: \'품목별 순위 전체보기\' 버튼을 구독 판매순위 탭 바로 옆으로 옮김']],
@@ -2135,7 +2147,7 @@ function careShow(key){
 function careOpen(key){fuLog('care');drawerOpen('#careDrawer');
   if(!key){var it=S.cart[S.cart.length-1];key=it?careKey(it.cat,it.sub):(S.sel.m?careKey(catOf(S.sel.m),subOf(S.sel.m)):'');}
   careShow(key||careCur||CARE[0][0]);}
-function careClose(){if(window.XCMP_BACK&&$('#xDrawer').classList.contains('on')){location.href='lg.html';return;}['#careDrawer','#cmpDrawer','#winDrawer','#boxDrawer','#aiDrawer','#xDrawer','#rankDrawer'].forEach(function(id){var e=$(id);if(e)e.classList.remove('on');});$('#careBg').classList.remove('on');}
+function careClose(){if(window.XCMP_BACK&&$('#xDrawer').classList.contains('on')){location.href='lg.html';return;}['#careDrawer','#cmpDrawer','#winDrawer','#boxDrawer','#aiDrawer','#xDrawer','#rankDrawer','#specDrawer'].forEach(function(id){var e=$(id);if(e)e.classList.remove('on');});$('#careBg').classList.remove('on');}
 function drawerOpen(id){careClose();$(id).classList.add('on');$('#careBg').classList.add('on');}
 Array.prototype.forEach.call(document.querySelectorAll('.dclose'),function(b){b.onclick=careClose;});
 function cmpItems(){return calcItems().filter(function(i){return i.cmp!==false;});}
@@ -2487,7 +2499,7 @@ function admCsv(){var L=(ADM.stat&&ADM.stat.todayEmps)||[];var rows=[['사번','
   csvDown(rows,'접속기록_'+todayStr()+'.csv');}
 function csvDown(rows,name){var t='﻿'+rows.map(function(r){return r.map(function(v){v=String(v==null?'':v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');}).join('\n');
   var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv;charset=utf-8'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);}
-var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['⚖️','비교하기'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교'],install:['📲','앱 설치 완료'],instguide:['📲','앱 설치 안내 보기']};
+var FNAME={capture:['📸','견적 캡처'],search:['🔍','모델 검색'],add:['➕','모델 담기'],best:['🔥','많이 찾는 모델 클릭'],cmp:['💰','가격 비교'],feel:['🔥','체감가 보기'],print:['🖨','견적 인쇄'],ai:['🎯','혜택 TOP'],save:['💾','견적 보관'],box:['📁','보관함 열기'],care:['🛠','케어 가이드'],win:['🏆','판촉 모델 보기'],copy:['📋','견적 복사'],multi:['💳','카드 여러 장 결제'],detail:['📊','자세히보기'],xcmp:['🆚','삼성 vs LG 비교'],install:['📲','앱 설치 완료'],instguide:['📲','앱 설치 안내 보기']};
 var AFEAT={days:7,data:null,brand:''};
 var LGCARD_N={shinhan:'신한 더구독케어',wooripl:'우리 Platinum',woori:'우리 LG전자',lotte:'롯데 구독엔로카',kb:'KB국민 LG전자',hyundai:'현대 LG전자',hana:'하나 플러스',nh:'NH 올원 BEST',best:'광주/전북 베스트케어'};
 function fnm(k){if(k==='win')return AFEAT.brand==='lg'?'활성화 모델 보기':AFEAT.brand==='ss'?'판촉 모델 보기':AFEAT.brand==='ck'?'반값 모델 보기':'판촉 · 활성화 · 반값 모델 보기';if(k==='cardpol'&&AFEAT.brand==='ck')return '카드 혜택표 보기';return FNAME[k][1];}
@@ -3103,6 +3115,48 @@ function aiAdd(code){var m=byCode[code];if(!m)return;var c=catOf(m),Y=maxYears(c
   var p=ps.reduce(function(a,b){return a[2]<=b[2]?a:b;}),pm=promoOf(code);mvLog(code,'add');fuLog('add');fuLog('cust:'+S.cust);fuLog('term:max');fuLog('pre:0');
   S.cart.push({code:m[0],cat:c,sub:subOf(m),y:p[0],type:D.types[p[1]],mon:p[2],rec:0,win:!!(pm.fin&&pm.win),cmp:true,pre:0});S.cmpY=null;fetchInfo(code);render();
   toast(code+' 담았어요 ('+S.cart.length+'개)');}
+
+/* 📋 스펙 비교 (삼성닷컴 상품 스펙 · data/spec/ss/<모델>.json · 깃허브가 매주 갱신)
+   모델 2~3개를 고르면 다른 항목만 위로 올려 노랗게 강조 · 코스 목록처럼 긴 항목은 추가 / 빠진 것만 표시 · 같은 항목은 접어 둠 */
+var SPC={sel:[],data:{},q:''};
+function specBase(){return (window.TEST_MODE?'../':'')+'data/spec/ss/';}
+function specLoad(code,cb){if(SPC.data[code]!==undefined){cb();return;}SPC.data[code]=null;
+  fetch(specBase()+String(code).replace(/[^A-Za-z0-9._-]/g,'_')+'.json?d='+new Date().toISOString().slice(0,10)).then(function(r){return r.ok?r.json():null;}).then(function(j){SPC.data[code]=j||false;cb();},function(){SPC.data[code]=false;cb();});}
+function specOpen(){fuLog('spec');var c=S.cart.map(function(x){return x.code;}).filter(function(c,i,a){return a.indexOf(c)===i;});
+  if(!SPC.sel.length||c.length>=2)SPC.sel=c.slice(0,3);drawerOpen('#specDrawer');specRender();markAct('스펙 비교');}
+function specRender(){
+  var E=esc,h='<div class="sp-sel">'+SPC.sel.map(function(c){return '<span class="sp-chip">'+E(c)+'<button data-spx="'+E(c)+'" aria-label="빼기">✕</button></span>';}).join('')
+    +(SPC.sel.length<3?'<div class="sp-add"><input id="spQ" placeholder="'+(SPC.sel.length?'비교할 모델 추가 (모델명 검색)':'비교할 모델 검색 (2~3개)')+'" autocomplete="off" value="'+E(SPC.q)+'"><div class="sp-sug" id="spSug" style="display:none"></div></div>':'')+'</div>';
+  $('#specBar').innerHTML=h;
+  Array.prototype.forEach.call(document.querySelectorAll('#specBar [data-spx]'),function(b){b.onclick=function(){SPC.sel=SPC.sel.filter(function(c){return c!==b.dataset.spx;});specRender();};});
+  var q=$('#spQ');if(q){q.oninput=function(){SPC.q=q.value;var v=q.value.trim().toUpperCase(),g=$('#spSug');if(v.length<2){g.style.display='none';return;}
+      var L=MODELS.filter(function(m){return m[0].indexOf(v)>=0&&SPC.sel.indexOf(m[0])<0;}).slice(0,12);
+      g.innerHTML=L.length?L.map(function(m){return '<button data-spa="'+E(m[0])+'">'+E(m[0])+'<small>'+E(catOf(m))+'</small></button>';}).join(''):'<div style="padding:10px;font-size:13px;color:#64748b">찾는 모델이 없어요</div>';g.style.display='';
+      Array.prototype.forEach.call(g.querySelectorAll('[data-spa]'),function(b){b.onclick=function(){SPC.sel.push(b.dataset.spa);SPC.q='';specRender();};});};
+    if(SPC.q)q.oninput();}
+  var B=$('#specBody');
+  if(SPC.sel.length<2){B.innerHTML='<div class="empty" style="margin:16px">비교할 모델을 2~3개 골라 주세요.<br><small>담은 모델이 2개 이상이면 자동으로 들어와요.</small></div>';return;}
+  var wait=SPC.sel.filter(function(c){return SPC.data[c]===undefined||SPC.data[c]===null;});
+  if(wait.length){B.innerHTML='<div class="empty" style="margin:16px">삼성닷컴 스펙을 불러오는 중…</div>';wait.forEach(function(c){if(SPC.data[c]===undefined)specLoad(c,function(){if($('#specDrawer').classList.contains('on'))specRender();});});return;}
+  var D=SPC.sel.map(function(c){return SPC.data[c];}),keys=[],seen={};
+  D.forEach(function(d){if(d)d.spec.forEach(function(r){var k=r[0]+'|'+r[1];if(!seen[k]){seen[k]=1;keys.push([r[0],r[1],k]);}});});
+  var val=function(d,k){if(!d)return null;for(var i=0;i<d.spec.length;i++)if(d.spec[i][0]+'|'+d.spec[i][1]===k)return d.spec[i][2];return '';};
+  var isList=function(vs){return vs.every(function(v){return v&&v.split(', ').length>=4;});};
+  var diff=[],same=[];keys.forEach(function(k){var vs=D.map(function(d){return val(d,k[2]);});var known=vs.filter(function(v){return v!==null;});
+    (known.length>1&&known.some(function(v){return v!==known[0];})?diff:same).push({k:k,vs:vs});});
+  var head='<thead><tr><th class="k">항목</th>'+SPC.sel.map(function(c,i){var d=D[i];return '<th>'+E(c)+(d&&d.name?'<span class="sp-nm">'+E(d.name)+'</span>':'')+(d&&d.parts?'<span class="sp-nm">구성: '+E(d.parts)+' · 본체 스펙</span>':'')+'</th>';}).join('')+'</tr></thead>';
+  var cell=function(x,i){var v=x.vs[i];if(v===null)return '<td style="color:#94a3b8">스펙 없음</td>';
+    if(isList(x.vs.filter(function(v){return v!==null;}))){var mine=v.split(', '),others=x.vs.filter(function(o,j){return j!==i&&o!==null;}).map(function(o){return o.split(', ');});
+      var plus=mine.filter(function(a){return others.some(function(o){return o.indexOf(a)<0;});});   /* 이 모델에만 있는 것 */
+      return '<td>'+(plus.length?plus.map(function(a){return '<span class="sp-plus">+ '+E(a)+'</span>';}).join('<br>'):'<span style="color:#94a3b8">추가 없음</span>')+'<br><small style="color:#94a3b8;font-weight:500">전체 '+mine.length+'개</small></td>';}
+    return '<td>'+E(v||'-')+'</td>';};
+  var row=function(x,cls){return '<tr class="'+cls+'"><th class="k">'+E(x.k[1])+'<small>'+E(x.k[0])+'</small></th>'+SPC.sel.map(function(c,i){return cell(x,i);}).join('')+'</tr>';};
+  var miss=SPC.sel.filter(function(c,i){return !D[i];});
+  B.innerHTML=(miss.length?'<div class="warn" style="margin-bottom:8px">'+E(miss.join(', '))+' : 삼성닷컴 스펙을 찾지 못했어요 (삼성닷컴에 없는 모델이거나 아직 갱신 전)</div>':'')
+    +'<div class="sp-sec">🔍 다른 항목 '+diff.length+'개</div>'+(diff.length?'<table class="sp-t">'+head+'<tbody>'+diff.map(function(x){return row(x,'d');}).join('')+'</tbody></table>':'<div class="empty">스펙이 모두 같아요</div>')
+    +(same.length?'<details style="margin-top:12px"><summary class="sp-sec" style="cursor:pointer">✅ 같은 항목 '+same.length+'개 보기</summary><table class="sp-t" style="margin-top:6px">'+head+'<tbody>'+same.map(function(x){return row(x,'');}).join('')+'</tbody></table></details>':'')
+    +'<div class="hint" style="margin-top:10px">삼성닷컴 상품 스펙 기준'+(D[0]&&D[0].at?' ('+E(D[0].at)+' 갱신)':'')+' · 색상만 다른 모델은 같은 시리즈 스펙으로 보여 줘요. 인증 정보는 뺐어요.</div>';}
+$('#specTab').onclick=specOpen;$('#specBtn').onclick=specOpen;
 /*RK*/
 /* 🛒 삼성닷컴 AI 구독 판매순위 창: 품목별 판매량순(최근 31일) · 모델명 · 판매가 · 월 구독료 (data/ss-rank.js · 매일 새벽 자동 갱신) */
 var RK={cat:null};
@@ -3859,6 +3913,11 @@ iaShow();
 .mbox{border:1px solid #e5e7eb;border-radius:14px;padding:11px 13px;margin-top:10px;background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.04)}
 .mbox>.lbl,.mbox>div>.lbl:first-child{margin-top:0!important}
 #secCond .cond{gap:12px;margin-top:12px}#secCond .cond>.mbox{margin-top:0}
+/* 옆 탭 크게 (잘 보이도록) */
+.side-tabs:not(.open) .care-tab{font-size:14.5px!important;padding:10px 10px!important;letter-spacing:.5px!important;white-space:nowrap;flex-shrink:0}
+@media(min-width:900px){.side-tabs:not(.open){top:84px!important;bottom:auto!important;max-height:calc(100vh - 96px);overflow-y:auto;overflow-x:visible;padding-left:8px}}
+.side-tabs.open .care-tab{font-size:16px!important;padding:14px 20px 14px 18px!important;min-width:190px!important}
+.side-tog{font-size:15px!important;padding:16px 11px!important}
 </style>
 <script>
 (function(){function go(){
