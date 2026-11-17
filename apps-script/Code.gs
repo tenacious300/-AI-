@@ -1938,7 +1938,7 @@ function reportFolder_() {
 function rpTable_(sh, row, head, rows, color) {
   var w = head.length;
   if (rows.length) head.forEach(function (h, i) { if (h === '사번') sh.getRange(row + 1, i + 1, rows.length, 1).setNumberFormat('@'); });   // 사번 앞자리 0 유지
-  sh.getRange(row, 1, 1, w).setValues([head]).setFontWeight('bold').setFontColor('#ffffff').setBackground(color || '#1d4ed8')
+  sh.getRange(row, 1, 1, w).setNumberFormat('@').setValues([head]).setFontWeight('bold').setFontColor('#ffffff').setBackground(color || '#1d4ed8')
     .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
   sh.setRowHeight(row, 30);
   if (rows.length) {
@@ -1968,9 +1968,10 @@ function buildReport_(t) {
   var A = dayRange_('00000000', t), R = rosterMap_(), dates = Object.keys(A).sort();
   var yd = mvDay_(1), all = PropertiesService.getScriptProperties().getProperties();
   var nm = function (e) { return (R[e] || [])[0] || ''; }, br = function (e) { return (R[e] || [])[1] || (R[e] ? '(지점 없음)' : '(명부 없음)'); }, rk = function (e) { return (R[e] || [])[2] || ''; };
+  var bk = function (e) { return R[e] ? br(e) : '\uffff'; };   // 정렬용: 명부에 없는 사번은 맨 아래
   var daySum = function (d) {
-    var o = A[d] || {}, s = { u: 0, n: 0, am: 0, v: 0, ad: 0, c: 0, p: 0, s: 0, b: [0, 0, 0] };
-    Object.keys(o).forEach(function (e) { var x = o[e]; s.u++; s.n += x.n; s.am += x.am; s.v += x.v; s.ad += x.ad; s.c += x.c; s.p += x.p; s.s += x.s; for (var i = 0; i < 3; i++) if (x.u[i]) s.b[i]++; });
+    var o = A[d] || {}, s = { r: 0, u: 0, n: 0, am: 0, v: 0, ad: 0, c: 0, p: 0, s: 0, b: [0, 0, 0] };
+    Object.keys(o).forEach(function (e) { var x = o[e]; s.u++; if (R[e]) s.r++; s.n += x.n; s.am += x.am; s.v += x.v; s.ad += x.ad; s.c += x.c; s.p += x.p; s.s += x.s; for (var i = 0; i < 3; i++) if (x.u[i]) s.b[i]++; });
     s.peak = Number(all['peak_' + d] || 0); s.visits = Number(all['visits_' + d] || 0);
     return s;
   };
@@ -1984,7 +1985,7 @@ function buildReport_(t) {
       for (var i = 0; i < 3; i++) { if (x.u[i]) o.bd[i]++; o.bn[i] += x.b[i] || 0; }
     });
   });
-  var T = daySum(t), Y = daySum(yd), rosterN = Object.keys(R).length, cumUsers = Object.keys(C).length;
+  var T = daySum(t), Y = daySum(yd), rosterN = Object.keys(R).length, cumUsers = Object.keys(C).length, cumR = Object.keys(C).filter(function (e) { return R[e]; }).length;
   var tdy = A[t] || {};
 
   var name = 'AI구독계산기_이용리포트_' + dayFmt_(t);
@@ -1996,11 +1997,11 @@ function buildReport_(t) {
   var row = rpTitle_(sh, 1, '📊 AI 구독 계산기 이용 리포트 — ' + dayFmt_(t) + ' (' + Utilities.formatDate(new Date(), TZ, 'HH:mm') + ' 기준)',
     '명부 ' + rosterN + '명 · 기록 시작 ' + (dates[0] ? dayFmt_(dates[0]) : '-') + ' · 실사용 시간은 화면을 실제로 보고 있던 시간 (11/17 이후 정확)');
   row++;
-  var kp = [['이용 인원 (명)', T.u, Y.u], ['명부 대비 이용률 (%)', rpPct_(T.u, rosterN), rpPct_(Y.u, rosterN)], ['접속 횟수', T.n, Y.n], ['실사용 합계 (분)', T.am, Y.am],
+  var kp = [['이용 인원 (명)', T.u, Y.u], ['  └ 명부 직원', T.r, Y.r], ['  └ 명부에 없는 사번', T.u - T.r, Y.u - Y.r], ['명부 직원 이용률 (%)', rpPct_(T.r, rosterN), rpPct_(Y.r, rosterN)], ['접속 횟수', T.n, Y.n], ['실사용 합계 (분)', T.am, Y.am],
     ['모델 조회', T.v, Y.v], ['모델 담기', T.ad, Y.ad], ['견적 캡처', T.c, Y.c], ['인쇄', T.p, Y.p], ['보관', T.s, Y.s],
     ['삼성 이용 인원', T.b[0], Y.b[0]], ['LG 이용 인원', T.b[1], Y.b[1]], ['쿠쿠 이용 인원', T.b[2], Y.b[2]], ['최대 동시 접속', T.peak, Y.peak]];
   var k0 = row;
-  row = rpTable_(sh, row, ['항목', '오늘 ' + dayFmt_(t).slice(5), '어제 ' + dayFmt_(yd).slice(5), '증감'], kp.map(function (r) { return [r[0], r[1], r[2], r[1] - r[2]]; }));
+  row = rpTable_(sh, row, ['항목', '오늘 ' + dayFmt_(t).slice(5), '어제 ' + dayFmt_(yd).slice(5), '증감'], kp.map(function (r) { return [r[0], r[1], r[2], Math.round((r[1] - r[2]) * 10) / 10]; }));
   var dRg = sh.getRange(k0 + 1, 4, kp.length, 1);
   sh.setConditionalFormatRules([
     SpreadsheetApp.newConditionalFormatRule().whenNumberGreaterThan(0).setFontColor('#15803d').setRanges([dRg]).build(),
@@ -2009,8 +2010,8 @@ function buildReport_(t) {
   sh.getRange(k0 + 1, 1, kp.length, 1).setFontWeight('bold');
   row++;
   row = rpTitle_(sh, row, '누적 (기록 시작 이후)');
-  row = rpTable_(sh, row, ['누적 이용 인원', '명부 대비 (%)', '누적 이용일 합계', '누적 실사용', '누적 담기', '누적 인쇄 + 보관'],
-    [[cumUsers, rpPct_(cumUsers, rosterN), dates.reduce(function (a, d) { return a + Object.keys(A[d]).length; }, 0),
+  row = rpTable_(sh, row, ['누적 이용 인원', '명부 직원', '명부 직원 이용률 (%)', '누적 이용일 합계', '누적 실사용', '누적 담기', '누적 인쇄 + 보관'],
+    [[cumUsers, cumR, rpPct_(cumR, rosterN), dates.reduce(function (a, d) { return a + Object.keys(A[d]).length; }, 0),
       rpMin_(Object.keys(C).reduce(function (a, e) { return a + C[e].am; }, 0)), Object.keys(C).reduce(function (a, e) { return a + C[e].ad; }, 0),
       Object.keys(C).reduce(function (a, e) { return a + C[e].p + C[e].s; }, 0)]], '#0f766e');
   row++;
@@ -2033,7 +2034,7 @@ function buildReport_(t) {
 
   /* 2. 오늘 사번별 */
   var s2 = ss.insertSheet('오늘 사번별');
-  var L2 = Object.keys(tdy).sort(function (a, b) { return br(a) < br(b) ? -1 : br(a) > br(b) ? 1 : (tdy[b].am - tdy[a].am); });
+  var L2 = Object.keys(tdy).sort(function (a, b) { return bk(a) < bk(b) ? -1 : bk(a) > bk(b) ? 1 : (tdy[b].am - tdy[a].am); });
   rpTable_(s2, 1, ['지점', '이름', '직책', '사번', '첫 접속', '마지막 접속', '접속 횟수', '실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 기능', 'LG 기능', '쿠쿠 기능', '이용 계산기', '기기'],
     L2.map(function (e) { var x = tdy[e]; return [br(e), nm(e), rk(e), e, x.f, x.l, x.n, x.am, x.v, x.ad, x.c, x.p, x.s, x.b[0], x.b[1], x.b[2], dayUsedTxt_(x.u), x.dev]; }));
   if (L2.length) { rpHeat_(s2, 'H2:H' + (L2.length + 1), '#60a5fa'); s2.getRange(1, 1, L2.length + 1, 18).createFilter(); }
@@ -2042,7 +2043,7 @@ function buildReport_(t) {
   /* 3. 누적 사번별 (명부 전원 · 미사용 포함) */
   var s3 = ss.insertSheet('누적 사번별'), seen = {}, L3 = [];
   Object.keys(R).concat(Object.keys(C)).forEach(function (e) { if (!seen[e]) { seen[e] = 1; L3.push(e); } });
-  L3.sort(function (a, b) { return br(a) < br(b) ? -1 : br(a) > br(b) ? 1 : ((C[b] ? C[b].days : 0) - (C[a] ? C[a].days : 0)) || (nm(a) < nm(b) ? -1 : 1); });
+  L3.sort(function (a, b) { return bk(a) < bk(b) ? -1 : bk(a) > bk(b) ? 1 : ((C[b] ? C[b].days : 0) - (C[a] ? C[a].days : 0)) || (nm(a) < nm(b) ? -1 : 1); });
   rpTable_(s3, 1, ['지점', '이름', '직책', '사번', '상태', '오늘 이용', '누적 이용일', '최근 7일 이용일', '첫 이용일', '마지막 이용일', '누적 실사용 (분)', '접속 횟수', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 이용일', 'LG 이용일', '쿠쿠 이용일'],
     L3.map(function (e) {
       var o = C[e], st = !o ? '미사용' : o.d7 ? (o.d7 >= 3 ? '활발' : '최근 사용') : '7일 넘게 미사용';
@@ -2061,9 +2062,9 @@ function buildReport_(t) {
 
   /* 4. 일별 추이 */
   var s4 = ss.insertSheet('일별 추이'), D4 = dates.slice().reverse();
-  rpTable_(s4, 1, ['날짜', '요일', '이용 인원', '이용률 (%)', '접속 횟수', '실사용 (분)', '1인당 실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 이용', 'LG 이용', '쿠쿠 이용', '최대 동시 접속'],
+  rpTable_(s4, 1, ['날짜', '요일', '이용 인원', '명부 직원 이용률 (%)', '접속 횟수', '실사용 (분)', '1인당 실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 이용', 'LG 이용', '쿠쿠 이용', '최대 동시 접속'],
     D4.map(function (d) { var s = daySum(d), dw = '일월화수목금토'.charAt(new Date(Number(d.slice(0, 4)), Number(d.slice(4, 6)) - 1, Number(d.slice(6, 8))).getDay());
-      return [dayFmt_(d), dw, s.u, rpPct_(s.u, rosterN), s.n, s.am, s.u ? Math.round(s.am / s.u) : 0, s.v, s.ad, s.c, s.p, s.s, s.b[0], s.b[1], s.b[2], s.peak]; }), '#0369a1');
+      return [dayFmt_(d), dw, s.u, rpPct_(s.r, rosterN), s.n, s.am, s.u ? Math.round(s.am / s.u) : 0, s.v, s.ad, s.c, s.p, s.s, s.b[0], s.b[1], s.b[2], s.peak]; }), '#0369a1');
   if (D4.length) { rpHeat_(s4, 'C2:C' + (D4.length + 1), '#38bdf8'); rpHeat_(s4, 'F2:F' + (D4.length + 1), '#60a5fa'); }
   s4.setFrozenRows(1);
 
@@ -2080,7 +2081,7 @@ function buildReport_(t) {
 
   /* 6. 일별 원본 */
   var s6 = ss.insertSheet('일별 원본'), raw = [];
-  D4.forEach(function (d) { Object.keys(A[d]).sort(function (a, b) { return br(a) < br(b) ? -1 : 1; }).forEach(function (e) { var x = A[d][e];
+  D4.forEach(function (d) { Object.keys(A[d]).sort(function (a, b) { return bk(a) < bk(b) ? -1 : bk(a) > bk(b) ? 1 : 0; }).forEach(function (e) { var x = A[d][e];
     raw.push([dayFmt_(d), br(e), nm(e), e, x.f, x.l, x.n, x.am, x.v, x.ad, x.c, x.p, x.s, x.b[0], x.b[1], x.b[2], dayUsedTxt_(x.u)]); }); });
   rpTable_(s6, 1, ['날짜', '지점', '이름', '사번', '첫 접속', '마지막 접속', '접속 횟수', '실사용 (분)', '모델 조회', '모델 담기', '견적 캡처', '인쇄', '보관', '삼성 기능', 'LG 기능', '쿠쿠 기능', '이용 계산기'], raw, '#475569');
   if (raw.length) s6.getRange(1, 1, raw.length + 1, 17).createFilter();
@@ -2095,12 +2096,12 @@ function buildReport_(t) {
 
   // 메일 본문 (요약)
   var td = function (v, s) { return '<td style="padding:6px 10px;border:1px solid #e2e8f0;' + (s || '') + '">' + v + '</td>'; };
-  var dlt = function (a, b) { var d = a - b; return d > 0 ? '<span style="color:#15803d">▲' + d + '</span>' : d < 0 ? '<span style="color:#dc2626">▼' + (-d) + '</span>' : '-'; };
+  var dlt = function (a, b) { var d = Math.round((a - b) * 10) / 10; return d > 0 ? '<span style="color:#15803d">▲' + d + '</span>' : d < 0 ? '<span style="color:#dc2626">▼' + (-d) + '</span>' : '-'; };
   var html = '<div style="font-family:Apple SD Gothic Neo,Malgun Gothic,sans-serif;color:#0f172a;max-width:640px">'
     + '<h2 style="margin:0 0 4px">📊 AI 구독 계산기 이용 리포트</h2><div style="color:#64748b;margin-bottom:14px">' + dayFmt_(t) + ' ' + Utilities.formatDate(new Date(), TZ, 'HH:mm') + ' 기준 · 명부 ' + rosterN + '명</div>'
     + '<table style="border-collapse:collapse;font-size:14px"><tr style="background:#1d4ed8;color:#fff">' + td('항목') + td('오늘') + td('어제') + td('증감') + '</tr>'
     + kp.map(function (r) { return '<tr>' + td('<b>' + r[0] + '</b>') + td(r[1], 'text-align:right') + td(r[2], 'text-align:right;color:#64748b') + td(dlt(r[1], r[2]), 'text-align:right') + '</tr>'; }).join('')
-    + '</table><p style="margin:14px 0 6px"><b>누적</b> 이용 인원 ' + cumUsers + '명 (명부의 ' + rpPct_(cumUsers, rosterN) + '%) · 기록 ' + dates.length + '일</p>'
+    + '</table><p style="margin:14px 0 6px"><b>누적</b> 이용 인원 ' + cumUsers + '명 (명부 직원 ' + cumR + '명 · ' + rpPct_(cumR, rosterN) + '%) · 기록 ' + dates.length + '일</p>'
     + '<p style="margin:0 0 6px"><b>오늘 많이 쓴 직원</b> ' + Object.keys(tdy).sort(function (a, b) { return tdy[b].am - tdy[a].am; }).slice(0, 5).map(function (e) { return (nm(e) || e) + '(' + br(e) + ' ' + rpMin_(tdy[e].am) + ')'; }).join(', ') + '</p>'
     + '<p style="color:#64748b;font-size:12px;margin-top:16px">첨부 엑셀: 요약 · 오늘 사번별 · 누적 사번별(미사용 직원 포함) · 일별 추이 · 사번×날짜 · 일별 원본<br>구글 드라이브 \'' + REPORT_FOLDER_NAME + '\' 폴더에도 같은 시트가 보관돼요.</p></div>';
   return { blob: blob, subject: 'AI 구독 계산기 이용 리포트 ' + dayFmt_(t) + ' — 오늘 ' + T.u + '명 이용', html: html };
