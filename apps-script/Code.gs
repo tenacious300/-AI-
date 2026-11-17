@@ -1234,7 +1234,12 @@ function rosterAllowed_(emp) {
    - 켜면 토큰 없는 견적 보관함 요청도 막아요. 화면은 heartbeat의 pinReq로 알아채고, 토큰 없는 기기는 PIN 입력 화면으로 보내요.
    - PIN은 원문이 아니라 해시로 견적 시트 파일의 'PIN' 탭에 저장. 사번당 5번 틀리면 30분 잠금. */
 var PIN_SHEET = 'PIN', PIN_MAX_FAIL = 5, PIN_LOCK_SEC = 1800;
-function pinRequired_() { return PropertiesService.getScriptProperties().getProperty('PIN_REQUIRED') === 'Y'; }
+/* PIN 필수 여부: heartbeat(75초마다)에서도 읽어서 캐시에 10분 보관 (스크립트 속성 읽기는 하루 5만 번 제한) */
+function pinRequired_() {
+  var cache = CacheService.getScriptCache(), v = cache.get('pinReq');
+  if (v == null) { v = PropertiesService.getScriptProperties().getProperty('PIN_REQUIRED') === 'Y' ? 'Y' : 'N'; cache.put('pinReq', v, 600); }
+  return v === 'Y';
+}
 function pinSheet_() {
   var ss = quoteSheet_().getParent(), sh = ss.getSheetByName(PIN_SHEET);
   if (!sh) { sh = ss.insertSheet(PIN_SHEET); sh.appendRow(['사번', 'PIN 해시', '토큰', '설정 시각']); sh.setFrozenRows(1); }
@@ -1306,6 +1311,7 @@ function adminPinRequiredSet(arg) {
   if (!pwOk_(arg.pw)) return { ok: false, msg: '비밀번호가 맞지 않아요.' };
   var props = PropertiesService.getScriptProperties();
   if (arg.on) props.setProperty('PIN_REQUIRED', 'Y'); else props.deleteProperty('PIN_REQUIRED');
+  CacheService.getScriptCache().put('pinReq', arg.on ? 'Y' : 'N', 600);   /* 바로 반영 */
   return { ok: true, on: pinRequired_() };
 }
 /** 관리자: PIN 상태 (필수 여부 · PIN 정한 인원) */
