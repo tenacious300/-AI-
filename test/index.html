@@ -436,6 +436,12 @@ body.preview{background:#e5e7eb;padding:0}
 .pq .lump .calc{display:grid;grid-template-columns:1fr 1fr;gap:0 24px;margin-bottom:6px}
 .pq .lump .calc .fr{font-size:12px}
 .pq .lump .fcol .fh{font-weight:800;color:#e11d48;font-size:12.5px;padding:2px 0 3px;border-bottom:1px solid #fecdd3}.pq .lump .fcol .fh small{font-weight:500;color:#9f1239;font-size:11px}.pq .lump .fcol .fr{border-bottom-color:#fecdd3}.pq .lump .fcol .fb{color:#e11d48;font-size:16px;font-weight:800;border-bottom:0;padding-top:4px}
+.pq.cpt{font-size:11.5px}.pq.cpt h1{font-size:19px}.pq.cpt .hd{padding-bottom:5px;margin-bottom:7px}.pq.cpt .cond{margin-bottom:7px}
+.pq.cpt th,.pq.cpt td{padding:3px 6px}.pq.cpt th{font-size:11px}.pq.cpt .pimg,.pq.cpt .noimg{width:52px;height:52px}.pq.cpt .pn{font-size:12px}
+.pq.cpt .tot{margin-top:7px;gap:2px 22px}.pq.cpt .tot div{padding:2px 0}.pq.cpt .tot .em{font-size:13.5px}.pq.cpt .tot .em.pay{padding:5px 10px!important;margin-top:3px;font-size:14px}
+.pq.cpt .lump{margin-top:8px;padding:6px 10px}.pq.cpt .lump h3{font-size:13px;margin:0 0 5px}.pq.cpt .lump .why{gap:6px;margin-bottom:5px}.pq.cpt .lump .why>div{padding:3px 8px}.pq.cpt .lump .why b{font-size:13.5px}
+.pq.cpt .lump td,.pq.cpt .lump th{padding:2px 6px}.pq.cpt .lump .calc{margin:4px 0}.pq.cpt .lump .calc .fr{font-size:11.5px;padding:1px 0}.pq.cpt .pbars{margin:5px 0 4px;padding:5px 10px;gap:4px}.pq.cpt .pt{height:9px}
+.pq.cpt .verdict{padding:5px 10px;font-size:13px}.pq.cpt .nt{margin-top:8px;font-size:10px;line-height:1.45}
 .pq .lump .verdict{background:#0369a1;color:#fff;border-radius:8px;padding:7px 12px;font-size:15px;margin:4px 0}
 .pq .lump .verdict.good{background:#047857}
 .pq .lump .verdict small{color:#e0f2fe;font-size:12px}
@@ -1315,8 +1321,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.65',VER_DATE='2026.11.17';
+var VERSION='v8.66',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.66','11.17',['일시불 비교 · 체감가+일시불 비교 견적서: 간격 · 사진 크기를 줄여 2~3품목까지 한 장에 인쇄']],
   ['v8.65','11.17',['일시불 비교 · 체감가+일시불 비교 견적서 인쇄: 비교 박스가 통째로 다음 장으로 넘어가 1장에 큰 빈칸이 생기던 문제 수정']],
   ['v8.64','11.17',['삼성닷컴 제품 정보(사진·이름·기준가)를 기기에 하루 저장해 두 번째부터 빠르게 열려요','LG 단가 데이터 크기를 1.6MB → 0.66MB로 줄여 LG 계산기 첫 로딩이 빨라져요']],
   ['v8.63','11.17',['📋 LG 스펙 비교 추가: LG닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 (우리 LG 단가표 모델 · 매주 자동 갱신)']],
@@ -2063,7 +2070,7 @@ function buildPrint(mode){
   if(chP)T.push(['구독포인트 (약 5%)','+'+chP.toLocaleString()+'P']);
   var allP=fp+wp+chP+PKp.pts;
   T.push(['고객 총 혜택',won(sumDisc+cardTot+extra)+(allP?' + '+allP.toLocaleString()+'P':'')]);
-  var html='<div class="pq"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
+  var html='<div class="pq'+(mode==='lump'||mode==='feellump'?' cpt':'')+'"><div class="hd"><div><h1>삼성 AI 구독 견적서</h1><small>11월 운영정책 기준 (11/1~11/30)</small></div><div style="text-align:right"><small>견적일 '+ds+'</small>'+staffLine()+'</div></div>'
     +'<div class="cond"><span>고객 유형: <b>'+({single:'신규 (단건)',combo:'신규 결합',exist:'기존 구독'}[S.cust]||'신규')+'</b></span><span>제휴카드: <b>'+(MC?MC.per.map(function(p){return p.name+' · 월 '+p.u+'만원↑';}).join(' / '):card?card.name+' · 월 '+S.usage+'만원↑':'미사용')+'</b></span></div>'
     +'<table><tr><th>No</th><th>제품</th><th>모델 · 계약</th><th>정상 월</th><th>할인</th><th>선납금</th><th>월 납부</th></tr>'+rows+'</table>'
     +'<div class="tot">'+T.map(function(x,k){return '<div'+(k===T.length-1?' class="em"':'')+'><span>'+x[0]+'</span><span>'+x[1]+'</span></div>';}).join('')

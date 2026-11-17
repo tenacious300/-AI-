@@ -1312,8 +1312,9 @@ var $=function(s){return document.querySelector(s);};
 var won=function(n){return Math.round(n).toLocaleString('ko-KR')+'원';};
 var r10=function(n){return Math.round(n/10)*10;};
 var pct=function(r){return (Math.round(r*1000)/10)+'%';};
-var VERSION='v8.65',VER_DATE='2026.11.17';
+var VERSION='v8.66',VER_DATE='2026.11.17';
 var CHANGELOG=[
+  ['v8.66','11.17',['일시불 비교 · 체감가+일시불 비교 견적서: 간격 · 사진 크기를 줄여 2~3품목까지 한 장에 인쇄']],
   ['v8.65','11.17',['일시불 비교 · 체감가+일시불 비교 견적서 인쇄: 비교 박스가 통째로 다음 장으로 넘어가 1장에 큰 빈칸이 생기던 문제 수정']],
   ['v8.64','11.17',['삼성닷컴 제품 정보(사진·이름·기준가)를 기기에 하루 저장해 두 번째부터 빠르게 열려요','LG 단가 데이터 크기를 1.6MB → 0.66MB로 줄여 LG 계산기 첫 로딩이 빨라져요']],
   ['v8.63','11.17',['📋 LG 스펙 비교 추가: LG닷컴 스펙으로 모델 2~3개 비교, 다른 항목만 노랗게 강조 (우리 LG 단가표 모델 · 매주 자동 갱신)']],
