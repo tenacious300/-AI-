@@ -1919,6 +1919,7 @@ function sendDailyReport_(tag) {
     var R = buildReport_(today_());
     MailApp.sendEmail({ to: reportTo_(), subject: tag + R.subject, htmlBody: R.html, attachments: [R.blob], name: 'AI 구독 계산기' });
     p.setProperty('REPORT_LAST', Utilities.formatDate(new Date(), TZ, 'yyyy.MM.dd HH:mm') + ' → ' + reportTo_());
+    try { tgReport_(tag, R); } catch (e) {}
     p.deleteProperty('REPORT_ERR');
     return 'ok';
   } catch (e) {
@@ -1926,6 +1927,48 @@ function sendDailyReport_(tag) {
     p.setProperty('REPORT_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + m);
     return m;
   }
+}
+/* ---------- 텔레그램 봇 ----------
+   스크립트 속성 TG_TOKEN 에 봇 토큰을 넣고, 받을 사람이 봇에게 아무 말이나 한 번 보내면
+   다음 리포트부터 그 채팅방으로 요약 + 엑셀 파일이 같이 가요. (받는 채팅방은 TG_CHAT 에 저장 · 쉼표로 여러 개) */
+function tgToken_() { return PropertiesService.getScriptProperties().getProperty('TG_TOKEN') || ''; }
+function tgApi_(method, payload) {
+  var res = UrlFetchApp.fetch('https://api.telegram.org/bot' + tgToken_() + '/' + method, { method: 'post', payload: payload, muteHttpExceptions: true });
+  var j = JSON.parse(res.getContentText() || '{}');
+  if (!j.ok) throw new Error('텔레그램 ' + method + ': ' + (j.description || res.getResponseCode()));
+  return j.result;
+}
+/** 받을 채팅방: 저장된 것 + 봇에게 새로 말을 건 사람 */
+function tgChats_() {
+  var p = PropertiesService.getScriptProperties(), L = (p.getProperty('TG_CHAT') || '').split(',').filter(String);
+  try {
+    tgApi_('getUpdates', { timeout: 0 }).forEach(function (u) {
+      var m = u.message || u.my_chat_member || {}, c = m.chat && String(m.chat.id);
+      if (c && L.indexOf(c) < 0) L.push(c);
+    });
+  } catch (e) {}
+  L = L.slice(0, 5);
+  if (L.length) p.setProperty('TG_CHAT', L.join(','));
+  return L;
+}
+function tgReport_(tag, R) {
+  if (!tgToken_()) return;
+  var p = PropertiesService.getScriptProperties();
+  try {
+    tgChats_().forEach(function (c) {
+      tgApi_('sendMessage', { chat_id: c, text: tag + R.text });
+      tgApi_('sendDocument', { chat_id: c, document: R.blob });
+    });
+    p.deleteProperty('TG_ERR');
+  } catch (e) { p.setProperty('TG_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + String(e && e.message || e).slice(0, 200)); }
+}
+/** 편집기에서 실행: 채팅방 확인 + 테스트 메시지 */
+function setupTelegram() {
+  if (!tgToken_()) { Logger.log('스크립트 속성에 TG_TOKEN 을 먼저 넣어 주세요'); return; }
+  var L = tgChats_();
+  if (!L.length) { Logger.log('봇에게 아무 말이나 한 번 보낸 뒤 다시 실행해 주세요'); return; }
+  L.forEach(function (c) { tgApi_('sendMessage', { chat_id: c, text: '✅ AI 구독 계산기 연결됐어요. 매일 21시 이용 리포트를 여기로 보내 드려요.' }); });
+  Logger.log('연결 완료: ' + L.join(', '));
 }
 function reportFolder_() {
   var props = PropertiesService.getScriptProperties(), id = props.getProperty('reportFolderId');
@@ -2104,5 +2147,10 @@ function buildReport_(t) {
     + '</table><p style="margin:14px 0 6px"><b>누적</b> 이용 인원 ' + cumUsers + '명 (명부 직원 ' + cumR + '명 · ' + rpPct_(cumR, rosterN) + '%) · 기록 ' + dates.length + '일</p>'
     + '<p style="margin:0 0 6px"><b>오늘 많이 쓴 직원</b> ' + Object.keys(tdy).sort(function (a, b) { return tdy[b].am - tdy[a].am; }).slice(0, 5).map(function (e) { return (nm(e) || e) + '(' + br(e) + ' ' + rpMin_(tdy[e].am) + ')'; }).join(', ') + '</p>'
     + '<p style="color:#64748b;font-size:12px;margin-top:16px">첨부 엑셀: 요약 · 오늘 사번별 · 누적 사번별(미사용 직원 포함) · 일별 추이 · 사번×날짜 · 일별 원본<br>구글 드라이브 \'' + REPORT_FOLDER_NAME + '\' 폴더에도 같은 시트가 보관돼요.</p></div>';
-  return { blob: blob, subject: 'AI 구독 계산기 이용 리포트 ' + dayFmt_(t) + ' — 오늘 ' + T.u + '명 이용', html: html };
+  var top = Object.keys(tdy).sort(function (a, b) { return tdy[b].am - tdy[a].am; }).slice(0, 5).map(function (e) { return (nm(e) || e) + '(' + br(e) + ' ' + rpMin_(tdy[e].am) + ')'; }).join(', ');
+  var text = '📊 AI 구독 계산기 이용 리포트\n' + dayFmt_(t) + ' ' + Utilities.formatDate(new Date(), TZ, 'HH:mm') + ' 기준 · 명부 ' + rosterN + '명\n\n'
+    + kp.map(function (r) { return String(r[0]).replace(/^\s*└\s*/, ' · ') + ': ' + r[1] + ' (어제 ' + r[2] + ')'; }).join('\n')
+    + '\n\n누적 이용 ' + cumUsers + '명 (명부 직원 ' + cumR + '명 · ' + rpPct_(cumR, rosterN) + '%) · 기록 ' + dates.length + '일'
+    + (top ? '\n오늘 많이 쓴 직원: ' + top : '');
+  return { blob: blob, subject: 'AI 구독 계산기 이용 리포트 ' + dayFmt_(t) + ' — 오늘 ' + T.u + '명 이용', html: html, text: text };
 }
