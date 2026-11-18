@@ -1809,7 +1809,7 @@ window.REC_PAGE={brand:'lg',priceLabel:'요금은 지금 진행 중인 활성화
 (function(){var _add=$('#addBtn').onclick;$('#addBtn').onclick=function(){var n=S.cart.length,busy=REC.busy;_add.apply(this,arguments);if(!busy&&S.cart.length>n){var k=S.cart[S.cart.length-1].code;setTimeout(function(){recAfterAdd(k);},250);}};})();
 $('#bestBtn').onclick=recBest;setTimeout(recLoadPairs,2500);
 /* 📢 단가 바뀐 점 요약 (common.js) */
-setTimeout(function(){try{var mp={};D.m.forEach(function(m){var v=null;candRows(m).forEach(function(r){if(v===null||r[R.fin]<v)v=r[R.fin];});if(v!=null)mp[m[0]]=v;});snapCheck('lg','LG',mp);  /* 주간 활성화(며칠마다 바뀜)는 빼고 단가표 요금만 비교 */}catch(e){}},1500);
+setTimeout(function(){try{var mp={};D.m.forEach(function(m){var v=null;m[2].forEach(function(r){if(D.bd[r[R.bd]]!=='결합없음')return;if(v===null||r[R.fin]<v)v=r[R.fin];});if(v!=null)mp[m[0]]=v;});snapCheck('lg2','LG',mp);  /* 고객 조건(결합·소상공인)과 상관없이 결합없음 기본 요금만 비교 · lg2: 예전 잘못 저장된 값은 버리고 조용히 새로 저장 */  /* 주간 활성화(며칠마다 바뀜)는 빼고 단가표 요금만 비교 */}catch(e){}},1500);
 $('#printBtn').onclick=function(){if(!S.cart.length){toast('담은 모델이 없어요');return;}$('#pmModal').classList.add('on');};
 $('#pmClose').onclick=function(){$('#pmModal').classList.remove('on');};
 Array.prototype.forEach.call(document.querySelectorAll('.pm-opt'),function(b){b.onclick=function(){$('#pmModal').classList.remove('on');var lm=b.dataset.pm==='lump'||b.dataset.pm==='feellump';
