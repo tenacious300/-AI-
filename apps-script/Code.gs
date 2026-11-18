@@ -1929,8 +1929,8 @@ function sendDailyReport_(tag) {
   }
 }
 /* ---------- 텔레그램 봇 ----------
-   스크립트 속성 TG_TOKEN 에 봇 토큰을 넣고, 받을 사람이 봇에게 아무 말이나 한 번 보내면
-   다음 리포트부터 그 채팅방으로 요약 + 엑셀 파일이 같이 가요. (받는 채팅방은 TG_CHAT 에 저장 · 쉼표로 여러 개) */
+   스크립트 속성 TG_TOKEN = 봇 토큰. 받는 사람은 봇에게 '/등록 관리자비밀번호'를 보내야 등록돼요 (TG_CHAT · 최대 5명).
+   1분마다 tgPoll 이 봇에 온 메시지를 읽어 답해요: /지금 · /오늘 · /리포트 · /해제 · /도움 (말로 물어도 됨) */
 function tgToken_() { return PropertiesService.getScriptProperties().getProperty('TG_TOKEN') || ''; }
 function tgApi_(method, payload) {
   var res = UrlFetchApp.fetch('https://api.telegram.org/bot' + tgToken_() + '/' + method, { method: 'post', payload: payload, muteHttpExceptions: true });
@@ -1938,37 +1938,81 @@ function tgApi_(method, payload) {
   if (!j.ok) throw new Error('텔레그램 ' + method + ': ' + (j.description || res.getResponseCode()));
   return j.result;
 }
-/** 받을 채팅방: 저장된 것 + 봇에게 새로 말을 건 사람 */
-function tgChats_() {
-  var p = PropertiesService.getScriptProperties(), L = (p.getProperty('TG_CHAT') || '').split(',').filter(String);
-  try {
-    tgApi_('getUpdates', { timeout: 0 }).forEach(function (u) {
-      var m = u.message || u.my_chat_member || {}, c = m.chat && String(m.chat.id);
-      if (c && L.indexOf(c) < 0) L.push(c);
-    });
-  } catch (e) {}
-  L = L.slice(0, 5);
-  if (L.length) p.setProperty('TG_CHAT', L.join(','));
-  return L;
-}
+function tgChats_() { return (PropertiesService.getScriptProperties().getProperty('TG_CHAT') || '').split(',').filter(String); }
+function tgSay_(chat, text) { return tgApi_('sendMessage', { chat_id: chat, text: text }); }
 function tgReport_(tag, R) {
   if (!tgToken_()) return;
   var p = PropertiesService.getScriptProperties();
   try {
-    tgChats_().forEach(function (c) {
-      tgApi_('sendMessage', { chat_id: c, text: tag + R.text });
-      tgApi_('sendDocument', { chat_id: c, document: R.blob });
-    });
+    tgChats_().forEach(function (c) { tgSay_(c, tag + R.text); tgApi_('sendDocument', { chat_id: c, document: R.blob }); });
     p.deleteProperty('TG_ERR');
   } catch (e) { p.setProperty('TG_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + String(e && e.message || e).slice(0, 200)); }
 }
-/** 편집기에서 실행: 채팅방 확인 + 테스트 메시지 */
+var TG_HELP = '물어볼 수 있는 것\n/지금 · 실시간 접속자\n/오늘 · 오늘 이용 현황 (어제와 비교)\n/리포트 · 오늘까지 엑셀 바로 받기\n/해제 · 이 채팅방 받기 끄기\n"지금 몇 명?", "오늘 몇 명 들어왔어?"처럼 말로 물어도 돼요.';
+function tgNow_() {
+  var map = readPresence_(CacheService.getScriptCache()), R = rosterMap_(), keys = Object.keys(map), n = activeCount_(map);
+  var who = keys.filter(function (k) { return map[k].emp; }).map(function (k) {
+    var s = map[k], r = R[s.emp] || [], idle = idleOf_(s);
+    return '· ' + (r[0] || s.emp) + (r[1] ? ' (' + r[1] + ')' : '') + (s.cart ? ' · 담은 모델 ' + s.cart + '개' : '') + (idle ? ' · ' + idle + '분째 쉬는 중' : '');
+  });
+  return '🟢 지금 접속자 ' + n + '명 (' + Utilities.formatDate(new Date(), TZ, 'HH:mm') + ')' + (who.length ? '\n' + who.slice(0, 30).join('\n') : '');
+}
+function tgToday_() {
+  var all = PropertiesService.getScriptProperties().getProperties(), t = today_(), y = mvDay_(1), R = rosterMap_();
+  var em = function (d) { try { return JSON.parse(getP_(all, 'emps_' + d) || '{}'); } catch (e) { return {}; } };
+  var T = em(t), Y = em(y), num = function (k, d) { return Number(getP_(all, k + '_' + d) || 0); };
+  var line = function (label, a, b) { return label + ': ' + a + ' (어제 ' + b + ')'; };
+  var tr = Object.keys(T).filter(function (e) { return R[e]; }).length, rn = Object.keys(R).length;
+  return '📊 오늘 이용 현황 (' + Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' 기준)\n'
+    + line('이용 인원', Object.keys(T).length + '명', Object.keys(Y).length + '명') + '\n'
+    + (rn ? '명부 직원 이용률: ' + rpPct_(tr, rn) + '% (' + tr + '/' + rn + '명)\n' : '')
+    + line('접속 횟수', num('visits', t) + '회', num('visits', y) + '회') + '\n'
+    + line('최고 동시접속', num('peak', t) + '명', num('peak', y) + '명') + '\n'
+    + line('견적 인쇄 · 복사 · 보관', num('print', t) + ' · ' + num('copy', t) + ' · ' + num('save', t), num('print', y) + ' · ' + num('copy', y) + ' · ' + num('save', y));
+}
+/** 봇에 온 메시지 1건 처리 */
+function tgHandle_(m) {
+  var chat = String(m.chat.id), text = String(m.text || '').trim(), p = PropertiesService.getScriptProperties(), L = tgChats_();
+  var reg = /^\/?(등록|start)\s*(.*)$/i.exec(text);
+  if (reg && reg[1] === '등록') {
+    try { tgApi_('deleteMessage', { chat_id: chat, message_id: m.message_id }); } catch (e) {}   // 비밀번호가 채팅에 남지 않게
+    if (pwLocked_()) return tgSay_(chat, '비밀번호를 여러 번 틀려 15분 동안 잠겼어요.');
+    if (!pwOk_(reg[2])) return tgSay_(chat, '비밀번호가 맞지 않아요.');
+    if (L.indexOf(chat) < 0) { if (L.length >= 5) return tgSay_(chat, '받는 사람은 5명까지예요. 다른 채팅방에서 /해제 후 다시 등록해 주세요.'); L.push(chat); p.setProperty('TG_CHAT', L.join(',')); }
+    return tgSay_(chat, '✅ 등록됐어요. 매일 21시 이용 리포트를 여기로 보내 드려요.\n\n' + TG_HELP);
+  }
+  if (L.indexOf(chat) < 0) return tgSay_(chat, 'AI 구독 계산기 관리자용 봇이에요. 관리자는 "/등록 관리자비밀번호"를 보내 주세요.');
+  if (/해제/.test(text)) { p.setProperty('TG_CHAT', L.filter(function (c) { return c !== chat; }).join(',')); return tgSay_(chat, '이 채팅방은 받기를 껐어요. 다시 받으려면 /등록 비밀번호'); }
+  if (/리포트|엑셀|보고서/.test(text)) {
+    try { daySnap_(today_()); } catch (e) {}
+    var R = buildReport_(today_()); tgSay_(chat, R.text); return tgApi_('sendDocument', { chat_id: chat, document: R.blob });
+  }
+  if (/지금|실시간|현재|접속\s*중|누가/.test(text)) return tgSay_(chat, tgNow_());
+  if (/오늘|몇\s*명|이용|접속|방문/.test(text)) return tgSay_(chat, tgToday_());
+  return tgSay_(chat, TG_HELP);
+}
+/** 1분마다 실행 (setupTelegram 이 예약) */
+function tgPoll() {
+  if (!tgToken_()) return;
+  var lock = LockService.getScriptLock(); if (!lock.tryLock(1000)) return;
+  try {
+    var p = PropertiesService.getScriptProperties(), off = Number(p.getProperty('TG_OFFSET') || 0);
+    var U = tgApi_('getUpdates', { offset: off, timeout: 0, allowed_updates: '["message"]' });
+    if (!U.length) return;
+    p.setProperty('TG_OFFSET', String(U[U.length - 1].update_id + 1));   // 먼저 저장 → 오류가 나도 같은 메시지에 두 번 답하지 않음
+    U.forEach(function (u) { if (u.message && u.message.chat) { try { tgHandle_(u.message); } catch (e) { try { tgSay_(u.message.chat.id, '⚠️ 처리 중 오류: ' + String(e && e.message || e).slice(0, 150)); } catch (e2) {} } } });
+  } catch (e) {
+    p.setProperty('TG_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + String(e && e.message || e).slice(0, 200));
+  } finally { lock.releaseLock(); }
+}
+/** 편집기에서 한 번 실행: 1분마다 봇 메시지 확인 예약 */
 function setupTelegram() {
   if (!tgToken_()) { Logger.log('스크립트 속성에 TG_TOKEN 을 먼저 넣어 주세요'); return; }
-  var L = tgChats_();
-  if (!L.length) { Logger.log('봇에게 아무 말이나 한 번 보낸 뒤 다시 실행해 주세요'); return; }
-  L.forEach(function (c) { tgApi_('sendMessage', { chat_id: c, text: '✅ AI 구독 계산기 연결됐어요. 매일 21시 이용 리포트를 여기로 보내 드려요.' }); });
-  Logger.log('연결 완료: ' + L.join(', '));
+  try { tgApi_('deleteWebhook', {}); } catch (e) {}
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'tgPoll') ScriptApp.deleteTrigger(t); });
+  ScriptApp.newTrigger('tgPoll').timeBased().everyMinutes(1).create();
+  var me = tgApi_('getMe', {});
+  Logger.log('준비 완료: 텔레그램에서 @' + me.username + ' 에게 "/등록 관리자비밀번호"를 보내 주세요 (1분 안에 답이 와요)');
 }
 function reportFolder_() {
   var props = PropertiesService.getScriptProperties(), id = props.getProperty('reportFolderId');
