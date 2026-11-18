@@ -97,10 +97,10 @@ function recAfterAdd(code){if(REC.off||REC.busy||!window.REC_PAGE)return;recLoad
   var E=PG.esc,me=r.me,row=function(x,kind,note){var d=x.price-me.price;
     var btn=kind==='swap'?'<button class="rc-b sw" data-swap="'+E(x.code)+'">바꾸기</button>':'<button class="rc-b" data-add="'+E(x.code)+'">담기</button>';
     return '<div class="rc-r"><div><b>'+E(x.code)+'</b><small>'+E(x.cat)+(note?' · '+note:'')+'</small>'+(x.tag?'<em class="rc-tag">'+E(x.tag)+'</em>':'')+'</div><div class="rc-p">월 '+recWon(x.price)+(kind==='with'?'':'<i class="'+(d>0?'up':'dn')+'">'+(d>0?'+':'')+recWon(d)+'</i>')+'</div>'+btn+'</div>';};
-  var h='<div class="rc-box"><div class="rc-t">💡 '+E(me.code)+' 담았어요</div><div class="rc-sub">이런 모델도 함께 보여 드려요 · '+E(REC_PAGE.priceLabel||'요금은 모델별 가장 싼 월 요금 기준')+'</div><div class="rc-body">';
+  var h='<div class="rc-box"><div class="rc-t">💡 '+E(me.code)+' 담았어요</div><div class="rc-sub">'+E(REC_PAGE.priceLabel||'요금은 모델별 가장 싼 월 요금 기준')+'</div><div class="rc-body">';
   if(r.up.length)h+='<div class="rc-h">⬆ 조금만 더 내면 한 단계 위</div>'+r.up.map(function(x){return row(x,'add');}).join('');
-  if(r.dn.length)h+='<div class="rc-h">⬇ 비슷한 모델, 더 저렴하게</div>'+r.dn.map(function(x){return row(x,'swap','방금 담은 모델과 바꿔요');}).join('');
-  if(r.withL.length)h+='<div class="rc-h">'+(r.withL.some(function(w){return w.n;})?'🤝 함께 많이 담는 모델':'🤝 같이 쓰면 좋은 품목')+'</div>'+r.withL.map(function(w){return row(w.x,'with',w.n?'같이 담긴 견적 '+w.n+'건':'같이 쓰면 좋은 품목');}).join('');
+  if(r.dn.length)h+='<div class="rc-h">⬇ 비슷한 모델, 더 저렴하게</div>'+r.dn.map(function(x){return row(x,'swap');}).join('');
+  if(r.withL.length)h+='<div class="rc-h">'+(r.withL.some(function(w){return w.n;})?'🤝 함께 많이 담는 모델':'🤝 같이 쓰면 좋은 품목')+'</div>'+r.withL.map(function(w){return row(w.x,'with',w.n?'같이 담긴 견적 '+w.n+'건':'');}).join('');
   h+='</div><label class="rc-off"><input type="checkbox" id="rcOff"> 다음부터 담을 때 추천 안 보기</label><button class="rc-x">괜찮아요</button></div>';
   var d=document.createElement('div');d.className='rc-ov';d.innerHTML=h;document.body.appendChild(d);
   var shown=r.up.concat(r.dn).map(function(x){return x.code;}).concat(r.withL.map(function(w){return w.x.code;})),okL=[],sent=false;
