@@ -1874,7 +1874,7 @@ function reportTo_() { return PropertiesService.getScriptProperties().getPropert
 function reportInfo_() {
   var p = PropertiesService.getScriptProperties(), on = false;
   try { on = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'dailyReport'; }); } catch (e) { on = null; }   // null = 아직 권한 허용 전
-  return { to: reportTo_(), on: on, last: p.getProperty('REPORT_LAST') || '', err: p.getProperty('REPORT_ERR') || '' };
+  return { to: reportTo_(), on: on, last: p.getProperty('REPORT_LAST') || '', err: p.getProperty('REPORT_ERR') || '', tg: tgInfo_() };
 }
 /** 처음 한 번 편집기에서 실행: 권한 허용 + 매일 21시 발송 · 23시 45분 기록 저장 예약 + 지난 기록 채우기 + 테스트 메일 */
 function setupDailyReport() {
@@ -1903,6 +1903,10 @@ function adminReportSet(arg) {
     if (arg.on === true && !reportInfo_().on) { ScriptApp.newTrigger('dailyReport').timeBased().everyDays(1).atHour(21).nearMinute(0).inTimezone(TZ).create(); ScriptApp.newTrigger('daySnapNight').timeBased().everyDays(1).atHour(23).nearMinute(45).inTimezone(TZ).create(); }
     if (arg.on === false) ScriptApp.getProjectTriggers().forEach(function (t) { if (['dailyReport', 'daySnapNight'].indexOf(t.getHandlerFunction()) >= 0) ScriptApp.deleteTrigger(t); });
   } catch (e) { return { ok: false, msg: '권한 허용이 필요해요. Apps Script 편집기에서 setupDailyReport를 한 번 실행해 주세요.', info: reportInfo_() }; }
+  if (arg.tgtest) {
+    var tr = tgTest_();
+    return { ok: tr === 'ok', msg: tr === 'ok' ? '' : tr, info: reportInfo_() };
+  }
   if (arg.send) {
     var r = sendDailyReport_('[수동] ');
     if (r !== 'ok') return { ok: false, msg: r, info: reportInfo_() };
@@ -1991,12 +1995,32 @@ function tgHandle_(m) {
   if (/오늘|몇\s*명|이용|접속|방문/.test(text)) return tgSay_(chat, tgToday_());
   return tgSay_(chat, TG_HELP);
 }
+/** 관리자 화면용 텔레그램 상태 */
+function tgInfo_() {
+  var p = PropertiesService.getScriptProperties(), c = CacheService.getScriptCache(), I = { token: !!tgToken_(), chats: tgChats_().length, on: false, last: c.get('tgLast') || '', err: p.getProperty('TG_ERR') || '', bot: '' };
+  try { I.on = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'tgPoll'; }); } catch (e) { I.on = null; }
+  if (I.token) {
+    I.bot = c.get('tgBot') || '';
+    if (!I.bot) { try { I.bot = tgApi_('getMe', {}).username || ''; c.put('tgBot', I.bot, 21600); } catch (e) { I.botErr = String(e && e.message || e).slice(0, 150); } }
+  }
+  return I;
+}
+/** 관리자: 등록된 채팅방에 시험 메시지 */
+function tgTest_() {
+  var L = tgChats_();
+  if (!tgToken_()) return '토큰(TG_TOKEN)이 없어요';
+  if (!L.length) return '등록된 받는 사람이 없어요. 봇에게 "/등록 관리자비밀번호"를 먼저 보내 주세요';
+  try { L.forEach(function (c) { tgSay_(c, '🔔 관리자 화면에서 보낸 시험 메시지예요. 잘 받으셨으면 정상이에요.'); }); PropertiesService.getScriptProperties().deleteProperty('TG_ERR'); return 'ok'; }
+  catch (e) { var m = String(e && e.message || e).slice(0, 200); PropertiesService.getScriptProperties().setProperty('TG_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + m); return m; }
+}
 /** 1분마다 실행 (setupTelegram 이 예약) */
 function tgPoll() {
   if (!tgToken_()) return;
   var lock = LockService.getScriptLock(); if (!lock.tryLock(1000)) return;
+  var p = PropertiesService.getScriptProperties();
   try {
-    var p = PropertiesService.getScriptProperties(), off = Number(p.getProperty('TG_OFFSET') || 0);
+    CacheService.getScriptCache().put('tgLast', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm'), 21600);
+    var off = Number(p.getProperty('TG_OFFSET') || 0);
     var U = tgApi_('getUpdates', { offset: off, timeout: 0, allowed_updates: '["message"]' });
     if (!U.length) return;
     p.setProperty('TG_OFFSET', String(U[U.length - 1].update_id + 1));   // 먼저 저장 → 오류가 나도 같은 메시지에 두 번 답하지 않음

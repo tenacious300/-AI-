@@ -891,7 +891,19 @@ function aedMailHtml(I){I=I||{};var st=I.on===true?'<b style="color:#15803d">●
   return '<div class="aed-mail"><div style="flex:1;min-width:220px"><b>📧 매일 밤 9시 엑셀 리포트</b> '+st+'<br><small>받는 주소 <b>'+esc(I.to||'')+'</b>'+(I.last?' · 마지막 발송 '+esc(I.last.split(' → ')[0]):'')+'</small>'
     +(I.on==null?'<br><small style="color:#ea580c">Apps Script 편집기에서 <b>setupDailyReport</b> 함수를 한 번 실행해 권한을 허용하면 켜져요.</small>':'')+(I.err?'<br><small style="color:#dc2626">최근 오류: '+esc(I.err)+'</small>':'')
     +'<br><small style="color:var(--sub)">첨부: 요약 · 오늘 사번별 · 누적 사번별(미사용 포함) · 일별 추이 · 사번×날짜 · 일별 원본</small></div>'
-    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn line sm" id="aedMailTo">주소 변경</button><button class="btn line sm" id="aedMailNow">지금 보내기</button>'+(I.on===true?'<button class="btn line sm" data-aedon="0">끄기</button>':I.on===false?'<button class="btn sm" data-aedon="1">켜기</button>':'')+'</div></div>';}
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn line sm" id="aedMailTo">주소 변경</button><button class="btn line sm" id="aedMailNow">지금 보내기</button>'+(I.on===true?'<button class="btn line sm" data-aedon="0">끄기</button>':I.on===false?'<button class="btn sm" data-aedon="1">켜기</button>':'')+'</div></div>'+aedTgHtml(I.tg);}
+function aedTgHtml(T){if(!T)return '';var ok=function(b,t){return '<li>'+(b?'✅':'❌')+' '+t+'</li>';};
+  var good=T.token&&T.on===true&&T.chats>0&&!T.err&&!T.botErr&&T.last;
+  var st=good?'<b style="color:#15803d">● 정상</b>':'<b style="color:#ea580c">⚠ 확인 필요</b>';
+  return '<div class="aed-mail"><div style="flex:1;min-width:220px"><b>✈️ 텔레그램 봇</b> '+st+(T.bot?' <small>@'+esc(T.bot)+'</small>':'')
+    +'<ul style="margin:6px 0 0;padding-left:4px;list-style:none;font-size:13px;line-height:1.7">'
+    +ok(T.token,'봇 토큰'+(T.token?'':' 없음 → 스크립트 속성에 <b>TG_TOKEN</b> 넣기'))
+    +ok(!T.botErr&&T.token,T.botErr?'봇 연결 실패: '+esc(T.botErr)+(/permission|권한|authoriz/i.test(T.botErr)?' → 편집기에서 <b>setupTelegram</b> 실행 후 권한 허용':''):'봇 연결')
+    +ok(T.on===true,T.on===true?'1분마다 확인 예약':T.on===false?'1분 확인 예약 없음 → 편집기에서 <b>setupTelegram</b> 실행':'예약 확인 권한 없음 → 편집기에서 <b>setupTelegram</b> 실행')
+    +ok(!!T.last,T.last?'마지막 확인 '+esc(T.last):'최근 6시간 확인 기록 없음 (예약이 실패 중이거나 권한 허용 필요)')
+    +ok(T.chats>0,'받는 사람 '+T.chats+'명'+(T.chats?'':' → 봇에게 "/등록 관리자비밀번호" 보내기'))
+    +'</ul>'+(T.err?'<small style="color:#dc2626">최근 오류: '+esc(T.err)+'</small>':'')+'</div>'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="btn line sm" id="aedTgTest"'+(T.token&&T.chats?'':' disabled')+'>시험 메시지</button></div></div>';}
 function aedMailSet(arg,btn,ok){arg.pw=ADM.pw;if(btn){btn.disabled=true;btn.textContent='처리 중…';}
   gsr('adminReportSet',arg,function(r){if(r&&r.info&&AEMP.dd)AEMP.dd.report=r.info;toast(r&&r.ok?ok:((r&&r.msg)||'처리하지 못했어요'));if(ADM.tab==='emp')admRender();},function(){toast('처리하지 못했어요');if(ADM.tab==='emp')admRender();});}
 function aedBind(){
@@ -908,6 +920,7 @@ function aedBind(){
   var mt=$('#aedMailTo');if(mt)mt.onclick=function(){var cur=(AEMP.dd&&AEMP.dd.report&&AEMP.dd.report.to)||'';var v=prompt('리포트를 받을 메일 주소 (여러 명은 쉼표로 구분, 최대 5명)',cur);if(v==null||!v.trim()||v.trim()===cur)return;aedMailSet({to:v.trim()},mt,'받는 주소를 바꿨어요');};
   var mn=$('#aedMailNow');if(mn)mn.onclick=function(){if(!confirm('지금까지의 기록으로 엑셀 리포트를 만들어 '+((AEMP.dd&&AEMP.dd.report&&AEMP.dd.report.to)||'관리자 메일')+'로 보낼까요?\n(30초쯤 걸려요)'))return;aedMailSet({send:true},mn,'리포트 메일을 보냈어요');};
   Array.prototype.forEach.call(document.querySelectorAll('#admBody [data-aedon]'),function(b){b.onclick=function(){var on=b.dataset.aedon==='1';aedMailSet({on:on},b,on?'매일 밤 9시 자동 발송을 켰어요':'자동 발송을 껐어요');};});
+  var tt=$('#aedTgTest');if(tt)tt.onclick=function(){aedMailSet({tgtest:true},tt,'텔레그램으로 시험 메시지를 보냈어요');};
   aehBind();
   var cv=$('#aedCsv');if(cv)cv.onclick=function(){var R=AEMP.dd;if(!R||!R.ok)return;csvDown([['날짜','사번','이름','지점','직책','첫 접속','마지막 접속','접속 횟수','실사용(분)','모델 조회','모델 담기','견적 캡처','인쇄','보관','삼성 기능','LG 기능','쿠쿠 기능','이용 계산기','기기']].concat(aedRows().map(function(x){return [afDs(R.date),x.e,x.name,x.br,x.rank,x.f,x.l,x.n,x.am,x.v,x.ad,x.c,x.p,x.s,x.b[0],x.b[1],x.b[2],x.none?'미접속':['삼성','LG','쿠쿠'].filter(function(n,i){return x.u[i];}).join('·'),x.dev];})),'사번별일별_'+R.date+'.csv');};}
 /* 한 사번의 날짜별 기록 */
