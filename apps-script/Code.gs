@@ -1955,7 +1955,7 @@ function tgReport_(tag, R) {
 var TG_HELP = '물어볼 수 있는 것\n/지금 · 실시간 접속자\n/오늘 · 오늘 이용 현황 (어제와 비교)\n/리포트 · 오늘까지 엑셀 바로 받기\n/해제 · 이 채팅방 받기 끄기\n"지금 몇 명?", "오늘 몇 명 들어왔어?"처럼 말로 물어도 돼요.';
 function tgNow_() {
   var map = readPresence_(CacheService.getScriptCache()), R = rosterMap_(), keys = Object.keys(map), n = activeCount_(map);
-  var who = keys.filter(function (k) { return map[k].emp; }).map(function (k) {
+  var who = keys.filter(function (k) { return map[k].emp && idleOf_(map[k]) < LONG_IDLE_MIN; }).map(function (k) {
     var s = map[k], r = R[s.emp] || [], idle = idleOf_(s);
     return '· ' + (r[0] || s.emp) + (r[1] ? ' (' + r[1] + ')' : '') + (s.cart ? ' · 담은 모델 ' + s.cart + '개' : '') + (idle ? ' · ' + idle + '분째 쉬는 중' : '');
   });
