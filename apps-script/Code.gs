@@ -2024,7 +2024,14 @@ function tgPoll() {
     var U = tgApi_('getUpdates', { offset: off, timeout: 0, allowed_updates: '["message"]' });
     if (!U.length) return;
     p.setProperty('TG_OFFSET', String(U[U.length - 1].update_id + 1));   // 먼저 저장 → 오류가 나도 같은 메시지에 두 번 답하지 않음
-    U.forEach(function (u) { if (u.message && u.message.chat) { try { tgHandle_(u.message); } catch (e) { try { tgSay_(u.message.chat.id, '⚠️ 처리 중 오류: ' + String(e && e.message || e).slice(0, 150)); } catch (e2) {} } } });
+    var C = CacheService.getScriptCache(), now = Date.now() / 1000;
+    U.forEach(function (u) {
+      var m = u.message;
+      if (!m || !m.chat) return;
+      if (now - Number(m.date || 0) > 180) return;              // 3분 넘은 메시지는 답하지 않음 (밀린 메시지 · 다시 받은 메시지 한꺼번에 답장 방지)
+      if (C.get('tgu' + u.update_id)) return;                   // 이미 답한 메시지는 다시 답하지 않음
+      C.put('tgu' + u.update_id, '1', 21600);
+      if (true) { try { tgHandle_(u.message); } catch (e) { try { tgSay_(u.message.chat.id, '⚠️ 처리 중 오류: ' + String(e && e.message || e).slice(0, 150)); } catch (e2) {} } } });
   } catch (e) {
     p.setProperty('TG_ERR', Utilities.formatDate(new Date(), TZ, 'MM.dd HH:mm') + ' ' + String(e && e.message || e).slice(0, 200));
   } finally { lock.releaseLock(); }
