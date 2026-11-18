@@ -1070,7 +1070,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--tp)}
   </section>
 
   <section class="card pol">
-    <h2>11월 정책 한눈에</h2>
+    <h2>11월 정책</h2>
     <details class="fold" style="border:0;margin:0;padding:0"><summary>운영정책 · 할인</summary>
       <ul>
         <li><b>구독료 할인(단품)</b>: 전 품목 5%</li>
@@ -1856,7 +1856,7 @@ function render(){
   if(!S.multi){
     var CXcfg={cards:CARDS,items:items,n:n,u:S.usage,promo:!!S.promo,sel:S.card,sumMon2:sumMon2,usages:USAGES,sched:function(c,u){return cardSchedule(c,items,u==null?S.usage:u,S.promo);},
       info:function(c){var X=SSCARD_X[c.id]||{};return {face:cxFace(X.img?SSCARD_IMG+X.img+'.png':'',c.name,X.color,80),full:X.full||c.name,months:c.promoM?'프로모션 '+c.promoM+'개월':'기본 할인',
-        tags:[c.promoM?['프로모션 '+c.promoM+'개월','ok']:null,c.once?['연회비 캐시백 '+won(c.once),'ok']:null,c.launch?['런칭 선납 캐시백','ok']:null].filter(Boolean),note:esc(c.note)};}};
+        tags:[c.once?['연회비 캐시백 '+won(c.once),'ok']:null,c.launch?['런칭 선납 캐시백','ok']:null].filter(Boolean),note:esc(c.note)};}};
     if(CXO.auto){CXO.auto=0;var bb=cxBestAt(CXcfg,S.usage),nv=bb?bb.c.id:'none';if(S.card!==nv){S.card=nv;CXO.open=nv;toast(bb?'전월 '+S.usage+'만원↑ 추천 카드 '+(CXcfg.info(bb.c).full||bb.c.name)+' 자동 적용':'전월 '+S.usage+'만원으로는 할인되는 카드가 없어요');setTimeout(render,0);}}
     $('#cxRecBox').innerHTML=cxRec(CXcfg);$('#cardInfo').innerHTML=cxHtml(CXcfg);
     $('#cardSel').innerHTML='';$('#cardSel').style.display='none';
@@ -2041,7 +2041,7 @@ $('#copyBtn').onclick=function(){
   var items=calcItems();if(!items.length){toast('담은 모델이 없어요');return;}
   var card=CARDS.filter(function(c){return c.id===S.card;})[0],cs=card?cardSchedule(card,items,S.usage,S.promo):null;
   var sumMon2=items.reduce(function(a,i){return a+i.mon2;},0),f=cs&&cs.months[0]?cs.months[0].b+cs.months[0].p:0;
-  var t='[삼성 AI 구독 견적]\n';
+  var d=new Date(),me=meGet(),t='[삼성 AI 구독 견적] '+(d.getMonth()+1)+'/'+d.getDate()+'\n';
   items.forEach(function(i,k){t+=(k+1)+'. '+i.code+' ('+i.cat+') '+i.y+'년 '+i.type+'\n   정상 월 '+won(i.mon)+' → 할인 '+pct(i.rate)+' 월 '+won(i.mon2)+(i.P?' (선납금 '+won(i.P)+')':'')+'\n';});
   var sumP=items.reduce(function(a,i){return a+i.P;},0);
   if(sumP)t+='선납금 합계: '+won(sumP)+'\n';
@@ -2049,7 +2049,7 @@ $('#copyBtn').onclick=function(){
   if(S.multi&&S._mc){var MC=S._mc,ff=0;MC.per.forEach(function(p){if(!p.codes.length)return;ff+=p.f;t+=p.name+'('+p.u+'만↑): '+p.codes.join(', ')+' → 월 할인 '+won(p.f)+'\n';});t+='카드 '+MC.per.length+'장 적용 시 월 '+won(Math.max(0,sumMon2-ff))+'\n';}
   else if(card&&cs.tier)t+=card.name+'('+S.usage+'만↑) 적용 시 월 '+won(Math.max(0,sumMon2-f))+'\n';
   var PKc=pkgCalc(items);if(PKc.tierPts)t+=PKG.name+' '+PKc.n+'품목: +'+PKc.tierPts.toLocaleString()+'P\n';if(PKc.bonusPts)t+='모니터·카운터탑 추가 '+PKc.bonus.length+'대: +'+PKc.bonusPts.toLocaleString()+'P\n';
-  t+='※ 최종 금액은 계약 시 확인';
+  t+='※ 최종 금액은 계약 시 확인';if(me)t+='\n담당: '+[me.br,me.name,me.rank].filter(Boolean).join(' ');
   var ok=function(){fuLog('copy');toast('견적을 복사했어요');markAct('견적 복사');gsr('logEvent',{name:'copy',emp:EMP});};
   var fb=function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');ok();}catch(e){}ta.remove();};
   var cp=function(){if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(ok,fb);else fb();};
